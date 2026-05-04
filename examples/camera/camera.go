@@ -1,0 +1,167 @@
+package main
+
+import (
+	"bytes"
+	"fmt"
+	"image"
+	"image/color"
+	_ "image/jpeg"
+	"log"
+	"math/rand/v2"
+
+	"github.com/Liphium/scaff"
+	"github.com/Liphium/scaff/smath"
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/colorm"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hajimehoshi/ebiten/v2/examples/resources/images"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
+	"github.com/hajimehoshi/ebiten/v2/vector"
+)
+
+var Controls = `
+Key           Action
+------------  ------------------------
+WASD          Move camera
+T             Add 1.0 Trauma
+Tab           Change camera smoothing type
+Space         Look at random position
+E/Q           Zoom in/out
+ArrowUp/Down  Zoom 2x
+Backspace     Reset camera
+R             Rotate
+C             Toggle DrawWithColorM() %v
+`
+
+var (
+	w, h                                = 1024., 768.
+	camSpeed, zoomSpeedFactor, rotSpeed = 6.0, 1.02, 0.02
+	target                              = smath.Vec{}
+	mainCamera                          = scaff.NewCamera(target.X, target.Y, w, h)
+	dio                                 = &ebiten.DrawImageOptions{
+		Filter: ebiten.FilterPixelated,
+	}
+	cdio        = &colorm.DrawImageOptions{}
+	clrm        = colorm.ColorM{}
+	spriteSheet *ebiten.Image
+
+	colormEnabled bool
+)
+
+type Game struct{}
+
+func (g *Game) Update() error {
+	mainCamera.SetSize(w, h)
+
+	if inpututil.IsKeyJustPressed(ebiten.KeyC) {
+		colormEnabled = !colormEnabled
+	}
+
+	if inpututil.IsKeyJustPressed(ebiten.KeyArrowUp) {
+		mainCamera.ZoomFactor *= 2
+	}
+	if inpututil.IsKeyJustPressed(ebiten.KeyArrowDown) {
+		mainCamera.ZoomFactor /= 2
+	}
+
+	if inpututil.IsKeyJustPressed(ebiten.KeySpace) {
+		target.X, target.Y = rand.Float64()*200, rand.Float64()*200
+	}
+
+	if inpututil.IsKeyJustPressed(ebiten.KeyTab) {
+		switch mainCamera.SmoothType {
+		case scaff.CameraMovementNone:
+			mainCamera.SetCenter(target.X, target.Y)
+			mainCamera.SmoothType = scaff.CameraMovementLerp
+		case scaff.CameraMovementLerp:
+			mainCamera.SetCenter(target.X, target.Y)
+			mainCamera.SmoothType = scaff.CameraMovementDamp
+		case scaff.CameraMovementDamp:
+			mainCamera.SetCenter(target.X, target.Y)
+			mainCamera.SmoothType = scaff.CameraMovementNone
+		}
+	}
+
+	if ebiten.IsKeyPressed(ebiten.KeyQ) { // zoom out
+		mainCamera.ZoomFactor /= zoomSpeedFactor
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyE) { // zoom in
+		mainCamera.ZoomFactor *= zoomSpeedFactor
+	}
+
+	if ebiten.IsKeyPressed(ebiten.KeyR) {
+		mainCamera.Angle += rotSpeed
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyF) {
+		mainCamera.Angle -= rotSpeed
+	}
+
+	if ebiten.IsKeyPressed(ebiten.KeyBackspace) {
+		target = smath.Vec{}
+		mainCamera.SetCenter(0, 0)
+		mainCamera.Reset()
+	}
+
+	a := Axis().Unit().Scale(camSpeed)
+	target = target.Add(a)
+	mainCamera.LookAt(target.X, target.Y)
+
+	return nil
+}
+
+func Axis() (axis smath.Vec) {
+	if ebiten.IsKeyPressed(ebiten.KeyW) {
+		axis.Y -= 1
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyS) {
+		axis.Y += 1
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyA) {
+		axis.X -= 1
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyD) {
+		axis.X += 1
+	}
+	return
+}
+
+func (g *Game) Draw(screen *ebiten.Image) {
+
+	if colormEnabled {
+		cdio.GeoM.Reset() // GeoM must be reset
+		clrm.Reset()      // ColorM must be reset
+		clrm.ChangeHSV(2, 1, 0.5)
+		mainCamera.DrawWithColorM(spriteSheet, clrm, cdio, screen)
+	} else {
+		dio.GeoM.Reset() // GeoM must be reset
+		mainCamera.Draw(spriteSheet, dio, screen)
+	}
+
+	// Draw camera crosshair
+	cx, cy := float32(w/2), float32(h/2)
+	vector.StrokeLine(screen, cx-100, cy, cx+100, cy, 1, color.White, true)
+	vector.StrokeLine(screen, cx, cy-100, cx, cy+100, 1, color.White, true)
+	// HUD
+	ebitenutil.DebugPrintAt(screen, fmt.Sprintf(Controls, colormEnabled), 10, 10)
+	ebitenutil.DebugPrintAt(screen, mainCamera.String(), 10, 250)
+}
+
+func (g *Game) Layout(width, height int) (int, int) {
+	w = float64(width)
+	h = float64(height)
+	return width, height
+}
+
+func main() {
+	mainCamera.SmoothType = scaff.CameraMovementDamp
+	img, _, err := image.Decode(bytes.NewReader(images.Gophers_jpg))
+	if err != nil {
+		log.Fatal(err)
+	}
+	spriteSheet = ebiten.NewImageFromImage(img)
+	ebiten.SetWindowSize(int(w), int(h))
+	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
+	if err := ebiten.RunGame(&Game{}); err != nil {
+		log.Fatal(err)
+	}
+}
