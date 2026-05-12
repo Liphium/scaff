@@ -27,25 +27,25 @@ func Clickable(create func(t *scaffui.Tracker, props *ClickableProps)) scaffui.N
 				ip.Child(child)
 			}
 
-			ip.OnDown(func(button int) bool {
-				pressed[button] = true
-				return true
-			})
-
-			ip.OnRelease(func(button int) bool {
-				wasPressed := pressed[button]
-				pressed[button] = false
-
-				if wasPressed {
-					if fn, ok := core.Props().onClick.Value(); ok {
-						return fn(button)
-					}
+			ip.OnDown(func(handled, inside bool, event scaffui.DownEvent) bool {
+				if inside {
+					pressed[event.Button] = true
 				}
-				return false
+				return inside
 			})
 
-			ip.OnReleaseOutside(func(button int) bool {
-				pressed[button] = false
+			ip.OnRelease(func(handled, inside bool, event scaffui.ReleaseEvent) bool {
+				wasPressed := pressed[event.Button]
+				pressed[event.Button] = false
+
+				// If the event was not handled before and the button was pressed before + released inside of this element, a click has been detected
+				if wasPressed && inside && !handled {
+					if fn, ok := core.Props().onClick.Value(); ok {
+						return fn(event.Button)
+					}
+					return true
+				}
+
 				return false
 			})
 		}))
