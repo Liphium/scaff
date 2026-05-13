@@ -16,7 +16,7 @@ func main() {
 
 	hovered := scaffui.NewSignal(false)
 
-	layer := scaffui.NewInterfaceLayer(basenode.Root(func(t *scaffui.Tracker, props *basenode.RootProps) {
+	layer := scaffui.NewInterfaceLayer(nil, basenode.Root(func(t *scaffui.Tracker, props *basenode.RootProps) {
 		props.Child(basenode.Align(func(t *scaffui.Tracker, props *basenode.AlignProps) {
 			props.Horizontal(basenode.HorizontalAlignmentCenter)
 			props.Vertical(basenode.VerticalAlignmentCenter)

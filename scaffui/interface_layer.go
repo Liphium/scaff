@@ -1,6 +1,8 @@
 package scaffui
 
 import (
+	"io/fs"
+
 	"github.com/Liphium/scaff"
 	"github.com/Liphium/scaff/smath"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -11,6 +13,7 @@ var _ scaff.UILayer = &InterfaceLayer{}
 
 type InterfaceLayer struct {
 	root     *MountedNode
+	assetsFS fs.FS
 	renderer *EbitenRenderer
 
 	prevCursorSet bool
@@ -18,9 +21,10 @@ type InterfaceLayer struct {
 	prevCursorY   int
 }
 
-func NewInterfaceLayer(builder NodeBuilder) *InterfaceLayer {
+func NewInterfaceLayer(assetsFS fs.FS, builder NodeBuilder) *InterfaceLayer {
 	return &InterfaceLayer{
-		root: NewMountedFromBuilder(builder),
+		assetsFS: assetsFS,
+		root:     NewMountedFromBuilder(builder),
 	}
 }
 
@@ -35,7 +39,7 @@ func (e *InterfaceLayer) Unload() {
 func (e *InterfaceLayer) Draw(c *scaff.LayerContext, screen *ebiten.Image) {
 	// Initialize the UI and stuff
 	if e.renderer == nil {
-		e.renderer = NewEbitenRenderer(ebiten.NewImage(c.Width, c.Height), true)
+		e.renderer = NewEbitenRendererWithFS(ebiten.NewImage(c.Width, c.Height), true, e.assetsFS)
 		e.root.Current().SetConstraints(Loose(c.Width, c.Height))
 		_, err := e.root.Current().Layout()
 		if err != nil {

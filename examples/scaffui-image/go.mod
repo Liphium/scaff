@@ -1,4 +1,4 @@
-module github.com/Liphium/scaff/examples/scaffui-sample
+module github.com/Liphium/scaff/examples/scaffui-image
 
 go 1.26.2
 

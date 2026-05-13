@@ -13,9 +13,6 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
-// TODO to make the renderer actually good:
-// - Cache the images created based on the path
-
 var _ Renderer = &EbitenRenderer{}
 
 // Create a new renderer using Ebitengine's image API (this uses the vector package)
