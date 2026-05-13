@@ -5,7 +5,7 @@ import (
 	"github.com/Liphium/scaff/smath"
 )
 
-func UseMultiNode[P any](id string, propsCreator func(t *Tracker, props *P), create func(core *MultiChildConstruct[P])) NodeBuilder {
+func UseMultiNode[P any](id string, propsCreator func(t *scaff.Tracker, props *P), create func(core *MultiChildConstruct[P])) NodeBuilder {
 	return func() Node {
 		node := newMultiChildCoreNode[P]()
 		node.id = id
@@ -26,7 +26,7 @@ type MultiChildConstruct[P any] struct {
 	node *MultiChildNode[P]
 }
 
-func (m *MultiChildConstruct[P]) Tracker() *Tracker {
+func (m *MultiChildConstruct[P]) Tracker() *scaff.Tracker {
 	return m.node.Tracker()
 }
 
@@ -131,7 +131,7 @@ func (m *MultiChildNode[P]) Layout() (Size, error) {
 	if m.onLayout != nil {
 		size, err := m.onLayout(m)
 		if err != nil {
-			return Size{}, NewError(m, err)
+			return Size{}, scaff.NewTracedError(m, err)
 		}
 		m.size = size
 		return size, nil
@@ -142,7 +142,7 @@ func (m *MultiChildNode[P]) Layout() (Size, error) {
 		child.Current().SetConstraints(m.constraints)
 		childSize, err := child.Current().Layout()
 		if err != nil {
-			return Size{}, NewError(m, err)
+			return Size{}, scaff.NewTracedError(m, err)
 		}
 
 		size.Width = max(size.Width, childSize.Width)
@@ -153,37 +153,36 @@ func (m *MultiChildNode[P]) Layout() (Size, error) {
 	return size, nil
 }
 
-func (m *MultiChildNode[P]) HandleEvent(c *scaff.LayerContext, event Event) *Error {
+func (m *MultiChildNode[P]) HandleEvent(c *scaff.LayerContext, event Event) *scaff.TracedError {
 	if m.onHandleEvent != nil {
 		if err := m.onHandleEvent(m, c, event); err != nil {
-			return NewError(m, err)
+			return scaff.NewTracedError(m, err)
 		}
 	}
 
 	for _, child := range m.tracker.Nodes() {
 		if err := child.Current().HandleEvent(c, event); err != nil {
-			return NewError(m, err)
+			return scaff.NewTracedError(m, err)
 		}
 	}
 
 	return nil
 }
 
-func (m *MultiChildNode[P]) Tracker() *Tracker {
+func (m *MultiChildNode[P]) Tracker() *scaff.Tracker {
 	return m.tracker.Tracker()
 }
 
-func (m *MultiChildNode[P]) Update(c *scaff.LayerContext) (bool, *Error) {
+func (m *MultiChildNode[P]) Update(c *scaff.LayerContext) (bool, *scaff.TracedError) {
 	if m.onUpdate != nil {
 		relayout, err := m.onUpdate(m, c)
 		if err != nil {
-			return false, NewError(m, err)
+			return false, scaff.NewTracedError(m, err)
 		}
 
 		childRelayout, updateErr := m.tracker.Update(c)
 		if updateErr != nil {
-			updateErr.add(m)
-			return false, updateErr
+			return false, scaff.NewTracedError(m, updateErr)
 		}
 
 		return relayout || childRelayout, nil

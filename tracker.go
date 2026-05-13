@@ -1,9 +1,14 @@
-package scaffui
+package scaff
 
 import (
 	"sync"
 	"sync/atomic"
 )
+
+type Tracking interface {
+	// Should return the tracker for the current Node
+	Tracker() *Tracker
+}
 
 var _ Tracking = &Tracker{}
 

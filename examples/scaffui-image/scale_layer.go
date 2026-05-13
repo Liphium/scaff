@@ -4,11 +4,10 @@ import (
 	"time"
 
 	"github.com/Liphium/scaff"
-	"github.com/Liphium/scaff/scaffui"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
-var scaleFactor = scaffui.NewSignal[float64](0)
+var scaleFactor = scaff.NewSignal[float64](0)
 
 var _ scaff.WorldLayer = (*scaleLayer)(nil)
 

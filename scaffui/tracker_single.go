@@ -4,20 +4,20 @@ import "github.com/Liphium/scaff"
 
 type SingleTracker struct {
 	current Node
-	tracker *Tracker
+	tracker *scaff.Tracker
 	node    *MountedNode
 }
 
 func NewSingleTracker(current Node) *SingleTracker {
 	return &SingleTracker{
 		current: current,
-		tracker: NewTracker(),
+		tracker: scaff.NewTracker(),
 		node:    nil,
 	}
 }
 
 // Get tracker used by SingleTracker. Should be returned as tracker for current Node.
-func (s *SingleTracker) Tracker() *Tracker {
+func (s *SingleTracker) Tracker() *scaff.Tracker {
 	return s.tracker
 }
 
@@ -42,7 +42,7 @@ func (s *SingleTracker) Node() (*MountedNode, bool) {
 	return s.node, s.node != nil
 }
 
-func (s *SingleTracker) Update(c *scaff.LayerContext) (relayout bool, err *Error) {
+func (s *SingleTracker) Update(c *scaff.LayerContext) (relayout bool, err *scaff.TracedError) {
 
 	// If there is no node, nothing to check
 	if s.node == nil {
@@ -59,7 +59,7 @@ func (s *SingleTracker) Update(c *scaff.LayerContext) (relayout bool, err *Error
 		currentSize := s.current.Size()
 		newSize, err := s.current.Layout()
 		if err != nil {
-			return false, NewError(s.current, err)
+			return false, scaff.NewTracedError(s.current, err)
 		}
 
 		if currentSize != newSize {

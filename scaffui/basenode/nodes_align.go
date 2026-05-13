@@ -3,6 +3,7 @@ package basenode
 import (
 	"errors"
 
+	"github.com/Liphium/scaff"
 	"github.com/Liphium/scaff/optional"
 	"github.com/Liphium/scaff/scaffui"
 	"github.com/Liphium/scaff/smath"
@@ -26,7 +27,7 @@ func (pp *AlignProps) Horizontal(alignment HorizontalAlignment) {
 	pp.horizontalAligment.SetValue(alignment)
 }
 
-func Align(create func(t *scaffui.Tracker, props *AlignProps)) scaffui.NodeBuilder {
+func Align(create func(t *scaff.Tracker, props *AlignProps)) scaffui.NodeBuilder {
 	return scaffui.UseSingleNode("align", create, func(core *scaffui.SingleChildConstruct[AlignProps]) {
 
 		// Pass the child to the core node

@@ -5,7 +5,7 @@ import (
 	"github.com/Liphium/scaff/smath"
 )
 
-func UseSingleNode[P any](id string, propsCreator func(t *Tracker, props *P), create func(core *SingleChildConstruct[P])) NodeBuilder {
+func UseSingleNode[P any](id string, propsCreator func(t *scaff.Tracker, props *P), create func(core *SingleChildConstruct[P])) NodeBuilder {
 	return func() Node {
 		node := newSingleChildCoreNode[P]()
 		node.id = id
@@ -26,7 +26,7 @@ type SingleChildConstruct[P any] struct {
 	node *SingleChildNode[P]
 }
 
-func (s *SingleChildConstruct[P]) Tracker() *Tracker {
+func (s *SingleChildConstruct[P]) Tracker() *scaff.Tracker {
 	return s.node.Tracker()
 }
 
@@ -141,7 +141,7 @@ func (s *SingleChildNode[P]) layout() (Size, error) {
 	if s.onLayout != nil {
 		size, err := s.onLayout(s)
 		if err != nil {
-			return size, NewError(s, err)
+			return size, scaff.NewTracedError(s, err)
 		}
 		s.size = size
 		return size, nil
@@ -154,7 +154,7 @@ func (s *SingleChildNode[P]) layout() (Size, error) {
 		child.Current().SetConstraints(s.constraints)
 		childSize, err := child.Current().Layout()
 		if err != nil {
-			return Size{}, NewError(s, err)
+			return Size{}, scaff.NewTracedError(s, err)
 		}
 
 		size.Width = max(size.Width, childSize.Width)
@@ -164,35 +164,34 @@ func (s *SingleChildNode[P]) layout() (Size, error) {
 	return size, nil
 }
 
-func (s *SingleChildNode[P]) HandleEvent(c *scaff.LayerContext, event Event) *Error {
+func (s *SingleChildNode[P]) HandleEvent(c *scaff.LayerContext, event Event) *scaff.TracedError {
 	if s.onHandleEvent != nil {
 		if err := s.onHandleEvent(s, c, event); err != nil {
-			return NewError(s, err)
+			return scaff.NewTracedError(s, err)
 		}
 	}
 
 	return s.HandleEventChild(c, event)
 }
 
-func (s *SingleChildNode[P]) Tracker() *Tracker {
+func (s *SingleChildNode[P]) Tracker() *scaff.Tracker {
 	return s.tracker.Tracker()
 }
 
-func (s *SingleChildNode[P]) Update(c *scaff.LayerContext) (bool, *Error) {
+func (s *SingleChildNode[P]) Update(c *scaff.LayerContext) (bool, *scaff.TracedError) {
 	relayout := false
 	var err error
 	if s.onUpdate != nil {
 		relayout, err = s.onUpdate(s, c)
 		if err != nil {
-			return false, NewError(s, err)
+			return false, scaff.NewTracedError(s, err)
 		}
 	}
 
 	// We should still update all the children after our own update
 	childRelayout, updateErr := s.tracker.Update(c)
 	if updateErr != nil {
-		updateErr.add(s)
-		return false, updateErr
+		return false, scaff.NewTracedError(s, updateErr)
 	}
 	return relayout || childRelayout, nil
 }
@@ -231,7 +230,7 @@ func (s *SingleChildNode[P]) LayoutChild(constraints Constraints) (Size, error) 
 	return child.Current().Layout()
 }
 
-func (s *SingleChildNode[P]) HandleEventChild(c *scaff.LayerContext, event Event) *Error {
+func (s *SingleChildNode[P]) HandleEventChild(c *scaff.LayerContext, event Event) *scaff.TracedError {
 	child, ok := s.tracker.Node()
 	if !ok {
 		return nil

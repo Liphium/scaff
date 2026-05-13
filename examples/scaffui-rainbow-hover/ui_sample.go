@@ -14,21 +14,21 @@ func main() {
 	ebiten.SetWindowSize(900, 600)
 	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
 
-	hovered := scaffui.NewSignal(false)
+	hovered := scaff.NewSignal(false)
 
-	layer := scaffui.NewInterfaceLayer(nil, basenode.Root(func(t *scaffui.Tracker, props *basenode.RootProps) {
-		props.Child(basenode.Align(func(t *scaffui.Tracker, props *basenode.AlignProps) {
+	layer := scaffui.NewInterfaceLayer(nil, basenode.Root(func(t *scaff.Tracker, props *basenode.RootProps) {
+		props.Child(basenode.Align(func(t *scaff.Tracker, props *basenode.AlignProps) {
 			props.Horizontal(basenode.HorizontalAlignmentCenter)
 			props.Vertical(basenode.VerticalAlignmentCenter)
 
-			props.Child(basenode.Flex(func(t *scaffui.Tracker, props *basenode.FlexProps) {
-				props.Child(basenode.Input(func(t *scaffui.Tracker, props *basenode.InputProps) {
+			props.Child(basenode.Flex(func(t *scaff.Tracker, props *basenode.FlexProps) {
+				props.Child(basenode.Input(func(t *scaff.Tracker, props *basenode.InputProps) {
 					props.OnMove(func(handled, inside bool, event scaffui.MoveEvent) bool {
 						hovered.Set(inside)
 						return false
 					})
 
-					props.Child(basenode.Rectangle(func(t *scaffui.Tracker, props *basenode.RectangleProps) {
+					props.Child(basenode.Rectangle(func(t *scaff.Tracker, props *basenode.RectangleProps) {
 						props.WantedConstraints(scaffui.Tight(100, 100))
 						props.BorderRadius(8)
 						if hovered.Track(t) {

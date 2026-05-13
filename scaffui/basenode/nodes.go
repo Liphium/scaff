@@ -1,3 +1,4 @@
+// This package provides very basic nodes that work with scaffui. These provide a good baseline for implementing more higher-level components like buttons or input fields.
 package basenode
 
 import (

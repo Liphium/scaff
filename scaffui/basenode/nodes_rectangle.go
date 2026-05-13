@@ -3,6 +3,7 @@ package basenode
 import (
 	"image/color"
 
+	"github.com/Liphium/scaff"
 	"github.com/Liphium/scaff/optional"
 	"github.com/Liphium/scaff/scaffui"
 	"github.com/Liphium/scaff/scaffui/uispec"
@@ -37,7 +38,7 @@ func (rp *RectangleProps) BorderRadius(borderRadius int) {
 	rp.borderRadius.SetValue(borderRadius)
 }
 
-func Rectangle(create func(t *scaffui.Tracker, props *RectangleProps)) scaffui.NodeBuilder {
+func Rectangle(create func(t *scaff.Tracker, props *RectangleProps)) scaffui.NodeBuilder {
 	return scaffui.UseSingleNode("rectangle", create, func(core *scaffui.SingleChildConstruct[RectangleProps]) {
 
 		// Pass the child to the single node (when there)

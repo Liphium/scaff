@@ -1,6 +1,7 @@
 package basenode
 
 import (
+	"github.com/Liphium/scaff"
 	"github.com/Liphium/scaff/optional"
 	"github.com/Liphium/scaff/scaffui"
 	"github.com/Liphium/scaff/scaffui/uispec"
@@ -20,7 +21,7 @@ func (cp *ConstrainedProps) Child(builder scaffui.NodeBuilder) {
 	cp.child.SetValue(builder)
 }
 
-func Constrained(create func(t *scaffui.Tracker, props *ConstrainedProps)) scaffui.NodeBuilder {
+func Constrained(create func(t *scaff.Tracker, props *ConstrainedProps)) scaffui.NodeBuilder {
 	return scaffui.UseSingleNode("constrained", create, func(core *scaffui.SingleChildConstruct[ConstrainedProps]) {
 
 		// Pass the child to the core node

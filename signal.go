@@ -1,4 +1,4 @@
-package scaffui
+package scaff
 
 import (
 	"maps"

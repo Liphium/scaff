@@ -45,7 +45,7 @@ func (o *InputProps) OnScroll(fn func(handled, inside bool, event scaffui.Scroll
 }
 
 // Create a new input node exposing a better interface to handle all kinds of input events coming down from scaffui.
-func Input(create func(t *scaffui.Tracker, props *InputProps)) scaffui.NodeBuilder {
+func Input(create func(t *scaff.Tracker, props *InputProps)) scaffui.NodeBuilder {
 	return scaffui.UseSingleNode("input", create, func(core *scaffui.SingleChildConstruct[InputProps]) {
 
 		lastPosition := smath.Vec{X: 0, Y: 0}

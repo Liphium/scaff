@@ -1,6 +1,7 @@
 package basenode
 
 import (
+	"github.com/Liphium/scaff"
 	"github.com/Liphium/scaff/optional"
 	"github.com/Liphium/scaff/scaffui"
 )
@@ -18,11 +19,11 @@ func (cp *ClickableProps) OnClick(fn func(button int) bool) {
 	cp.onClick.SetValue(fn)
 }
 
-func Clickable(create func(t *scaffui.Tracker, props *ClickableProps)) scaffui.NodeBuilder {
+func Clickable(create func(t *scaff.Tracker, props *ClickableProps)) scaffui.NodeBuilder {
 	return scaffui.UseSingleNode("clickable", create, func(core *scaffui.SingleChildConstruct[ClickableProps]) {
 		pressed := make(map[int]bool)
 
-		core.Child(Input(func(t *scaffui.Tracker, ip *InputProps) {
+		core.Child(Input(func(t *scaff.Tracker, ip *InputProps) {
 			if child, ok := core.Props().child.Value(); ok {
 				ip.Child(child)
 			}

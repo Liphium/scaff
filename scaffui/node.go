@@ -5,16 +5,9 @@ import (
 	"github.com/Liphium/scaff/smath"
 )
 
-// Layout algorithm basic idea (copy what Flutter is doing kinda)
-//
-// 1. Constraints pass: Constraints go down
-// 2. Size pass: Sizes go up
-
 type Node interface {
-	Tracking
-
-	// Should return the name or something of the node (doesn't need to be unique, is used in the error path especially)
-	ID() string
+	scaff.Tracking
+	scaff.Identifiable
 
 	// Should return the current size of the node
 	Size() Size
@@ -35,18 +28,13 @@ type Node interface {
 	Unload()
 
 	// Called on every tick, use to handle state updates, etc.
-	Update(c *scaff.LayerContext) (sizeChange bool, err *Error)
+	Update(c *scaff.LayerContext) (sizeChange bool, err *scaff.TracedError)
 
 	// Draw the thing onto the screen at a specified position (next step is getting this to work)
 	Draw(position smath.Vec, renderer Renderer)
 
 	// Handle events from cgui (you do not have to handle any, but should always push them along to children at least)
-	HandleEvent(c *scaff.LayerContext, event Event) *Error
-}
-
-type Tracking interface {
-	// Should return the tracker for the current Node
-	Tracker() *Tracker
+	HandleEvent(c *scaff.LayerContext, event Event) *scaff.TracedError
 }
 
 type WantsConstraints interface {

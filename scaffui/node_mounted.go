@@ -31,7 +31,7 @@ func (w *MountedNode) Unload() {
 }
 
 // Should be called for an update from the parent, the boolean indicates whether a re-layout should be done (forwards errors from the update of the child)
-func (w *MountedNode) Update(c *scaff.LayerContext) (bool, *Error) {
+func (w *MountedNode) Update(c *scaff.LayerContext) (bool, *scaff.TracedError) {
 	relayout, err := w.current.Update(c)
 	if err != nil {
 		return false, err

@@ -1,6 +1,7 @@
 package basenode
 
 import (
+	"github.com/Liphium/scaff"
 	"github.com/Liphium/scaff/optional"
 	"github.com/Liphium/scaff/scaffui"
 	"github.com/Liphium/scaff/scaffui/uispec"
@@ -20,7 +21,7 @@ func (pp *PaddingProps) Child(builder scaffui.NodeBuilder) {
 	pp.child.SetValue(builder)
 }
 
-func Padding(create func(t *scaffui.Tracker, props *PaddingProps)) scaffui.NodeBuilder {
+func Padding(create func(t *scaff.Tracker, props *PaddingProps)) scaffui.NodeBuilder {
 	return scaffui.UseSingleNode("padding", create, func(core *scaffui.SingleChildConstruct[PaddingProps]) {
 
 		// Pass the child to the core node

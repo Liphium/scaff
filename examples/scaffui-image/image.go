@@ -20,15 +20,15 @@ func main() {
 	ebiten.SetWindowSize(900, 600)
 	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
 
-	scaling := scaffui.NewSignal(false)
+	scaling := scaff.NewSignal(false)
 
-	layer := scaffui.NewInterfaceLayer(assetsFS, basenode.Root(func(t *scaffui.Tracker, props *basenode.RootProps) {
-		props.Child(basenode.Stack(func(t *scaffui.Tracker, props *basenode.StackProps) {
-			props.Child(basenode.Align(func(t *scaffui.Tracker, props *basenode.AlignProps) {
+	layer := scaffui.NewInterfaceLayer(assetsFS, basenode.Root(func(t *scaff.Tracker, props *basenode.RootProps) {
+		props.Child(basenode.Stack(func(t *scaff.Tracker, props *basenode.StackProps) {
+			props.Child(basenode.Align(func(t *scaff.Tracker, props *basenode.AlignProps) {
 				props.Horizontal(basenode.HorizontalAlignmentCenter)
 				props.Vertical(basenode.VerticalAlignmentCenter)
 
-				props.Child(basenode.Image(func(t *scaffui.Tracker, props *basenode.ImageProps) {
+				props.Child(basenode.Image(func(t *scaff.Tracker, props *basenode.ImageProps) {
 					props.Path("assets/icon.png")
 					if scaling.Track(t) {
 						props.Constraints(scaffui.Tight(int(150*scaleFactor.Track(t)), int(150*scaleFactor.Track(t))))
@@ -39,17 +39,17 @@ func main() {
 				}))
 			}))
 
-			props.Child(basenode.Align(func(t *scaffui.Tracker, props *basenode.AlignProps) {
+			props.Child(basenode.Align(func(t *scaff.Tracker, props *basenode.AlignProps) {
 				props.Horizontal(basenode.HorizontalAlignmentCenter)
 				props.Vertical(basenode.VerticalAlignmentBottom)
 
-				props.Child(basenode.Clickable(func(t *scaffui.Tracker, props *basenode.ClickableProps) {
+				props.Child(basenode.Clickable(func(t *scaff.Tracker, props *basenode.ClickableProps) {
 					props.OnClick(func(button int) bool {
 						scaling.Set(!scaling.Value())
 						return true
 					})
 
-					props.Child(basenode.Rectangle(func(t *scaffui.Tracker, props *basenode.RectangleProps) {
+					props.Child(basenode.Rectangle(func(t *scaff.Tracker, props *basenode.RectangleProps) {
 						props.WantedConstraints(scaffui.Tight(100, 20))
 						if scaling.Track(t) {
 							props.FillColor(color.RGBA{0, 255, 0, 255})

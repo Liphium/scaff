@@ -6,11 +6,10 @@ import (
 	"time"
 
 	"github.com/Liphium/scaff"
-	"github.com/Liphium/scaff/scaffui"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
-var rainbow = scaffui.NewSignal(color.RGBA{255, 255, 255, 255})
+var rainbow = scaff.NewSignal(color.RGBA{255, 255, 255, 255})
 
 var _ scaff.WorldLayer = (*rainbowLayer)(nil)
 

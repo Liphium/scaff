@@ -3,6 +3,7 @@ package basenode
 import (
 	"image/color"
 
+	"github.com/Liphium/scaff"
 	"github.com/Liphium/scaff/optional"
 	"github.com/Liphium/scaff/scaffui"
 	"github.com/Liphium/scaff/scaffui/uispec"
@@ -31,7 +32,7 @@ func (i *ImageProps) Constraints(constraints scaffui.Constraints) {
 	i.constraints.SetValue(constraints)
 }
 
-func Image(create func(t *scaffui.Tracker, props *ImageProps)) scaffui.NodeBuilder {
+func Image(create func(t *scaff.Tracker, props *ImageProps)) scaffui.NodeBuilder {
 	return scaffui.UseSingleNode("image", create, func(core *scaffui.SingleChildConstruct[ImageProps]) {
 		core.WantedConstraints(func(node *scaffui.SingleChildNode[ImageProps], parent scaffui.Constraints) scaffui.Constraints {
 			return node.Props().constraints.Or(scaffui.Unconstrained())

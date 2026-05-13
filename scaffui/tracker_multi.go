@@ -4,19 +4,19 @@ import "github.com/Liphium/scaff"
 
 type MultiTracker struct {
 	current Node
-	tracker *Tracker
+	tracker *scaff.Tracker
 	nodes   []*MountedNode
 }
 
 func NewMultiTracker(current Node) *MultiTracker {
 	return &MultiTracker{
 		current: current,
-		tracker: NewTracker(),
+		tracker: scaff.NewTracker(),
 	}
 }
 
 // Get the tracker used by the MultiTracker. Should be returned as the tracker for the current Node.
-func (mt *MultiTracker) Tracker() *Tracker {
+func (mt *MultiTracker) Tracker() *scaff.Tracker {
 	return mt.tracker
 }
 
@@ -40,7 +40,7 @@ func (m *MultiTracker) Load() {
 	}
 }
 
-func (m *MultiTracker) Update(c *scaff.LayerContext) (relayout bool, err *Error) {
+func (m *MultiTracker) Update(c *scaff.LayerContext) (relayout bool, err *scaff.TracedError) {
 	changed := false
 	for _, node := range m.nodes {
 		change, err := node.Update(c)
@@ -57,7 +57,7 @@ func (m *MultiTracker) Update(c *scaff.LayerContext) (relayout bool, err *Error)
 		currentSize := m.current.Size()
 		newSize, err := m.current.Layout()
 		if err != nil {
-			return false, NewError(m.current, err)
+			return false, scaff.NewTracedError(m.current, err)
 		}
 
 		// When size changed, indicate relayout to parent

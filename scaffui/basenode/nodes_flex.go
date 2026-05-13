@@ -1,6 +1,7 @@
 package basenode
 
 import (
+	"github.com/Liphium/scaff"
 	"github.com/Liphium/scaff/optional"
 	"github.com/Liphium/scaff/scaffui"
 	"github.com/Liphium/scaff/smath"
@@ -34,7 +35,7 @@ func (fp *FlexProps) Direction(direction LayoutDirection) {
 	fp.direction.SetValue(direction)
 }
 
-func Flex(create func(t *scaffui.Tracker, props *FlexProps)) scaffui.NodeBuilder {
+func Flex(create func(t *scaff.Tracker, props *FlexProps)) scaffui.NodeBuilder {
 	return scaffui.UseMultiNode("flex", create, func(core *scaffui.MultiChildConstruct[FlexProps]) {
 
 		// Pass all of the children to the multi child node
