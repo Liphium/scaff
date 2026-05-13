@@ -44,14 +44,11 @@ func (e *InterfaceLayer) Draw(c *scaff.LayerContext, screen *ebiten.Image) {
 	}
 
 	x, y := ebiten.CursorPosition()
-	if !e.prevCursorSet {
-		e.prevCursorX = x
-		e.prevCursorY = y
-		e.prevCursorSet = true
-	}
 
 	deltaX := x - e.prevCursorX
 	deltaY := y - e.prevCursorY
+	e.prevCursorX = x
+	e.prevCursorY = y
 
 	if deltaX != 0 || deltaY != 0 {
 		e.root.Current().HandleEvent(c, MoveEvent{
@@ -133,9 +130,6 @@ func (e *InterfaceLayer) Update(c *scaff.LayerContext) error {
 				ScrollY: scrollY,
 			})
 		}
-
-		e.prevCursorX = x
-		e.prevCursorY = y
 	}
 	return nil
 }
