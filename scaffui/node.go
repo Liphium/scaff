@@ -2,12 +2,10 @@ package scaffui
 
 import (
 	"github.com/Liphium/scaff"
-	"github.com/Liphium/scaff/smath"
 )
 
 type Node interface {
-	scaff.Tracking
-	scaff.Identifiable
+	scaff.Node
 
 	// Should return the current size of the node
 	Size() Size
@@ -20,21 +18,6 @@ type Node interface {
 
 	// Should layout the node and return the size within the (previously set) constraints
 	Layout() (Size, error)
-
-	// Called when the Node is initialized in the tree
-	Load()
-
-	// Called when the Node is removed from the tree
-	Unload()
-
-	// Called on every tick, use to handle state updates, etc.
-	Update(c *scaff.LayerContext) (sizeChange bool, err *scaff.TracedError)
-
-	// Draw the thing onto the screen at a specified position (next step is getting this to work)
-	Draw(position smath.Vec, renderer Renderer)
-
-	// Handle events from cgui (you do not have to handle any, but should always push them along to children at least)
-	HandleEvent(c *scaff.LayerContext, event Event) *scaff.TracedError
 }
 
 type WantsConstraints interface {

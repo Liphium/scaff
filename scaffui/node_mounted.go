@@ -1,7 +1,5 @@
 package scaffui
 
-import "github.com/Liphium/scaff"
-
 func NewMountedFromBuilder(builder NodeBuilder) *MountedNode {
 	return &MountedNode{
 		current:   builder(),
@@ -31,7 +29,7 @@ func (w *MountedNode) Unload() {
 }
 
 // Should be called for an update from the parent, the boolean indicates whether a re-layout should be done (forwards errors from the update of the child)
-func (w *MountedNode) Update(c *scaff.LayerContext) (bool, *scaff.TracedError) {
+func (w *MountedNode) Update(c *LayerContext) (bool, *TracedError) {
 	relayout, err := w.current.Update(c)
 	if err != nil {
 		return false, err

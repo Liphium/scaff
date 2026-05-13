@@ -1,12 +1,11 @@
-package scaffui
+package scaff
 
 import (
-	"github.com/Liphium/scaff"
 	"github.com/Liphium/scaff/smath"
 )
 
 type Event interface {
-	EventID() scaff.EventId
+	EventID() EventId
 }
 
 type PositionalEvent interface {
@@ -16,10 +15,10 @@ type PositionalEvent interface {
 
 // All types of events in cgui (don't work yet)
 const (
-	EventIdDown    scaff.EventId = "cgui::down"
-	EventIdRelease scaff.EventId = "cgui::release"
-	EventIdMove    scaff.EventId = "cgui::move"
-	EventIdScroll  scaff.EventId = "cgui::scroll"
+	EventIdDown    EventId = "scaff::down"
+	EventIdRelease EventId = "scaff::release"
+	EventIdMove    EventId = "scaff::move"
+	EventIdScroll  EventId = "scaff::scroll"
 )
 
 const (
@@ -35,7 +34,7 @@ type MoveEvent struct {
 	DeltaY int
 }
 
-func (me MoveEvent) EventID() scaff.EventId {
+func (me MoveEvent) EventID() EventId {
 	return EventIdMove
 }
 
@@ -51,7 +50,7 @@ type ScrollEvent struct {
 	ScrollY float64
 }
 
-func (se ScrollEvent) EventID() scaff.EventId {
+func (se ScrollEvent) EventID() EventId {
 	return EventIdScroll
 }
 
@@ -66,7 +65,7 @@ type DownEvent struct {
 	Button int
 }
 
-func (ce DownEvent) EventID() scaff.EventId {
+func (ce DownEvent) EventID() EventId {
 	return EventIdDown
 }
 
@@ -81,7 +80,7 @@ type ReleaseEvent struct {
 	Button int
 }
 
-func (ce ReleaseEvent) EventID() scaff.EventId {
+func (ce ReleaseEvent) EventID() EventId {
 	return EventIdRelease
 }
 
