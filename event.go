@@ -1,8 +1,13 @@
 package scaff
 
 import (
+	"fmt"
+
 	"github.com/Liphium/scaff/smath"
+	"github.com/hajimehoshi/ebiten/v2"
 )
+
+type EventId string
 
 type Event interface {
 	EventID() EventId
@@ -15,17 +20,19 @@ type PositionalEvent interface {
 
 // All types of events in cgui (don't work yet)
 const (
-	EventIdDown    EventId = "scaff::down"
-	EventIdRelease EventId = "scaff::release"
-	EventIdMove    EventId = "scaff::move"
-	EventIdScroll  EventId = "scaff::scroll"
+	EventIdMove   EventId = "scaff::move"
+	EventIdScroll EventId = "scaff::scroll"
 )
 
-const (
-	LeftClick   = 0
-	RightClick  = 1
-	MiddleClick = 2
-)
+// This event id has the button in it to make sure it can be marked as handled separately from events for other buttons
+func EventIdDown(button ebiten.MouseButton) EventId {
+	return EventId(fmt.Sprintf("scaff::down::%d", button))
+}
+
+// This event id has the button in it to make sure it can be marked as handled separately from events for other buttons
+func EventIdRelease(button ebiten.MouseButton) EventId {
+	return EventId(fmt.Sprintf("scaff::release::%d", button))
+}
 
 type MoveEvent struct {
 	X      int
@@ -62,28 +69,28 @@ func (se ScrollEvent) Position() smath.Vec {
 type DownEvent struct {
 	X      int
 	Y      int
-	Button int
+	Button ebiten.MouseButton
 }
 
-func (ce DownEvent) EventID() EventId {
-	return EventIdDown
+func (de DownEvent) EventID() EventId {
+	return EventIdDown(de.Button)
 }
 
-func (ce DownEvent) Position() smath.Vec {
-	return smath.Vec{X: float64(ce.X), Y: float64(ce.Y)}
+func (de DownEvent) Position() smath.Vec {
+	return smath.Vec{X: float64(de.X), Y: float64(de.Y)}
 }
 
 // Emitted when a user releases a mouse button.
 type ReleaseEvent struct {
 	X      int
 	Y      int
-	Button int
+	Button ebiten.MouseButton
 }
 
-func (ce ReleaseEvent) EventID() EventId {
-	return EventIdRelease
+func (re ReleaseEvent) EventID() EventId {
+	return EventIdRelease(re.Button)
 }
 
-func (ce ReleaseEvent) Position() smath.Vec {
-	return smath.Vec{X: float64(ce.X), Y: float64(ce.Y)}
+func (re ReleaseEvent) Position() smath.Vec {
+	return smath.Vec{X: float64(re.X), Y: float64(re.Y)}
 }

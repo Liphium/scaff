@@ -9,8 +9,6 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
-var _ scaff.UILayer = &InterfaceLayer{}
-
 type InterfaceLayer struct {
 	root     *MountedNode
 	assetsFS fs.FS
@@ -36,7 +34,7 @@ func (e *InterfaceLayer) Unload() {
 	e.root.Unload()
 }
 
-func (e *InterfaceLayer) Draw(c *scaff.LayerContext, screen *ebiten.Image) {
+func (e *InterfaceLayer) Draw(c *Context, screen *ebiten.Image) {
 	// Initialize the UI and stuff
 	if e.renderer == nil {
 		e.renderer = NewEbitenRendererWithFS(ebiten.NewImage(c.Width, c.Height), true, e.assetsFS)
