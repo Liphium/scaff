@@ -7,18 +7,18 @@ import (
 // UseNode creates a node without a child. You can use this if you simply want to create a node that does something very custom outside of scaff. This node still gives you access to all all functions on the Node interface through the props, but you can choose which ones you actually want to implement.
 //
 // If you want to have one or multiple children for this node, CreateSingleNode or CreateMultiNode might be a better fit for your use case.
-func UseNode[P any](id string, create func(t *Tracker, props *SingleChildProps[P])) NodeBuilder {
+func UseNode[P any](id string, create func(props *SingleChildProps[P])) NodeBuilder {
+	node := &SingleChildNode[P]{
+		id:      id,
+		tracker: NewTracker(),
+	}
+
+	// Create the actual node
+	singleProps := &SingleChildProps[P]{}
+	create(singleProps)
+	node.singleProps = singleProps
+
 	return func() Node {
-		node := &SingleChildNode[P]{
-			id:      id,
-			tracker: NewTracker(),
-		}
-
-		// Create the actual node
-		singleProps := &SingleChildProps[P]{}
-		create(node.tracker, singleProps)
-		node.singleProps = singleProps
-
 		return node
 	}
 }
@@ -87,7 +87,7 @@ func (s *SingleChildProps[P]) Draw(fn func(node *SingleChildNode[P], c *Context,
 	s.onDraw = fn
 }
 
-var _ Node = &SingleChildNode[any]{}
+var _ Node = &MultiChildNode[any]{}
 
 type SingleChildNode[P any] struct {
 	parent  Node
@@ -109,10 +109,10 @@ func (s *SingleChildNode[P]) Props() P {
 }
 
 func (s *SingleChildNode[P]) Load(parent Node) {
+	s.parent = parent
 
 	// If there is a builder, actually build and load the child
 	if s.builder != nil {
-		s.current = s.builder()
 		s.current.Load(s)
 	}
 
@@ -153,10 +153,10 @@ func (s *SingleChildNode[P]) Update(c *Context) *TracedError {
 	}
 
 	// If dirty, rebuild
-	if s.tracker.Changed() {
+	if s.current.Tracker().Changed() {
 		s.current.Unload()
 		s.current = s.builder()
-		s.current.Load(s.parent)
+		s.current.Load(s)
 	}
 
 	// Forward the update to the child

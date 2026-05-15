@@ -29,10 +29,15 @@ func NewGame() *Game {
 	}
 }
 
+// This is not needed as we have LayoutF below, we want to make sure the scale factor is taken into account properly.
 func (g *Game) Layout(width, height int) (int, int) {
-	g.width = width
-	g.height = height
-	return width, height
+	return -1, -1
+}
+
+// This makes sure the monitor's resolution is actually properly respected (Source: https://github.com/tinne26/kage-desk/blob/main/docs/tutorials/ebitengine_game.md#layout)
+func (g *Game) LayoutF(logicWinWidth, logicWinHeight float64) (float64, float64) {
+	scale := ebiten.Monitor().DeviceScaleFactor()
+	return logicWinWidth * scale, logicWinHeight * scale
 }
 
 func (g *Game) Update() error {

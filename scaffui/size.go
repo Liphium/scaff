@@ -3,8 +3,8 @@ package scaffui
 import "github.com/Liphium/scaff/smath"
 
 type Size struct {
-	Width  int
-	Height int
+	Width  float64
+	Height float64
 }
 
 // SubtractPadding shrinks size by horizontal and vertical padding totals.
@@ -24,6 +24,6 @@ func (s Size) AddPadding(padding Padding) Size {
 }
 
 func IsWithin(position smath.Vec, size Size, toCheck smath.Vec) bool {
-	return toCheck.X >= position.X && toCheck.X <= position.X+float64(size.Width) &&
-		toCheck.Y >= position.Y && toCheck.Y <= position.Y+float64(size.Height)
+	return toCheck.X >= position.X && toCheck.X <= position.X+size.Width &&
+		toCheck.Y >= position.Y && toCheck.Y <= position.Y+size.Height
 }

@@ -6,25 +6,25 @@ import (
 )
 
 // Infinite represents an unbounded maximum size.
-const Infinite = -1
+const Infinite float64 = -1
 
 type Constraints struct {
-	MinWidth  int
-	MaxWidth  int
-	MinHeight int
-	MaxHeight int
+	MinWidth  float64
+	MaxWidth  float64
+	MinHeight float64
+	MaxHeight float64
 }
 
-func (c Constraints) RealMaxWidth() int {
+func (c Constraints) RealMaxWidth() float64 {
 	if c.MaxWidth == Infinite {
-		return math.MaxInt32
+		return math.MaxFloat64
 	}
 	return c.MaxWidth
 }
 
-func (c Constraints) RealMaxHeight() int {
+func (c Constraints) RealMaxHeight() float64 {
 	if c.MaxHeight == Infinite {
-		return math.MaxInt32
+		return math.MaxFloat64
 	}
 	return c.MaxHeight
 }
@@ -33,11 +33,11 @@ func (c Constraints) IsTight() bool {
 	return c.MinHeight == c.MaxHeight && c.MinWidth == c.MaxWidth
 }
 
-func (c Constraints) DoesWidthFit(w int) bool {
+func (c Constraints) DoesWidthFit(w float64) bool {
 	return c.MinWidth <= w && w <= c.RealMaxWidth()
 }
 
-func (c Constraints) DoesHeightFit(h int) bool {
+func (c Constraints) DoesHeightFit(h float64) bool {
 	return c.MinHeight <= h && h <= c.RealMaxHeight()
 }
 
@@ -48,7 +48,7 @@ func (c Constraints) Fits(c2 Constraints) bool {
 }
 
 // Find the min size of constraints.
-func (c Constraints) Min(horizontal bool) int {
+func (c Constraints) Min(horizontal bool) float64 {
 	if horizontal {
 		return c.MinWidth
 	}
@@ -56,7 +56,7 @@ func (c Constraints) Min(horizontal bool) int {
 }
 
 // Find the max size of constraints.
-func (c Constraints) Max(horizontal bool) int {
+func (c Constraints) Max(horizontal bool) float64 {
 	if horizontal {
 		return c.MaxWidth
 	}
@@ -64,7 +64,7 @@ func (c Constraints) Max(horizontal bool) int {
 }
 
 // Find the max size of constraints.
-func (c Constraints) RealMax(horizontal bool) int {
+func (c Constraints) RealMax(horizontal bool) float64 {
 	if horizontal {
 		return c.RealMaxWidth()
 	}
@@ -112,7 +112,7 @@ func (c Constraints) TakeMaxWithin(c2 Constraints) (Size, error) {
 }
 
 // NewConstraints creates normalized width and height constraints.
-func NewConstraints(minWidth, maxWidth, minHeight, maxHeight int) Constraints {
+func NewConstraints(minWidth, maxWidth, minHeight, maxHeight float64) Constraints {
 	minWidth, maxWidth = normalizeConstraintRange(minWidth, maxWidth)
 	minHeight, maxHeight = normalizeConstraintRange(minHeight, maxHeight)
 
@@ -130,14 +130,14 @@ func Unconstrained() Constraints {
 }
 
 // Tight returns constraints with an exact width and height.
-func Tight(width, height int) Constraints {
+func Tight(width, height float64) Constraints {
 	return NewConstraints(width, width, height, height)
 }
 
 // TightFor returns tight constraints for provided axes.
-func TightFor(width, height int) Constraints {
-	minWidth, maxWidth := 0, Infinite
-	minHeight, maxHeight := 0, Infinite
+func TightFor(width, height float64) Constraints {
+	minWidth, maxWidth := 0.0, Infinite
+	minHeight, maxHeight := 0.0, Infinite
 
 	if width != Infinite {
 		minWidth, maxWidth = width, width
@@ -151,9 +151,9 @@ func TightFor(width, height int) Constraints {
 }
 
 // TightForFinite returns tight constraints only for finite axes.
-func TightForFinite(width, height int) Constraints {
-	minWidth, maxWidth := 0, Infinite
-	minHeight, maxHeight := 0, Infinite
+func TightForFinite(width, height float64) Constraints {
+	minWidth, maxWidth := 0.0, Infinite
+	minHeight, maxHeight := 0.0, Infinite
 
 	if width >= 0 {
 		minWidth, maxWidth = width, width
@@ -167,14 +167,14 @@ func TightForFinite(width, height int) Constraints {
 }
 
 // Loose returns constraints that are only bounded by maxima.
-func Loose(maxWidth, maxHeight int) Constraints {
+func Loose(maxWidth, maxHeight float64) Constraints {
 	return NewConstraints(0, maxWidth, 0, maxHeight)
 }
 
 // Expand returns constraints that fill specified finite axes.
-func Expand(width, height int) Constraints {
-	minWidth, maxWidth := 0, Infinite
-	minHeight, maxHeight := 0, Infinite
+func Expand(width, height float64) Constraints {
+	minWidth, maxWidth := 0.0, Infinite
+	minHeight, maxHeight := 0.0, Infinite
 
 	if width != Infinite {
 		minWidth, maxWidth = width, width
@@ -187,7 +187,7 @@ func Expand(width, height int) Constraints {
 	return NewConstraints(minWidth, maxWidth, minHeight, maxHeight)
 }
 
-func normalizeConstraintRange(min, max int) (int, int) {
+func normalizeConstraintRange(min, max float64) (float64, float64) {
 	if min == Infinite {
 		min = 0
 	}
