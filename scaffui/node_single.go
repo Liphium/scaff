@@ -14,7 +14,7 @@ import (
 // propsCreator should be the function passed in by users of your node (as in it should probably be an argument of the function creating your node).
 //
 // create is the function actually specifying your node. You can overwrite all of the functions of the node interface there, with some exceptions that we implement for you.
-func CreateSingleNode[P scaff.ChildProps](id string, propsCreator func(t *scaff.Tracker, props *P), create func(core *SingleChildProps[P])) NodeBuilder {
+func CreateSingleNode[P scaff.ChildProps[NodeBuilder]](id string, propsCreator func(t *scaff.Tracker, props *P), create func(core *SingleChildProps[P])) NodeBuilder {
 	node := &SingleChildNode[P]{
 		id:          id,
 		singleProps: &SingleChildProps[P]{},
@@ -36,14 +36,14 @@ func CreateSingleNode[P scaff.ChildProps](id string, propsCreator func(t *scaff.
 type SingleChildProps[P any] struct {
 	onLoad              func(node *SingleChildNode[P])
 	onUnload            func(node *SingleChildNode[P])
-	onWantedConstraints func(node *SingleChildNode[P], parent Constraints) Constraints
+	onWantedConstraints func(node *SingleChildNode[P], parent scath.Constraints) scath.Constraints
 	onLayout            func(node *SingleChildNode[P]) (scath.Vec, error)
 	onHandleEvent       func(node *SingleChildNode[P], c *scaff.Context, event scaff.Event) error
 	onUpdate            func(node *SingleChildNode[P], c *scaff.Context) (bool, error)
 	onDraw              func(node *SingleChildNode[P], position scath.Vec, renderer paint.Painter)
 }
 
-func (s *SingleChildProps[P]) WantedConstraints(fn func(node *SingleChildNode[P], parent Constraints) Constraints) {
+func (s *SingleChildProps[P]) WantedConstraints(fn func(node *SingleChildNode[P], parent scath.Constraints) scath.Constraints) {
 	s.onWantedConstraints = fn
 }
 
@@ -77,7 +77,7 @@ var _ WantsConstraints = &SingleChildNode[any]{}
 type SingleChildNode[P any] struct {
 	tracker     *SingleTracker
 	size        scath.Vec
-	constraints Constraints
+	constraints scath.Constraints
 
 	id          string
 	props       P
@@ -104,17 +104,17 @@ func (s *SingleChildNode[P]) Size() scath.Vec {
 	return s.size
 }
 
-func (s *SingleChildNode[P]) Constraints() Constraints {
+func (s *SingleChildNode[P]) Constraints() scath.Constraints {
 	return s.constraints
 }
 
-func (s *SingleChildNode[P]) SetConstraints(c Constraints) {
+func (s *SingleChildNode[P]) SetConstraints(c scath.Constraints) {
 	s.constraints = c
 }
 
-func (s *SingleChildNode[P]) WantedConstraints(parent Constraints) Constraints {
+func (s *SingleChildNode[P]) WantedConstraints(parent scath.Constraints) scath.Constraints {
 	if s.singleProps.onWantedConstraints == nil {
-		return Unconstrained()
+		return scath.Unconstrained()
 	}
 
 	return s.singleProps.onWantedConstraints(s, parent)
@@ -216,7 +216,7 @@ func (s *SingleChildNode[P]) Child() (*MountedNode, bool) {
 	return s.tracker.Node()
 }
 
-func (s *SingleChildNode[P]) LayoutChild(constraints Constraints) (scath.Vec, error) {
+func (s *SingleChildNode[P]) LayoutChild(constraints scath.Constraints) (scath.Vec, error) {
 	child, ok := s.tracker.Node()
 	if !ok {
 		return scath.Vec{}, nil

@@ -35,6 +35,6 @@ type Node interface {
 }
 
 // An interface for props of a node that has children. This helps nodes like single child not rebuild as often.
-type ChildProps interface {
-	GetBuilders() []NodeBuilder
+type ChildProps[B any] interface {
+	GetBuilders() []B
 }

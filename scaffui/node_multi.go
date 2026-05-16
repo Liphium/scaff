@@ -15,7 +15,7 @@ import (
 // propsCreator should be the function passed in by users of your node (as in it should probably be an argument of the function creating your node).
 //
 // create is the function actually specifying your node. You can overwrite all of the functions of the node interface there, with some exceptions that we implement for you.
-func CreateMultiNode[P scaff.ChildProps](id string, propsCreator func(t *scaff.Tracker, props *P), create func(core *MultiChildProps[P])) NodeBuilder {
+func CreateMultiNode[P scaff.ChildProps[NodeBuilder]](id string, propsCreator func(t *scaff.Tracker, props *P), create func(core *MultiChildProps[P])) NodeBuilder {
 	node := &MultiChildNode[P]{
 		id:         id,
 		multiProps: &MultiChildProps[P]{},
@@ -37,14 +37,14 @@ func CreateMultiNode[P scaff.ChildProps](id string, propsCreator func(t *scaff.T
 type MultiChildProps[P any] struct {
 	onLoad              func(node *MultiChildNode[P])
 	onUnload            func(node *MultiChildNode[P])
-	onWantedConstraints func(node *MultiChildNode[P], parent Constraints) Constraints
+	onWantedConstraints func(node *MultiChildNode[P], parent scath.Constraints) scath.Constraints
 	onLayout            func(node *MultiChildNode[P]) (scath.Vec, error)
 	onHandleEvent       func(node *MultiChildNode[P], c *scaff.Context, event scaff.Event) error
 	onUpdate            func(node *MultiChildNode[P], c *scaff.Context) (bool, error)
 	onDraw              func(node *MultiChildNode[P], position scath.Vec, renderer paint.Painter)
 }
 
-func (m *MultiChildProps[P]) WantedConstraints(fn func(node *MultiChildNode[P], parent Constraints) Constraints) {
+func (m *MultiChildProps[P]) WantedConstraints(fn func(node *MultiChildNode[P], parent scath.Constraints) scath.Constraints) {
 	m.onWantedConstraints = fn
 }
 
@@ -78,7 +78,7 @@ var _ WantsConstraints = &MultiChildNode[any]{}
 type MultiChildNode[P any] struct {
 	tracker     *MultiTracker
 	size        scath.Vec
-	constraints Constraints
+	constraints scath.Constraints
 
 	id         string
 	props      P
@@ -105,17 +105,17 @@ func (m *MultiChildNode[P]) Size() scath.Vec {
 	return m.size
 }
 
-func (m *MultiChildNode[P]) Constraints() Constraints {
+func (m *MultiChildNode[P]) Constraints() scath.Constraints {
 	return m.constraints
 }
 
-func (m *MultiChildNode[P]) SetConstraints(c Constraints) {
+func (m *MultiChildNode[P]) SetConstraints(c scath.Constraints) {
 	m.constraints = c
 }
 
-func (m *MultiChildNode[P]) WantedConstraints(parent Constraints) Constraints {
+func (m *MultiChildNode[P]) WantedConstraints(parent scath.Constraints) scath.Constraints {
 	if m.multiProps.onWantedConstraints == nil {
-		return Unconstrained()
+		return scath.Unconstrained()
 	}
 
 	return m.multiProps.onWantedConstraints(m, parent)

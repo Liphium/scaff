@@ -2,7 +2,7 @@ package scaffui
 
 import (
 	"github.com/Liphium/scaff/paint"
-	
+
 	"github.com/Liphium/scaff"
 	"github.com/Liphium/scaff/scath"
 )
@@ -51,10 +51,10 @@ type Node interface {
 	Size() scath.Vec
 
 	// Should return the current constraints (that were last set)
-	Constraints() Constraints
+	Constraints() scath.Constraints
 
 	// Set the constraints of the node (should be used for layouting)
-	SetConstraints(c Constraints)
+	SetConstraints(c scath.Constraints)
 
 	// Should layout the node and return the size within the (previously set) constraints
 	Layout() (scath.Vec, error)
@@ -71,12 +71,12 @@ type Node interface {
 
 type WantsConstraints interface {
 	// Should return the constraints wanted by this Node
-	WantedConstraints(parent Constraints) Constraints
+	WantedConstraints(parent scath.Constraints) scath.Constraints
 }
 
 // Get the constraints (default is unconstrained)
-func WantedConstraints(node Node, parent Constraints) Constraints {
-	wanted := Unconstrained()
+func WantedConstraints(node Node, parent scath.Constraints) scath.Constraints {
+	wanted := scath.Unconstrained()
 	if constrained, ok := node.(WantsConstraints); ok {
 		wanted = constrained.WantedConstraints(parent)
 	}

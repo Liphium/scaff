@@ -9,7 +9,7 @@ import "github.com/hajimehoshi/ebiten/v2"
 // propsCreator should be the function passed in by users of your node (as in it should probably be an argument of the function creating your node).
 //
 // create is the function actually specifying your node. You can overwrite all of the functions of the node interface there, with some exceptions that we implement for you.
-func CreateMultiNode[P ChildProps](id string, propsCreator func(t *Tracker, props *P), create func(props *MultiChildProps[P])) NodeBuilder {
+func CreateMultiNode[P ChildProps[NodeBuilder]](id string, propsCreator func(t *Tracker, props *P), create func(props *MultiChildProps[P])) NodeBuilder {
 	node := &MultiChildNode[P]{
 		id:         id,
 		multiProps: &MultiChildProps[P]{},

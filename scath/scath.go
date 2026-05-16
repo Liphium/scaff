@@ -5,4 +5,6 @@
 // Padding is for general padding in UI and more.
 //
 // Timeframe provides functions to deal with, well, time frames. Various lerp functions are available as well to help with animations and transitions.
+//
+// Constraints are normal rectangle constraints with lots of utility.
 package scath

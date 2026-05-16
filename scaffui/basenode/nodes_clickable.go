@@ -20,6 +20,13 @@ func (cp *ClickableProps) OnClick(fn func(button ebiten.MouseButton) bool) {
 	cp.onClick.SetValue(fn)
 }
 
+func (cp ClickableProps) GetBuilders() []scaffui.NodeBuilder {
+	if builder, ok := cp.child.Value(); ok {
+		return []scaffui.NodeBuilder{builder}
+	}
+	return nil
+}
+
 func Clickable(create func(t *scaff.Tracker, props *ClickableProps)) scaffui.NodeBuilder {
 	return scaffui.CreateSingleNode("clickable", create, func(core *scaffui.SingleChildProps[ClickableProps]) {
 		pressed := make(map[ebiten.MouseButton]bool)

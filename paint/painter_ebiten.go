@@ -1,13 +1,10 @@
 package paint
 
 import (
-	"image"
 	_ "image/gif"
 	_ "image/jpeg"
 	_ "image/png"
-	"io/fs"
 	"math"
-	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
@@ -15,29 +12,19 @@ import (
 
 var _ Painter = &EbitenPainter{}
 
-// Create a new renderer using Ebitengine's image API (this uses the vector package)
-func NewEbitenPainter(screen *ebiten.Image, antialias bool) *EbitenPainter {
-	return NewEbitenPainterWithFS(screen, antialias, nil)
-}
-
 // Create a new renderer using Ebitengine's image API and a custom filesystem for assets.
-func NewEbitenPainterWithFS(screen *ebiten.Image, antialias bool, assetsFS fs.FS) *EbitenPainter {
-	if assetsFS == nil {
-		assetsFS = os.DirFS(".")
-	}
-
+func NewEbitenPainter(screen *ebiten.Image, antialias bool, assets *AssetManager) *EbitenPainter {
 	return &EbitenPainter{
 		screen:    screen,
 		antialias: antialias,
-		assetsFS:  assetsFS,
+		assets:    assets,
 	}
 }
 
 type EbitenPainter struct {
 	screen    *ebiten.Image
 	antialias bool
-	images    map[string]*ebiten.Image
-	assetsFS  fs.FS
+	assets    *AssetManager
 }
 
 func (er *EbitenPainter) Screen() *ebiten.Image {
@@ -49,10 +36,6 @@ func (er *EbitenPainter) Clear() {
 }
 
 func (er *EbitenPainter) Paint(command RenderCommand) {
-	if er.images == nil {
-		er.images = make(map[string]*ebiten.Image)
-	}
-
 	switch c := command.(type) {
 	case Rectangle:
 		er.drawRectangle(c)
@@ -111,15 +94,10 @@ func (er *EbitenPainter) drawImage(command Image) {
 		return
 	}
 
-	img := er.images[command.Path]
-	if img == nil {
-		loaded, err := er.loadEbitenImage(command.Path)
-		if err != nil {
-			log.Error("failed to load image", "path", command.Path, "err", err)
-			return
-		}
-		img = loaded
-		er.images[command.Path] = img
+	img, err := er.assets.GetImage(command.Path)
+	if err != nil {
+		log.Error("failed to load image", "path", command.Path, "err", err)
+		return
 	}
 
 	bounds := img.Bounds()
@@ -173,19 +151,4 @@ func roundedRectPath(x, y, width, height float64, borderRadius int) *vector.Path
 	path.Close()
 
 	return path
-}
-
-func (er *EbitenPainter) loadEbitenImage(path string) (*ebiten.Image, error) {
-	f, err := er.assetsFS.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-
-	img, _, err := image.Decode(f)
-	if err != nil {
-		return nil, err
-	}
-
-	return ebiten.NewImageFromImage(img), nil
 }

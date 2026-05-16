@@ -1,7 +1,6 @@
-package scaffui
+package scath
 
 import (
-	"github.com/Liphium/scaff/scath"
 	"errors"
 	"math"
 )
@@ -10,8 +9,8 @@ import (
 const Infinite float64 = -1
 
 type Constraints struct {
-	MinX  float64
-	MaxX  float64
+	MinX float64
+	MaxX float64
 	MinY float64
 	MaxY float64
 }
@@ -73,7 +72,7 @@ func (c Constraints) RealMax(horizontal bool) float64 {
 }
 
 // SubtractPadding shrinks constraints by horizontal and vertical padding totals.
-func (c Constraints) SubtractPadding(padding scath.Padding) Constraints {
+func (c Constraints) SubtractPadding(padding Padding) Constraints {
 	horizontal := padding.Left + padding.Right
 	vertical := padding.Top + padding.Bottom
 
@@ -99,14 +98,14 @@ func (c Constraints) SubtractPadding(padding scath.Padding) Constraints {
 	)
 }
 
-func (c Constraints) TakeMaxWithin(c2 Constraints) (scath.Vec, error) {
-	size := scath.Vec{
-		X:  min(c.RealMaxX(), c2.RealMaxX()),
+func (c Constraints) TakeMaxWithin(c2 Constraints) (Vec, error) {
+	size := Vec{
+		X: min(c.RealMaxX(), c2.RealMaxX()),
 		Y: min(c.RealMaxY(), c2.RealMaxY()),
 	}
 
 	if !c.DoesXFit(size.X) || !c2.DoesXFit(size.X) || !c.DoesYFit(size.Y) || !c2.DoesYFit(size.Y) {
-		return scath.Vec{}, errors.New("constraints could not fit")
+		return Vec{}, errors.New("constraints could not fit")
 	}
 
 	return size, nil
@@ -118,8 +117,8 @@ func NewConstraints(minX, maxX, minY, maxY float64) Constraints {
 	minY, maxY = normalizeConstraintRange(minY, maxY)
 
 	return Constraints{
-		MinX:  minX,
-		MaxX:  maxX,
+		MinX: minX,
+		MaxX: maxX,
 		MinY: minY,
 		MaxY: maxY,
 	}

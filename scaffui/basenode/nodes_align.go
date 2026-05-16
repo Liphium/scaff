@@ -1,15 +1,16 @@
 package basenode
 
 import (
-	"github.com/Liphium/scaff/paint"
-
-	"errors"
-
 	"github.com/Liphium/scaff"
 	"github.com/Liphium/scaff/optional"
+	"github.com/Liphium/scaff/paint"
 	"github.com/Liphium/scaff/scaffui"
 	"github.com/Liphium/scaff/scath"
+
+	"errors"
 )
+
+var _ scaff.ChildProps[scaffui.NodeBuilder] = &AlignProps{}
 
 type AlignProps struct {
 	child              optional.O[scaffui.NodeBuilder]
@@ -29,13 +30,15 @@ func (pp *AlignProps) Horizontal(alignment HorizontalAlignment) {
 	pp.horizontalAligment.SetValue(alignment)
 }
 
+func (ap AlignProps) GetBuilders() []scaffui.NodeBuilder {
+	if builder, ok := ap.child.Value(); ok {
+		return []scaffui.NodeBuilder{builder}
+	}
+	return nil
+}
+
 func Align(create func(t *scaff.Tracker, props *AlignProps)) scaffui.NodeBuilder {
 	return scaffui.CreateSingleNode("align", create, func(core *scaffui.SingleChildProps[AlignProps]) {
-
-		// Pass the child to the core node
-		if child, ok := core.Props().child.Value(); ok {
-			core.Child(child)
-		}
 
 		// In Layout, we take the biggest we can get in any axis where alignment is given
 		core.Layout(func(node *scaffui.SingleChildNode[AlignProps]) (scath.Vec, error) {
@@ -48,7 +51,7 @@ func Align(create func(t *scaff.Tracker, props *AlignProps)) scaffui.NodeBuilder
 			}
 
 			if node.Props().horizontalAligment.HasValue() {
-				if node.Constraints().MaxX == scaffui.Infinite {
+				if node.Constraints().MaxX == scath.Infinite {
 					return size, errors.New("infinite width for horizontal alignment")
 				}
 
@@ -56,7 +59,7 @@ func Align(create func(t *scaff.Tracker, props *AlignProps)) scaffui.NodeBuilder
 			}
 
 			if node.Props().verticalAlignment.HasValue() {
-				if node.Constraints().MaxY == scaffui.Infinite {
+				if node.Constraints().MaxY == scath.Infinite {
 					return size, errors.New("infinite height for vertical alignment")
 				}
 

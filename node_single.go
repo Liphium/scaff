@@ -27,7 +27,7 @@ func UseNode[P any](id string, create func(props *SingleChildProps[P])) NodeBuil
 // propsCreator should be the function passed in by users of your node (as in it should probably be an argument of the function creating your node).
 //
 // create is the function actually specifying your node. You can overwrite all of the functions of the node interface there, with some exceptions that we implement for you.
-func CreateSingleNode[P ChildProps](id string, propsCreator func(t *Tracker, props *P), create func(props *SingleChildProps[P])) NodeBuilder {
+func CreateSingleNode[P ChildProps[NodeBuilder]](id string, propsCreator func(t *Tracker, props *P), create func(props *SingleChildProps[P])) NodeBuilder {
 
 	// Create the actual node
 	node := &SingleChildNode[P]{
@@ -45,12 +45,14 @@ func CreateSingleNode[P ChildProps](id string, propsCreator func(t *Tracker, pro
 		node.props = props
 
 		// Build the children, in case there are any
-		if len(props.GetBuilders()) > 1 {
-			log.Error("node can not have multiple children", "id", id, "children", len(props.GetBuilders()))
-		}
-		if len(props.GetBuilders()) == 1 {
-			node.builder = props.GetBuilders()[0]
-			node.current = node.builder()
+		if builders := props.GetBuilders(); builders != nil {
+			if len(builders) > 1 {
+				log.Error("node can not have multiple children", "id", id, "children", len(props.GetBuilders()))
+			}
+			if len(builders) == 1 {
+				node.builder = props.GetBuilders()[0]
+				node.current = node.builder()
+			}
 		}
 
 		return node
