@@ -1,6 +1,6 @@
-# smath
+# scath
 
-smath stands for custom math. It's here because we may want ot reuse this in some other stuff. May also be published as a separate package at some point, depending on how much we end up putting into here.
+scath stands for custom math. It's here because we may want ot reuse this in some other stuff. May also be published as a separate package at some point, depending on how much we end up putting into here.
 
 ## What this does
 

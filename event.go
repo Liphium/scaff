@@ -3,7 +3,7 @@ package scaff
 import (
 	"fmt"
 
-	"github.com/Liphium/scaff/smath"
+	"github.com/Liphium/scaff/scath"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -15,7 +15,7 @@ type Event interface {
 
 type PositionalEvent interface {
 	Event
-	Position() smath.Vec
+	Position() scath.Vec
 }
 
 // All types of events in cgui (don't work yet)
@@ -45,8 +45,8 @@ func (me MoveEvent) EventID() EventId {
 	return EventIdMove
 }
 
-func (me MoveEvent) Position() smath.Vec {
-	return smath.Vec{X: float64(me.X), Y: float64(me.Y)}
+func (me MoveEvent) Position() scath.Vec {
+	return scath.Vec{X: float64(me.X), Y: float64(me.Y)}
 }
 
 // Emitted when there is a new scroll delta. This can be either the mouse, a touchpad or potentially also swiping around on mobile.
@@ -61,8 +61,8 @@ func (se ScrollEvent) EventID() EventId {
 	return EventIdScroll
 }
 
-func (se ScrollEvent) Position() smath.Vec {
-	return smath.Vec{X: float64(se.X), Y: float64(se.Y)}
+func (se ScrollEvent) Position() scath.Vec {
+	return scath.Vec{X: float64(se.X), Y: float64(se.Y)}
 }
 
 // Emitted when the user presses a mouse button down.
@@ -76,8 +76,8 @@ func (de DownEvent) EventID() EventId {
 	return EventIdDown(de.Button)
 }
 
-func (de DownEvent) Position() smath.Vec {
-	return smath.Vec{X: float64(de.X), Y: float64(de.Y)}
+func (de DownEvent) Position() scath.Vec {
+	return scath.Vec{X: float64(de.X), Y: float64(de.Y)}
 }
 
 // Emitted when a user releases a mouse button.
@@ -91,6 +91,6 @@ func (re ReleaseEvent) EventID() EventId {
 	return EventIdRelease(re.Button)
 }
 
-func (re ReleaseEvent) Position() smath.Vec {
-	return smath.Vec{X: float64(re.X), Y: float64(re.Y)}
+func (re ReleaseEvent) Position() scath.Vec {
+	return scath.Vec{X: float64(re.X), Y: float64(re.Y)}
 }

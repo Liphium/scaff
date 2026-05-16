@@ -16,7 +16,7 @@ func (sp *StackProps) Child(builder scaffui.NodeBuilder) {
 func Stack(create func(t *scaff.Tracker, props *StackProps)) scaffui.NodeBuilder {
 
 	// The default behavior of multi-node covers all of the things we want the stack to do, so no work for us :D
-	return scaffui.UseMultiNode("stack", create, func(core *scaffui.MultiChildConstruct[StackProps]) {
+	return scaffui.CreateMultiNode("stack", create, func(core *scaffui.MultiChildConstruct[StackProps]) {
 		for _, child := range core.Props().children {
 			core.Child(child)
 		}

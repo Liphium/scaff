@@ -1,16 +1,16 @@
-package smath_test
+package scath_test
 
 import (
 	"testing"
 	"time"
 
-	"github.com/Liphium/scaff/smath"
+	"github.com/Liphium/scaff/scath"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestLerpFloat(t *testing.T) {
 	now := time.Now()
-	f := smath.NewTimeframe(now, 1000)
+	f := scath.NewTimeframe(now, 1000)
 
 	t.Run("normal values work", func(t *testing.T) {
 		assert.Equal(t, 0.0, f.LerpFloat(now, 0.0, 1.0))
@@ -26,7 +26,7 @@ func TestLerpFloat(t *testing.T) {
 
 func TestLerpInt(t *testing.T) {
 	now := time.Now()
-	f := smath.NewTimeframe(now, 1000)
+	f := scath.NewTimeframe(now, 1000)
 
 	t.Run("normal values work", func(t *testing.T) {
 		assert.Equal(t, 1, f.LerpInt(now, 1, 100))
@@ -42,7 +42,7 @@ func TestLerpInt(t *testing.T) {
 
 func TestLerpUint(t *testing.T) {
 	now := time.Now()
-	f := smath.NewTimeframe(now, 1000)
+	f := scath.NewTimeframe(now, 1000)
 
 	t.Run("normal values work", func(t *testing.T) {
 		assert.Equal(t, uint(1), f.LerpUint(now, uint(1), uint(100)))
@@ -58,7 +58,7 @@ func TestLerpUint(t *testing.T) {
 
 func TestLerpTypewriter(t *testing.T) {
 	now := time.Now()
-	f := smath.NewTimeframe(now, 1000)
+	f := scath.NewTimeframe(now, 1000)
 
 	t.Run("normal values work", func(t *testing.T) {
 		assert.Equal(t, "", f.LerpTypewriter(now, "ab"))
@@ -74,7 +74,7 @@ func TestLerpTypewriter(t *testing.T) {
 
 func TestLerpTypewriterBetween(t *testing.T) {
 	now := time.Now()
-	f := smath.NewTimeframe(now, 1000)
+	f := scath.NewTimeframe(now, 1000)
 
 	t.Run("normal values work", func(t *testing.T) {
 		assert.Equal(t, "a", f.LerpTypewriterBetween(now, "a", "b"))

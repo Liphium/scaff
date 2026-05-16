@@ -1,11 +1,13 @@
 package basenode
 
 import (
+	"github.com/Liphium/scaff/paint"
+
 	"github.com/Liphium/scaff"
 	"github.com/Liphium/scaff/optional"
 	"github.com/Liphium/scaff/scaffui"
 	"github.com/Liphium/scaff/scaffui/uispec"
-	"github.com/Liphium/scaff/smath"
+	"github.com/Liphium/scaff/scath"
 )
 
 type ConstrainedProps struct {
@@ -22,18 +24,18 @@ func (cp *ConstrainedProps) Child(builder scaffui.NodeBuilder) {
 }
 
 func Constrained(create func(t *scaff.Tracker, props *ConstrainedProps)) scaffui.NodeBuilder {
-	return scaffui.UseSingleNode("constrained", create, func(core *scaffui.SingleChildConstruct[ConstrainedProps]) {
+	return scaffui.CreateSingleNode("constrained", create, func(core *scaffui.SingleChildProps[ConstrainedProps]) {
 
 		// Pass the child to the core node
 		if child, ok := core.Props().child.Value(); ok {
 			core.Child(child)
 		}
 
-		core.Layout(func(node *scaffui.SingleChildNode[ConstrainedProps]) (scaffui.Size, error) {
+		core.Layout(func(node *scaffui.SingleChildNode[ConstrainedProps]) (scath.Vec, error) {
 			spec := uispec.SingleChildBoxSpec{
-				Parent:  node.Constraints(),
-				Wanted:  node.Props().constraints,
-				Padding: scaffui.Pad(0),
+				Parent:        node.Constraints(),
+				Wanted:        node.Props().constraints,
+				scath.Padding: scaffui.Pad(0),
 			}
 
 			if child, ok := node.Child(); ok {
@@ -42,7 +44,7 @@ func Constrained(create func(t *scaff.Tracker, props *ConstrainedProps)) scaffui
 			return spec.LayoutWithoutChild()
 		})
 
-		core.Draw(func(node *scaffui.SingleChildNode[ConstrainedProps], position smath.Vec, renderer scaffui.Renderer) {
+		core.Draw(func(node *scaffui.SingleChildNode[ConstrainedProps], position scath.Vec, renderer paint.Painter) {
 			node.DrawChild(position, renderer)
 		})
 	})

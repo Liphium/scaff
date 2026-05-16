@@ -12,7 +12,7 @@ var _ scaff.Scene = &TestScene{}
 
 type TestScene struct {
 	ID             string
-	OnUpdate       func(c scaff.SceneContext) error
+	OnUpdate       func(c *scaff.Context) error
 	OnLoad         func()
 	OnUnload       func()
 	TransitionFunc func(in bool) scaff.TransitionProperties
@@ -22,11 +22,11 @@ func (s *TestScene) GetId() string {
 	return s.ID
 }
 
-func (s *TestScene) Update(c scaff.SceneContext) error {
+func (s *TestScene) Update(c *scaff.Context) error {
 	return s.OnUpdate(c)
 }
 
-func (s *TestScene) Draw(c scaff.SceneContext, screen *ebiten.Image) {}
+func (s *TestScene) Draw(c *scaff.Context, screen *ebiten.Image) {}
 
 func (s *TestScene) Load() {
 	if s.OnLoad != nil {
@@ -49,7 +49,7 @@ func (s *TestScene) Transition(in bool) scaff.TransitionProperties {
 func createMockScene(id string, updates *[]string, loads *[]string, unloads *[]string) *TestScene {
 	return &TestScene{
 		ID: id,
-		OnUpdate: func(c scaff.SceneContext) error {
+		OnUpdate: func(c *scaff.Context) error {
 			if updates != nil {
 				*updates = append(*updates, id)
 			}

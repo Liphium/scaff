@@ -1,10 +1,12 @@
 package basenode
 
 import (
+	"github.com/Liphium/scaff/paint"
+
 	"github.com/Liphium/scaff"
 	"github.com/Liphium/scaff/optional"
 	"github.com/Liphium/scaff/scaffui"
-	"github.com/Liphium/scaff/smath"
+	"github.com/Liphium/scaff/scath"
 )
 
 // Props for creating a new Input node. All of the listeners should return wether or not the event was handled, meaning no other UI components should handle the event.
@@ -46,9 +48,9 @@ func (o *InputProps) OnScroll(fn func(handled, inside bool, event scaffui.Scroll
 
 // Create a new input node exposing a better interface to handle all kinds of input events coming down from scaffui.
 func Input(create func(t *scaff.Tracker, props *InputProps)) scaffui.NodeBuilder {
-	return scaffui.UseSingleNode("input", create, func(core *scaffui.SingleChildConstruct[InputProps]) {
+	return scaffui.CreateSingleNode("input", create, func(core *scaffui.SingleChildProps[InputProps]) {
 
-		lastPosition := smath.Vec{X: 0, Y: 0}
+		lastPosition := scath.Vec{X: 0, Y: 0}
 
 		if child, ok := core.Props().child.Value(); ok {
 			core.Child(child)
@@ -95,7 +97,7 @@ func Input(create func(t *scaff.Tracker, props *InputProps)) scaffui.NodeBuilder
 			return nil
 		})
 
-		core.Draw(func(node *scaffui.SingleChildNode[InputProps], position smath.Vec, renderer scaffui.Renderer) {
+		core.Draw(func(node *scaffui.SingleChildNode[InputProps], position scath.Vec, renderer paint.Painter) {
 			lastPosition = position
 			node.DrawChild(position, renderer)
 		})

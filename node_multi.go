@@ -11,13 +11,10 @@ import "github.com/hajimehoshi/ebiten/v2"
 // create is the function actually specifying your node. You can overwrite all of the functions of the node interface there, with some exceptions that we implement for you.
 func CreateMultiNode[P ChildProps](id string, propsCreator func(t *Tracker, props *P), create func(props *MultiChildProps[P])) NodeBuilder {
 	node := &MultiChildNode[P]{
-		id: id,
+		id:         id,
+		multiProps: &MultiChildProps[P]{},
 	}
-
-	// Create the actual node
-	multiProps := &MultiChildProps[P]{}
-	create(multiProps)
-	node.coreProps = multiProps
+	create(node.multiProps)
 
 	return func() Node {
 		node.tracker = NewTracker()
@@ -74,9 +71,9 @@ type MultiChildNode[P any] struct {
 	builders []NodeBuilder
 	tracker  *Tracker
 
-	id        string
-	props     P
-	coreProps *MultiChildProps[P]
+	id         string
+	props      P
+	multiProps *MultiChildProps[P]
 }
 
 func (s *MultiChildNode[P]) ID() string {
@@ -95,16 +92,16 @@ func (s *MultiChildNode[P]) Load(parent Node) {
 		child.Load(s)
 	}
 
-	if s.coreProps.onLoad != nil {
-		s.coreProps.onLoad(s, parent)
+	if s.multiProps.onLoad != nil {
+		s.multiProps.onLoad(s, parent)
 	}
 }
 
 func (s *MultiChildNode[P]) HandleEvent(c *Context, event Event) *TracedError {
 
 	// First handle event on this node
-	if s.coreProps.onHandleEvent != nil {
-		if err := s.coreProps.onHandleEvent(s, c, event); err != nil {
+	if s.multiProps.onHandleEvent != nil {
+		if err := s.multiProps.onHandleEvent(s, c, event); err != nil {
 			return NewTracedError(s, err)
 		}
 	}
@@ -120,9 +117,16 @@ func (s *MultiChildNode[P]) Tracker() *Tracker {
 func (s *MultiChildNode[P]) Update(c *Context) *TracedError {
 
 	// First call the update handler on the props for this node
-	if s.coreProps.onUpdate != nil {
-		if err := s.coreProps.onUpdate(s, c); err != nil {
+	if s.multiProps.onUpdate != nil {
+		if err := s.multiProps.onUpdate(s, c); err != nil {
 			return NewTracedError(s, err)
+		}
+	}
+
+	// Forward the update to the children
+	for _, child := range s.children {
+		if err := child.Update(c); err != nil {
+			return err
 		}
 	}
 
@@ -135,19 +139,12 @@ func (s *MultiChildNode[P]) Update(c *Context) *TracedError {
 		}
 	}
 
-	// Forward the update to the children
-	for _, child := range s.children {
-		if err := child.Update(c); err != nil {
-			return err
-		}
-	}
-
 	return nil
 }
 
 func (s *MultiChildNode[P]) Unload() {
-	if s.coreProps.onUnload != nil {
-		s.coreProps.onUnload(s)
+	if s.multiProps.onUnload != nil {
+		s.multiProps.onUnload(s)
 	}
 
 	// Unload the children properly
@@ -160,8 +157,8 @@ func (s *MultiChildNode[P]) Unload() {
 }
 
 func (s *MultiChildNode[P]) Draw(c *Context, image *ebiten.Image) {
-	if s.coreProps.onDraw != nil {
-		s.coreProps.onDraw(s, c, image)
+	if s.multiProps.onDraw != nil {
+		s.multiProps.onDraw(s, c, image)
 	} else {
 
 		// Default implementation: just draw children

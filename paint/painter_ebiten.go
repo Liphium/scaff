@@ -1,4 +1,4 @@
-package scaffui
+package paint
 
 import (
 	"image"
@@ -13,79 +13,79 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
-var _ Renderer = &EbitenRenderer{}
+var _ Painter = &EbitenPainter{}
 
 // Create a new renderer using Ebitengine's image API (this uses the vector package)
-func NewEbitenRenderer(screen *ebiten.Image, antialias bool) *EbitenRenderer {
-	return NewEbitenRendererWithFS(screen, antialias, nil)
+func NewEbitenPainter(screen *ebiten.Image, antialias bool) *EbitenPainter {
+	return NewEbitenPainterWithFS(screen, antialias, nil)
 }
 
 // Create a new renderer using Ebitengine's image API and a custom filesystem for assets.
-func NewEbitenRendererWithFS(screen *ebiten.Image, antialias bool, assetsFS fs.FS) *EbitenRenderer {
+func NewEbitenPainterWithFS(screen *ebiten.Image, antialias bool, assetsFS fs.FS) *EbitenPainter {
 	if assetsFS == nil {
 		assetsFS = os.DirFS(".")
 	}
 
-	return &EbitenRenderer{
+	return &EbitenPainter{
 		screen:    screen,
 		antialias: antialias,
 		assetsFS:  assetsFS,
 	}
 }
 
-type EbitenRenderer struct {
+type EbitenPainter struct {
 	screen    *ebiten.Image
 	antialias bool
 	images    map[string]*ebiten.Image
 	assetsFS  fs.FS
 }
 
-func (er *EbitenRenderer) Screen() *ebiten.Image {
+func (er *EbitenPainter) Screen() *ebiten.Image {
 	return er.screen
 }
 
-func (er *EbitenRenderer) Clear() {
+func (er *EbitenPainter) Clear() {
 	er.screen.Clear()
 }
 
-func (er *EbitenRenderer) DrawOne(command RenderCommand) {
+func (er *EbitenPainter) Paint(command RenderCommand) {
 	if er.images == nil {
 		er.images = make(map[string]*ebiten.Image)
 	}
 
 	switch c := command.(type) {
-	case RectangleCommand:
+	case Rectangle:
 		er.drawRectangle(c)
-	case RectangleStrokeCommand:
+	case RectangleStroke:
 		er.drawRectangleStroke(c)
-	case ImageCommand:
+	case Image:
 		er.drawImage(c)
-	case TextCommand:
+	case Text:
 		log.Warn("text command not implemented in ebiten renderer yet")
 	default:
 		log.Warn("unknown render command", "id", command.ID())
 	}
 }
 
-func (er *EbitenRenderer) Draw(commands []RenderCommand) {
+func (er *EbitenPainter) PaintMulti(commands []RenderCommand) {
 	for _, command := range commands {
-		er.DrawOne(command)
+		er.Paint(command)
 	}
 }
 
-func (er *EbitenRenderer) drawRectangle(command RectangleCommand) {
-	if command.Size.Width <= 0 || command.Size.Height <= 0 {
+func (er *EbitenPainter) drawRectangle(command Rectangle) {
+	if command.Size.X <= 0 || command.Size.Y <= 0 {
 		return
 	}
 
-	path := roundedRectPath(command.Position.X, command.Position.Y, float64(command.Size.Width), float64(command.Size.Height), command.BorderRadius)
+	path := roundedRectPath(command.Position.X, command.Position.Y, command.Size.X, command.Size.Y, command.BorderRadius)
 	drawOptions := &vector.DrawPathOptions{AntiAlias: er.antialias}
 	drawOptions.ColorScale.ScaleWithColor(command.FillColor)
 	vector.FillPath(er.screen, path, nil, drawOptions)
 }
 
-func (er *EbitenRenderer) drawRectangleStroke(command RectangleStrokeCommand) {
-	if command.Size.Width <= 0 || command.Size.Height <= 0 {
+func (er *EbitenPainter) drawRectangleStroke(command RectangleStroke) {
+	if command.Size.X <= 0 || command.Size.Y <= 0 {
 		return
 	}
 
@@ -94,7 +94,7 @@ func (er *EbitenRenderer) drawRectangleStroke(command RectangleStrokeCommand) {
 		thickness = 1
 	}
 
-	path := roundedRectPath(command.Position.X, command.Position.Y, float64(command.Size.Width), float64(command.Size.Height), command.BorderRadius)
+	path := roundedRectPath(command.Position.X, command.Position.Y, command.Size.X, command.Size.Y, command.BorderRadius)
 
 	strokeOptions := &vector.StrokeOptions{
 		Width:    float32(thickness),
@@ -106,8 +106,8 @@ func (er *EbitenRenderer) drawRectangleStroke(command RectangleStrokeCommand) {
 	vector.StrokePath(er.screen, path, strokeOptions, drawOptions)
 }
 
-func (er *EbitenRenderer) drawImage(command ImageCommand) {
-	if command.Size.Width <= 0 || command.Size.Height <= 0 {
+func (er *EbitenPainter) drawImage(command Image) {
+	if command.Size.X <= 0 || command.Size.Y <= 0 {
 		return
 	}
 
@@ -130,7 +130,7 @@ func (er *EbitenRenderer) drawImage(command ImageCommand) {
 
 	opts := &ebiten.DrawImageOptions{}
 	opts.Filter = command.FilterMode
-	opts.GeoM.Scale(float64(command.Size.Width)/float64(w), float64(command.Size.Height)/float64(h))
+	opts.GeoM.Scale(command.Size.X/float64(w), command.Size.Y/float64(h))
 	opts.GeoM.Translate(command.Position.X, command.Position.Y)
 	er.screen.DrawImage(img, opts)
 }
@@ -175,7 +175,7 @@ func roundedRectPath(x, y, width, height float64, borderRadius int) *vector.Path
 	return path
 }
 
-func (er *EbitenRenderer) loadEbitenImage(path string) (*ebiten.Image, error) {
+func (er *EbitenPainter) loadEbitenImage(path string) (*ebiten.Image, error) {
 	f, err := er.assetsFS.Open(path)
 	if err != nil {
 		return nil, err

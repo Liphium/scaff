@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/Liphium/scaff/optional"
-	"github.com/Liphium/scaff/smath"
+	"github.com/Liphium/scaff/scath"
 )
 
 // Type check to make sure State confirms to TransitionCapable
@@ -111,14 +111,14 @@ func (sm *StateMachine[O, S]) Update(now time.Time, obj O) {
 	}
 
 	// Update the transitioning state properly (to make sure it switches its internal logic)
-	sm.state.Update(now, func(s *State[O, S], t smath.Timeframe) error {
+	sm.state.Update(now, func(s *State[O, S], t scath.Timeframe) error {
 		return nil
 	})
 }
 
 // Use this to draw the actual object that is supposed to be drawn from the state in the StateMachine.
-func (sm *StateMachine[O, S]) Draw(now time.Time, drawFunc func(state S, frame smath.Timeframe)) {
-	sm.state.Update(now, func(s *State[O, S], frame smath.Timeframe) error {
+func (sm *StateMachine[O, S]) Draw(now time.Time, drawFunc func(state S, frame scath.Timeframe)) {
+	sm.state.Update(now, func(s *State[O, S], frame scath.Timeframe) error {
 		drawFunc(s.id, frame)
 		return nil
 	})

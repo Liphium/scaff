@@ -15,7 +15,7 @@ func (rp *RootProps) Child(builder scaffui.NodeBuilder) {
 }
 
 func Root(create func(t *scaff.Tracker, props *RootProps)) scaffui.NodeBuilder {
-	return scaffui.UseSingleNode("root", create, func(core *scaffui.SingleChildConstruct[RootProps]) {
+	return scaffui.CreateSingleNode("root", create, func(core *scaffui.SingleChildProps[RootProps]) {
 
 		// Pass the child to the core node
 		if child, ok := core.Props().child.Value(); ok {

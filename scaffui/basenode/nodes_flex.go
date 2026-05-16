@@ -1,10 +1,12 @@
 package basenode
 
 import (
+	"github.com/Liphium/scaff/paint"
+
 	"github.com/Liphium/scaff"
 	"github.com/Liphium/scaff/optional"
 	"github.com/Liphium/scaff/scaffui"
-	"github.com/Liphium/scaff/smath"
+	"github.com/Liphium/scaff/scath"
 )
 
 type FlexProps struct {
@@ -36,18 +38,18 @@ func (fp *FlexProps) Direction(direction LayoutDirection) {
 }
 
 func Flex(create func(t *scaff.Tracker, props *FlexProps)) scaffui.NodeBuilder {
-	return scaffui.UseMultiNode("flex", create, func(core *scaffui.MultiChildConstruct[FlexProps]) {
+	return scaffui.CreateMultiNode("flex", create, func(core *scaffui.MultiChildConstruct[FlexProps]) {
 
 		// Pass all of the children to the multi child node
 		for _, child := range core.Props().children {
 			core.Child(child)
 		}
 
-		core.Layout(func(node *scaffui.MultiChildNode[FlexProps]) (scaffui.Size, error) {
+		core.Layout(func(node *scaffui.MultiChildNode[FlexProps]) (scath.Vec, error) {
 			return flexLayout(node)
 		})
 
-		core.Draw(func(node *scaffui.MultiChildNode[FlexProps], position smath.Vec, renderer scaffui.Renderer) {
+		core.Draw(func(node *scaffui.MultiChildNode[FlexProps], position scath.Vec, renderer paint.Painter) {
 			flexDraw(node, position, renderer)
 		})
 	})
@@ -57,38 +59,38 @@ func flexDirection(node *scaffui.MultiChildNode[FlexProps]) LayoutDirection {
 	return node.Props().direction.Or(LayoutTopToBottom)
 }
 
-func flexDraw(node *scaffui.MultiChildNode[FlexProps], position smath.Vec, renderer scaffui.Renderer) {
+func flexDraw(node *scaffui.MultiChildNode[FlexProps], position scath.Vec, renderer paint.Painter) {
 	children := node.Children()
 
 	switch flexDirection(node) {
 	case LayoutRightToLeft:
-		xOffset := float64(node.Size().Width)
+		xOffset := float64(node.Size().X)
 		for _, child := range children {
 			childSize := child.Current().Size()
-			xOffset -= float64(childSize.Width)
-			child.Current().Draw(smath.Vec{X: position.X + xOffset, Y: position.Y}, renderer)
+			xOffset -= float64(childSize.X)
+			child.Current().Draw(scath.Vec{X: position.X + xOffset, Y: position.Y}, renderer)
 		}
 
 	case LayoutTopToBottom:
 		yOffset := 0.0
 		for _, child := range children {
-			child.Current().Draw(smath.Vec{X: position.X, Y: position.Y + yOffset}, renderer)
-			yOffset += float64(child.Current().Size().Height)
+			child.Current().Draw(scath.Vec{X: position.X, Y: position.Y + yOffset}, renderer)
+			yOffset += float64(child.Current().Size().Y)
 		}
 
 	case LayoutBottomToTop:
-		yOffset := float64(node.Size().Height)
+		yOffset := float64(node.Size().Y)
 		for _, child := range children {
 			childSize := child.Current().Size()
-			yOffset -= float64(childSize.Height)
-			child.Current().Draw(smath.Vec{X: position.X, Y: position.Y + yOffset}, renderer)
+			yOffset -= float64(childSize.Y)
+			child.Current().Draw(scath.Vec{X: position.X, Y: position.Y + yOffset}, renderer)
 		}
 
 	case LayoutLeftToRight:
 		xOffset := 0.0
 		for _, child := range children {
-			child.Current().Draw(smath.Vec{X: position.X + xOffset, Y: position.Y}, renderer)
-			xOffset += float64(child.Current().Size().Width)
+			child.Current().Draw(scath.Vec{X: position.X + xOffset, Y: position.Y}, renderer)
+			xOffset += float64(child.Current().Size().X)
 		}
 
 	default:
@@ -96,7 +98,7 @@ func flexDraw(node *scaffui.MultiChildNode[FlexProps], position smath.Vec, rende
 	}
 }
 
-func flexLayout(node *scaffui.MultiChildNode[FlexProps]) (scaffui.Size, error) {
+func flexLayout(node *scaffui.MultiChildNode[FlexProps]) (scath.Vec, error) {
 	switch flexDirection(node) {
 	case LayoutBottomToTop:
 		fallthrough // Same as top to bottom cause no positions considered yet
@@ -108,14 +110,14 @@ func flexLayout(node *scaffui.MultiChildNode[FlexProps]) (scaffui.Size, error) {
 		return flexLayoutLinear(node, true)
 	}
 
-	return scaffui.Size{}, nil
+	return scath.Vec{}, nil
 }
 
 // Shared linear layout logic for horizontal and vertical directions.
-func flexLayoutLinear(node *scaffui.MultiChildNode[FlexProps], horizontal bool) (scaffui.Size, error) {
+func flexLayoutLinear(node *scaffui.MultiChildNode[FlexProps], horizontal bool) (scath.Vec, error) {
 	mainMin, mainMax, crossMin, crossMax := axisConstraints(node.Constraints(), horizontal)
 	children := node.Children()
-	totalSize := scaffui.Size{}
+	totalSize := scath.Vec{}
 
 	if len(children) == 0 {
 		return clampLinearSize(totalSize, horizontal, mainMin, mainMax, crossMin, crossMax), nil
@@ -126,7 +128,7 @@ func flexLayoutLinear(node *scaffui.MultiChildNode[FlexProps], horizontal bool) 
 			child.Current().SetConstraints(newChildConstraints(horizontal, 0, scaffui.Infinite, crossMin, crossMax))
 			size, err := child.Current().Layout()
 			if err != nil {
-				return scaffui.Size{}, err
+				return scath.Vec{}, err
 			}
 			totalSize = addChildSize(totalSize, size, horizontal)
 		}
@@ -149,7 +151,7 @@ func flexLayoutLinear(node *scaffui.MultiChildNode[FlexProps], horizontal bool) 
 		child.Current().SetConstraints(newChildConstraints(horizontal, 0, share, crossMin, crossMax))
 		size, err := child.Current().Layout()
 		if err != nil {
-			return scaffui.Size{}, err
+			return scath.Vec{}, err
 		}
 		totalSize = addChildSize(totalSize, size, horizontal)
 
@@ -181,7 +183,7 @@ func flexLayoutLinear(node *scaffui.MultiChildNode[FlexProps], horizontal bool) 
 		child.Current().SetConstraints(newChildConstraints(horizontal, 0, remainder/factorSum*factor.Or(1), crossMin, crossMax))
 		size, err := child.Current().Layout()
 		if err != nil {
-			return scaffui.Size{}, err
+			return scath.Vec{}, err
 		}
 		totalSize = addChildSize(totalSize, size, horizontal)
 	}
@@ -192,10 +194,10 @@ func flexLayoutLinear(node *scaffui.MultiChildNode[FlexProps], horizontal bool) 
 // Maps constraints to main/cross axis values based on direction.
 func axisConstraints(c scaffui.Constraints, horizontal bool) (mainMin, mainMax, crossMin, crossMax int) {
 	if horizontal {
-		return c.MinWidth, c.MaxWidth, c.MinHeight, c.MaxHeight
+		return c.MinX, c.MaxX, c.MinY, c.MaxY
 	}
 
-	return c.MinHeight, c.MaxHeight, c.MinWidth, c.MaxWidth
+	return c.MinY, c.MaxY, c.MinX, c.MaxX
 }
 
 // Builds child constraints from main/cross axis values.
@@ -208,32 +210,32 @@ func newChildConstraints(horizontal bool, mainMin, mainMax, crossMin, crossMax i
 }
 
 // Find the max size in the axis of a child.
-func mainSize(size scaffui.Size, horizontal bool) int {
+func mainSize(size scath.Vec, horizontal bool) int {
 	if horizontal {
-		return size.Width
+		return size.X
 	}
 
-	return size.Height
+	return size.Y
 }
 
 // Aggregates child size into total container size.
-func addChildSize(total, child scaffui.Size, horizontal bool) scaffui.Size {
+func addChildSize(total, child scath.Vec, horizontal bool) scath.Vec {
 	if horizontal {
-		total.Width += child.Width
-		if child.Height > total.Height {
-			total.Height = child.Height
+		total.X += child.X
+		if child.Y > total.Y {
+			total.Y = child.Y
 		}
 		return total
 	}
 
-	total.Height += child.Height
-	if child.Width > total.Width {
-		total.Width = child.Width
+	total.Y += child.Y
+	if child.X > total.X {
+		total.X = child.X
 	}
 	return total
 }
 
-func clampLinearSize(size scaffui.Size, horizontal bool, mainMin, mainMax, crossMin, crossMax int) scaffui.Size {
+func clampLinearSize(size scath.Vec, horizontal bool, mainMin, mainMax, crossMin, crossMax int) scath.Vec {
 	main := mainSize(size, horizontal)
 	cross := mainSize(size, !horizontal)
 
@@ -241,10 +243,10 @@ func clampLinearSize(size scaffui.Size, horizontal bool, mainMin, mainMax, cross
 	cross = clampAxis(cross, crossMin, crossMax)
 
 	if horizontal {
-		return scaffui.Size{Width: main, Height: cross}
+		return scath.Vec{X: main, Y: cross}
 	}
 
-	return scaffui.Size{Width: cross, Height: main}
+	return scath.Vec{X: cross, Y: main}
 }
 
 func clampAxis(v, minV, maxV int) int {

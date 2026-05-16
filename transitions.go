@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/Liphium/scaff/optional"
-	"github.com/Liphium/scaff/smath"
+	"github.com/Liphium/scaff/scath"
 )
 
 type TransitionCapable interface {
@@ -31,9 +31,9 @@ type TransitionProperties struct {
 	Duration time.Duration
 }
 
-// ToTimeframe converts the transition properties to a smath.Timeframe.
-func (tp TransitionProperties) ToTimeframe(now time.Time, outTransition optional.O[TransitionProperties]) smath.Timeframe {
-	tf := smath.NewTimeframe(now, tp.Duration)
+// ToTimeframe converts the transition properties to a scath.Timeframe.
+func (tp TransitionProperties) ToTimeframe(now time.Time, outTransition optional.O[TransitionProperties]) scath.Timeframe {
+	tf := scath.NewTimeframe(now, tp.Duration)
 	if val, ok := outTransition.Value(); tp.Isolated && ok && val.Isolated {
 		tf = tf.AddDelay(val.Duration)
 	}
@@ -52,9 +52,9 @@ func NoTransition() TransitionProperties {
 // NOT GOROUTINE SAFE
 type TransitioningState[T TransitionCapable] struct {
 	from      optional.O[T]
-	fromFrame optional.O[smath.Timeframe]
+	fromFrame optional.O[scath.Timeframe]
 	to        optional.O[T]
-	toFrame   optional.O[smath.Timeframe]
+	toFrame   optional.O[scath.Timeframe]
 }
 
 // NewTransitioningState creates a new TransitioningState with the given state.
@@ -83,7 +83,7 @@ func (ts *TransitioningState[T]) Set(now time.Time, state optional.O[T]) {
 		}
 		to.Unload()
 		ts.to = optional.None[T]()
-		ts.toFrame = optional.None[smath.Timeframe]()
+		ts.toFrame = optional.None[scath.Timeframe]()
 
 		if s, ok := state.Value(); ok {
 			s.Load()
@@ -116,7 +116,7 @@ func (ts *TransitioningState[T]) SetEmpty(now time.Time) {
 }
 
 // Update should be called to both render and update the state of the transitions.
-func (ts *TransitioningState[T]) Update(now time.Time, update func(T, smath.Timeframe) error) error {
+func (ts *TransitioningState[T]) Update(now time.Time, update func(T, scath.Timeframe) error) error {
 
 	// If both transitions are over or not there, switch "to" to "from"
 	toFrame, toOk := ts.toFrame.Value()
@@ -130,7 +130,7 @@ func (ts *TransitioningState[T]) Update(now time.Time, update func(T, smath.Time
 		ts.from = ts.to
 		ts.fromFrame = ts.toFrame
 		ts.to = optional.None[T]()
-		ts.toFrame = optional.None[smath.Timeframe]()
+		ts.toFrame = optional.None[scath.Timeframe]()
 	}
 
 	// Render "from" if there

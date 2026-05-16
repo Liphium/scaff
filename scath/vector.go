@@ -1,6 +1,6 @@
-package smath
+package scath
 
-// All credit for this code to: https://github.com/setanarut/v
+// All credit for this code to: https://github.com/setanarut/v (if anything has been modified it is moved below the "MODIFIED BY SCAFF CONTRIBUTORS" comment)
 //
 // Copyright (c) 2025 Barış
 //
@@ -244,4 +244,28 @@ func (v Vec) Reflect(normal Vec) Vec {
 // String returns string representation of this vector.
 func (v Vec) String() string {
 	return fmt.Sprintf("(%.1f, %.1f)", v.X, v.Y)
+}
+
+// MODIFIED BY SCAFF CONTRIBUTORS
+
+// IsWithin checks, from the current vector as a position, with the size added if toCheck is within that rectangle.
+func (v Vec) IsWithinRectangle(size Vec, toCheck Vec) bool {
+	return toCheck.X >= v.X && toCheck.X <= v.X+size.X &&
+		toCheck.Y >= v.Y && toCheck.Y <= v.Y+size.Y
+}
+
+// SubtractPadding shrinks v by horizontal and vertical padding totals.
+func (v Vec) SubtractPadding(padding Padding) Vec {
+	return Vec{
+		X: max(0, v.X-(padding.Left+padding.Right)),
+		Y: max(0, v.Y-(padding.Top+padding.Bottom)),
+	}
+}
+
+// AddPadding grows v by horizontal and vertical padding totals.
+func (v Vec) AddPadding(padding Padding) Vec {
+	return Vec{
+		X: v.X + padding.Left + padding.Right,
+		Y: v.Y + padding.Top + padding.Bottom,
+	}
 }

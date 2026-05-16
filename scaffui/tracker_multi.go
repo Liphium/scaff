@@ -34,39 +34,40 @@ func (mt *MultiTracker) Nodes() []*MountedNode {
 }
 
 // Load all nodes mounted in the tracker.
-func (m *MultiTracker) Load() {
+func (m *MultiTracker) Load(parent Node) {
 	for _, child := range m.nodes {
-		child.Load()
+		child.Load(parent)
 	}
 }
 
-func (m *MultiTracker) Update(c *scaff.LayerContext) (relayout bool, err *scaff.TracedError) {
-	changed := false
+func (m *MultiTracker) Update(parent Node, c *scaff.Context) (UpdateResult, *scaff.TracedError) {
+	result := NoUpdate()
 	for _, node := range m.nodes {
-		change, err := node.Update(c)
+		change, err := node.Update(parent, c)
 		if err != nil {
-			return false, err
+			return NoUpdate(), err
 		}
 
-		// If there was a change, set changed to true (or ignore if previously true)
-		changed = changed || change
+		// Stack the updates on top of each other (will mark changed in case was not before)
+		result.Stack(change)
 	}
 
 	// When one of the children changed, re-layout the entire box, if own size changed, mark as dirty
-	if changed {
+	if result.SizeChanged {
 		currentSize := m.current.Size()
 		newSize, err := m.current.Layout()
 		if err != nil {
-			return false, scaff.NewTracedError(m.current, err)
+			return NoUpdate(), scaff.NewTracedError(m.current, err)
 		}
 
 		// When size changed, indicate relayout to parent
 		if currentSize != newSize {
-			return true, nil
+			return SizeChanged(), nil
 		}
+		return LayoutChanged(), nil
 	}
 
-	return false, nil
+	return result, nil
 }
 
 // Unload all nodes mounted in the tracker.

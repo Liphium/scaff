@@ -77,7 +77,7 @@ func (st *SceneTree) Transition(in bool) TransitionProperties {
 }
 
 // Forward update + handle some events that are only available in update
-func (st *SceneTree) Update(c SceneContext) error {
+func (st *SceneTree) Update(c *Context) error {
 	if st.sceneRoot == nil {
 		return nil
 	}
@@ -136,7 +136,7 @@ func (st *SceneTree) Update(c SceneContext) error {
 }
 
 // Pass Draw to the layers in the correct order
-func (st *SceneTree) Draw(c SceneContext, screen *ebiten.Image) {
+func (st *SceneTree) Draw(c *Context, screen *ebiten.Image) {
 	if st.sceneRoot == nil {
 		return
 	}
@@ -162,7 +162,7 @@ func (st *SceneTree) Draw(c SceneContext, screen *ebiten.Image) {
 	st.sceneRoot.Draw(ctx, screen)
 }
 
-func (st *SceneTree) buildContext(c SceneContext) *Context {
+func (st *SceneTree) buildContext(c *Context) *Context {
 	return &Context{
 		Now:             c.Now,
 		TransitionFrame: c.TransitionFrame,

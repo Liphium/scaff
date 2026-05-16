@@ -1,13 +1,15 @@
 package basenode
 
 import (
+	"github.com/Liphium/scaff/paint"
+
 	"image/color"
 
 	"github.com/Liphium/scaff"
 	"github.com/Liphium/scaff/optional"
 	"github.com/Liphium/scaff/scaffui"
 	"github.com/Liphium/scaff/scaffui/uispec"
-	"github.com/Liphium/scaff/smath"
+	"github.com/Liphium/scaff/scath"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -33,22 +35,22 @@ func (i *ImageProps) Constraints(constraints scaffui.Constraints) {
 }
 
 func Image(create func(t *scaff.Tracker, props *ImageProps)) scaffui.NodeBuilder {
-	return scaffui.UseSingleNode("image", create, func(core *scaffui.SingleChildConstruct[ImageProps]) {
+	return scaffui.CreateSingleNode("image", create, func(core *scaffui.SingleChildProps[ImageProps]) {
 		core.WantedConstraints(func(node *scaffui.SingleChildNode[ImageProps], parent scaffui.Constraints) scaffui.Constraints {
 			return node.Props().constraints.Or(scaffui.Unconstrained())
 		})
 
-		core.Layout(func(node *scaffui.SingleChildNode[ImageProps]) (scaffui.Size, error) {
+		core.Layout(func(node *scaffui.SingleChildNode[ImageProps]) (scath.Vec, error) {
 			spec := uispec.SingleChildBoxSpec{
-				Parent:  node.Constraints(),
-				Wanted:  node.Props().constraints,
-				Padding: scaffui.Pad(0),
+				Parent:        node.Constraints(),
+				Wanted:        node.Props().constraints,
+				scath.Padding: scaffui.Pad(0),
 			}
 
 			return spec.LayoutWithoutChild()
 		})
 
-		core.Draw(func(node *scaffui.SingleChildNode[ImageProps], position smath.Vec, renderer scaffui.Renderer) {
+		core.Draw(func(node *scaffui.SingleChildNode[ImageProps], position scath.Vec, renderer paint.Painter) {
 			if path, ok := node.Props().path.Value(); ok {
 
 				// Draw the actual image

@@ -1,6 +1,7 @@
 package scaffui
 
 import (
+	"github.com/Liphium/scaff/scath"
 	"errors"
 	"math"
 )
@@ -9,118 +10,118 @@ import (
 const Infinite float64 = -1
 
 type Constraints struct {
-	MinWidth  float64
-	MaxWidth  float64
-	MinHeight float64
-	MaxHeight float64
+	MinX  float64
+	MaxX  float64
+	MinY float64
+	MaxY float64
 }
 
-func (c Constraints) RealMaxWidth() float64 {
-	if c.MaxWidth == Infinite {
+func (c Constraints) RealMaxX() float64 {
+	if c.MaxX == Infinite {
 		return math.MaxFloat64
 	}
-	return c.MaxWidth
+	return c.MaxX
 }
 
-func (c Constraints) RealMaxHeight() float64 {
-	if c.MaxHeight == Infinite {
+func (c Constraints) RealMaxY() float64 {
+	if c.MaxY == Infinite {
 		return math.MaxFloat64
 	}
-	return c.MaxHeight
+	return c.MaxY
 }
 
 func (c Constraints) IsTight() bool {
-	return c.MinHeight == c.MaxHeight && c.MinWidth == c.MaxWidth
+	return c.MinY == c.MaxY && c.MinX == c.MaxX
 }
 
-func (c Constraints) DoesWidthFit(w float64) bool {
-	return c.MinWidth <= w && w <= c.RealMaxWidth()
+func (c Constraints) DoesXFit(w float64) bool {
+	return c.MinX <= w && w <= c.RealMaxX()
 }
 
-func (c Constraints) DoesHeightFit(h float64) bool {
-	return c.MinHeight <= h && h <= c.RealMaxHeight()
+func (c Constraints) DoesYFit(h float64) bool {
+	return c.MinY <= h && h <= c.RealMaxY()
 }
 
 func (c Constraints) Fits(c2 Constraints) bool {
-	widthFits := c.MinWidth <= c2.RealMaxWidth() && c2.MinWidth <= c.RealMaxWidth()
-	heightFits := c.MinHeight <= c2.RealMaxHeight() && c2.MinHeight <= c.RealMaxHeight()
+	widthFits := c.MinX <= c2.RealMaxX() && c2.MinX <= c.RealMaxX()
+	heightFits := c.MinY <= c2.RealMaxY() && c2.MinY <= c.RealMaxY()
 	return widthFits && heightFits
 }
 
 // Find the min size of constraints.
 func (c Constraints) Min(horizontal bool) float64 {
 	if horizontal {
-		return c.MinWidth
+		return c.MinX
 	}
-	return c.MinHeight
+	return c.MinY
 }
 
 // Find the max size of constraints.
 func (c Constraints) Max(horizontal bool) float64 {
 	if horizontal {
-		return c.MaxWidth
+		return c.MaxX
 	}
-	return c.MaxHeight
+	return c.MaxY
 }
 
 // Find the max size of constraints.
 func (c Constraints) RealMax(horizontal bool) float64 {
 	if horizontal {
-		return c.RealMaxWidth()
+		return c.RealMaxX()
 	}
-	return c.RealMaxHeight()
+	return c.RealMaxY()
 }
 
 // SubtractPadding shrinks constraints by horizontal and vertical padding totals.
-func (c Constraints) SubtractPadding(padding Padding) Constraints {
+func (c Constraints) SubtractPadding(padding scath.Padding) Constraints {
 	horizontal := padding.Left + padding.Right
 	vertical := padding.Top + padding.Bottom
 
-	minWidth := max(0, c.MinWidth-horizontal)
+	minX := max(0, c.MinX-horizontal)
 
-	maxWidth := c.MaxWidth
-	if maxWidth != Infinite {
-		maxWidth = max(0, maxWidth-horizontal)
+	maxX := c.MaxX
+	if maxX != Infinite {
+		maxX = max(0, maxX-horizontal)
 	}
 
-	minHeight := max(0, c.MinHeight-vertical)
+	minY := max(0, c.MinY-vertical)
 
-	maxHeight := c.MaxHeight
-	if maxHeight != Infinite {
-		maxHeight = max(0, maxHeight-vertical)
+	maxY := c.MaxY
+	if maxY != Infinite {
+		maxY = max(0, maxY-vertical)
 	}
 
 	return NewConstraints(
-		minWidth,
-		maxWidth,
-		minHeight,
-		maxHeight,
+		minX,
+		maxX,
+		minY,
+		maxY,
 	)
 }
 
-func (c Constraints) TakeMaxWithin(c2 Constraints) (Size, error) {
-	size := Size{
-		Width:  min(c.RealMaxWidth(), c2.RealMaxWidth()),
-		Height: min(c.RealMaxHeight(), c2.RealMaxHeight()),
+func (c Constraints) TakeMaxWithin(c2 Constraints) (scath.Vec, error) {
+	size := scath.Vec{
+		X:  min(c.RealMaxX(), c2.RealMaxX()),
+		Y: min(c.RealMaxY(), c2.RealMaxY()),
 	}
 
-	if !c.DoesWidthFit(size.Width) || !c2.DoesWidthFit(size.Width) || !c.DoesHeightFit(size.Height) || !c2.DoesHeightFit(size.Height) {
-		return Size{}, errors.New("constraints could not fit")
+	if !c.DoesXFit(size.X) || !c2.DoesXFit(size.X) || !c.DoesYFit(size.Y) || !c2.DoesYFit(size.Y) {
+		return scath.Vec{}, errors.New("constraints could not fit")
 	}
 
 	return size, nil
 }
 
 // NewConstraints creates normalized width and height constraints.
-func NewConstraints(minWidth, maxWidth, minHeight, maxHeight float64) Constraints {
-	minWidth, maxWidth = normalizeConstraintRange(minWidth, maxWidth)
-	minHeight, maxHeight = normalizeConstraintRange(minHeight, maxHeight)
+func NewConstraints(minX, maxX, minY, maxY float64) Constraints {
+	minX, maxX = normalizeConstraintRange(minX, maxX)
+	minY, maxY = normalizeConstraintRange(minY, maxY)
 
 	return Constraints{
-		MinWidth:  minWidth,
-		MaxWidth:  maxWidth,
-		MinHeight: minHeight,
-		MaxHeight: maxHeight,
+		MinX:  minX,
+		MaxX:  maxX,
+		MinY: minY,
+		MaxY: maxY,
 	}
 }
 
@@ -136,55 +137,55 @@ func Tight(width, height float64) Constraints {
 
 // TightFor returns tight constraints for provided axes.
 func TightFor(width, height float64) Constraints {
-	minWidth, maxWidth := 0.0, Infinite
-	minHeight, maxHeight := 0.0, Infinite
+	minX, maxX := 0.0, Infinite
+	minY, maxY := 0.0, Infinite
 
 	if width != Infinite {
-		minWidth, maxWidth = width, width
+		minX, maxX = width, width
 	}
 
 	if height != Infinite {
-		minHeight, maxHeight = height, height
+		minY, maxY = height, height
 	}
 
-	return NewConstraints(minWidth, maxWidth, minHeight, maxHeight)
+	return NewConstraints(minX, maxX, minY, maxY)
 }
 
 // TightForFinite returns tight constraints only for finite axes.
 func TightForFinite(width, height float64) Constraints {
-	minWidth, maxWidth := 0.0, Infinite
-	minHeight, maxHeight := 0.0, Infinite
+	minX, maxX := 0.0, Infinite
+	minY, maxY := 0.0, Infinite
 
 	if width >= 0 {
-		minWidth, maxWidth = width, width
+		minX, maxX = width, width
 	}
 
 	if height >= 0 {
-		minHeight, maxHeight = height, height
+		minY, maxY = height, height
 	}
 
-	return NewConstraints(minWidth, maxWidth, minHeight, maxHeight)
+	return NewConstraints(minX, maxX, minY, maxY)
 }
 
 // Loose returns constraints that are only bounded by maxima.
-func Loose(maxWidth, maxHeight float64) Constraints {
-	return NewConstraints(0, maxWidth, 0, maxHeight)
+func Loose(maxX, maxY float64) Constraints {
+	return NewConstraints(0, maxX, 0, maxY)
 }
 
 // Expand returns constraints that fill specified finite axes.
 func Expand(width, height float64) Constraints {
-	minWidth, maxWidth := 0.0, Infinite
-	minHeight, maxHeight := 0.0, Infinite
+	minX, maxX := 0.0, Infinite
+	minY, maxY := 0.0, Infinite
 
 	if width != Infinite {
-		minWidth, maxWidth = width, width
+		minX, maxX = width, width
 	}
 
 	if height != Infinite {
-		minHeight, maxHeight = height, height
+		minY, maxY = height, height
 	}
 
-	return NewConstraints(minWidth, maxWidth, minHeight, maxHeight)
+	return NewConstraints(minX, maxX, minY, maxY)
 }
 
 func normalizeConstraintRange(min, max float64) (float64, float64) {

@@ -6,7 +6,7 @@ import (
 
 	"github.com/Liphium/scaff"
 	"github.com/Liphium/scaff/optional"
-	"github.com/Liphium/scaff/smath"
+	"github.com/Liphium/scaff/scath"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
@@ -46,7 +46,7 @@ func (t *StateMachineScene) Update(c scaff.SceneContext) error {
 }
 
 func (t *StateMachineScene) Draw(c scaff.SceneContext, screen *ebiten.Image) {
-	t.timeMachine.Draw(c.Now, func(state int, frame smath.Timeframe) {
+	t.timeMachine.Draw(c.Now, func(state int, frame scath.Timeframe) {
 		text := "Scrolling text"
 		if state == 1 {
 			text = "is kinda cool"

@@ -23,4 +23,9 @@ Scaff provides various features that make your life a lot easier:
 
 This is just a really small overview. A lot of the functionality that makes Scaff special are the little packages and how they are made.
 
-More details will follow when the project is somewhat stable.
+## Credits
+
+| Name   | Description                        | License | Link                                | Note                                                                                     |
+| ------ | ---------------------------------- | ------- | ----------------------------------- | ---------------------------------------------------------------------------------------- |
+| V      | Vector math and position utilities | MIT     | https://github.com/setanarut/v      | Thanks for helping out with vector math!                                                 |
+| Kamera | Camera movement and math           | CC0     | https://github.com/setanarut/kamera | Thanks for making this amazing package, making it myself would've been really difficult. |

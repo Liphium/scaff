@@ -1,6 +1,4 @@
-package scaffui
-
-import "github.com/Liphium/scaff/smath"
+package scath
 
 type Padding struct {
 	Top    float64
@@ -55,6 +53,6 @@ func PadVertical(value float64) Padding {
 }
 
 // ToVecTopLeft converts top and left padding into position vector.
-func (p Padding) ToVecTopLeft() smath.Vec {
-	return smath.Vec{X: p.Left, Y: p.Top}
+func (p Padding) ToVecTopLeft() Vec {
+	return Vec{X: p.Left, Y: p.Top}
 }

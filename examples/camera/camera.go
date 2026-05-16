@@ -10,7 +10,7 @@ import (
 	"math/rand/v2"
 
 	"github.com/Liphium/scaff"
-	"github.com/Liphium/scaff/smath"
+	"github.com/Liphium/scaff/scath"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/colorm"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -36,7 +36,7 @@ C             Toggle DrawWithColorM() %v
 var (
 	w, h                                = 1024., 768.
 	camSpeed, zoomSpeedFactor, rotSpeed = 6.0, 1.02, 0.02
-	target                              = smath.Vec{}
+	target                              = scath.Vec{}
 	mainCamera                          = scaff.NewCamera(target.X, target.Y, w, h)
 	dio                                 = &ebiten.DrawImageOptions{
 		Filter: ebiten.FilterPixelated,
@@ -97,7 +97,7 @@ func (g *Game) Update() error {
 	}
 
 	if ebiten.IsKeyPressed(ebiten.KeyBackspace) {
-		target = smath.Vec{}
+		target = scath.Vec{}
 		mainCamera.SetCenter(0, 0)
 		mainCamera.Reset()
 	}
@@ -109,7 +109,7 @@ func (g *Game) Update() error {
 	return nil
 }
 
-func Axis() (axis smath.Vec) {
+func Axis() (axis scath.Vec) {
 	if ebiten.IsKeyPressed(ebiten.KeyW) {
 		axis.Y -= 1
 	}

@@ -6,7 +6,7 @@ import (
 
 	"github.com/Liphium/scaff"
 	"github.com/Liphium/scaff/optional"
-	"github.com/Liphium/scaff/smath"
+	"github.com/Liphium/scaff/scath"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -31,7 +31,7 @@ func TestTransitioningGeneral(t *testing.T) {
 		}
 	}
 	state := scaff.NewTransitioningState(now, scene1)
-	state.Update(now, func(ts *TestScene, f smath.Timeframe) error {
+	state.Update(now, func(ts *TestScene, f scath.Timeframe) error {
 		assert.Equal(t, "test1", ts.ID)
 		assert.Equal(t, 100*time.Nanosecond, f.Remaining(now))
 		assert.Equal(t, false, f.IsBackwards())
@@ -46,7 +46,7 @@ func TestTransitioningGeneral(t *testing.T) {
 			"test1": true,
 			"test2": false,
 		}
-		state.Update(now.Add(100), func(ts *TestScene, f smath.Timeframe) error {
+		state.Update(now.Add(100), func(ts *TestScene, f scath.Timeframe) error {
 			updates = append(updates, ts.GetId())
 			assert.Equal(t, expectedBackwards[ts.GetId()], f.IsBackwards())
 			return nil
@@ -54,7 +54,7 @@ func TestTransitioningGeneral(t *testing.T) {
 		assert.Equal(t, []string{"test1", "test2"}, updates)
 
 		// Other transition should be over now
-		state.Update(now.Add(200), func(ts *TestScene, f smath.Timeframe) error {
+		state.Update(now.Add(200), func(ts *TestScene, f scath.Timeframe) error {
 			assert.Equal(t, "test2", ts.ID)
 			assert.Equal(t, 0*time.Nanosecond, f.Remaining(now.Add(200)))
 			assert.Equal(t, false, f.IsBackwards())
@@ -71,14 +71,14 @@ func TestTransitioningGeneral(t *testing.T) {
 		// Insert scene 1 again and make sure it's actually in there
 		state.Set(now.Add(200), optional.With(scene1))
 		updates = []string{}
-		state.Update(now.Add(200), func(ts *TestScene, f smath.Timeframe) error {
+		state.Update(now.Add(200), func(ts *TestScene, f scath.Timeframe) error {
 			updates = append(updates, ts.GetId())
 			return nil
 		})
 		assert.Equal(t, []string{"test2", "test1"}, updates)
 
 		// Make sure the thing is gone at 300
-		state.Update(now.Add(300), func(ts *TestScene, f smath.Timeframe) error {
+		state.Update(now.Add(300), func(ts *TestScene, f scath.Timeframe) error {
 			assert.Equal(t, "test1", ts.ID)
 			assert.Equal(t, 0*time.Nanosecond, f.Remaining(now.Add(300)))
 			return nil
@@ -104,7 +104,7 @@ func TestTransitionCollision(t *testing.T) {
 	state.Set(now, optional.With(scene3))
 
 	// All scenes should be completely gone
-	state.Update(now, func(ts *TestScene, f smath.Timeframe) error {
+	state.Update(now, func(ts *TestScene, f scath.Timeframe) error {
 		assert.Equal(t, "test3", ts.ID)
 		return nil
 	})
@@ -134,7 +134,7 @@ func TestTransitioningIsolated(t *testing.T) {
 		}
 	}
 	state := scaff.NewTransitioningState(now, scene1)
-	state.Update(now, func(ts *TestScene, f smath.Timeframe) error {
+	state.Update(now, func(ts *TestScene, f scath.Timeframe) error {
 		assert.Equal(t, "test1", ts.ID)
 		assert.Equal(t, 100*time.Nanosecond, f.Remaining(now))
 		assert.Equal(t, false, f.IsBackwards())
@@ -148,7 +148,7 @@ func TestTransitioningIsolated(t *testing.T) {
 		"test2": 100 * time.Nanosecond,
 	}
 	updates := []string{}
-	state.Update(now.Add(100), func(ts *TestScene, f smath.Timeframe) error {
+	state.Update(now.Add(100), func(ts *TestScene, f scath.Timeframe) error {
 		updates = append(updates, ts.GetId())
 		assert.Equal(t, expectedRemaining[ts.GetId()], f.Remaining(now.Add(100)))
 		return nil
@@ -161,7 +161,7 @@ func TestTransitioningIsolated(t *testing.T) {
 		"test2": 100 * time.Nanosecond,
 	}
 	updates = []string{}
-	state.Update(now.Add(200), func(ts *TestScene, f smath.Timeframe) error {
+	state.Update(now.Add(200), func(ts *TestScene, f scath.Timeframe) error {
 		updates = append(updates, ts.GetId())
 		assert.Equal(t, expectedRemaining[ts.GetId()], f.Remaining(now.Add(200)))
 		return nil
@@ -169,7 +169,7 @@ func TestTransitioningIsolated(t *testing.T) {
 	assert.Equal(t, []string{"test1", "test2"}, updates)
 
 	// At 300, test1 should be fully transitioned in and still be there
-	state.Update(now.Add(300), func(ts *TestScene, f smath.Timeframe) error {
+	state.Update(now.Add(300), func(ts *TestScene, f scath.Timeframe) error {
 		assert.Equal(t, "test2", ts.GetId())
 		assert.Equal(t, 0*time.Nanosecond, f.Remaining(now.Add(300)))
 		return nil
@@ -193,7 +193,7 @@ func TestTransitioningEmpty(t *testing.T) {
 		}
 	}
 	state := scaff.NewTransitioningState(now, scene1)
-	state.Update(now, func(ts *TestScene, f smath.Timeframe) error {
+	state.Update(now, func(ts *TestScene, f scath.Timeframe) error {
 		assert.Equal(t, "test1", ts.ID)
 		assert.Equal(t, 100*time.Nanosecond, f.Remaining(now))
 		assert.Equal(t, false, f.IsBackwards())
@@ -203,7 +203,7 @@ func TestTransitioningEmpty(t *testing.T) {
 	t.Run("proper out when empty", func(t *testing.T) {
 		// Set empty and make sure test1 starts transitioning out
 		state.Set(now.Add(200), optional.None[*TestScene]())
-		state.Update(now.Add(200), func(ts *TestScene, f smath.Timeframe) error {
+		state.Update(now.Add(200), func(ts *TestScene, f scath.Timeframe) error {
 			assert.Equal(t, "test1", ts.ID)
 			assert.Equal(t, 0*time.Nanosecond, f.Remaining(now.Add(200)))
 			assert.Equal(t, 100*time.Nanosecond, f.Remaining(now.Add(300)))

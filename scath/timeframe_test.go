@@ -1,16 +1,16 @@
-package smath_test
+package scath_test
 
 import (
 	"testing"
 	"time"
 
-	"github.com/Liphium/scaff/smath"
+	"github.com/Liphium/scaff/scath"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestTimeframe(t *testing.T) {
 	now := time.Now()
-	f := smath.NewTimeframe(now, 1000)
+	f := scath.NewTimeframe(now, 1000)
 
 	t.Run("works as expected", func(t *testing.T) {
 		assert.Equal(t, 1000*time.Nanosecond, f.Remaining(now))
@@ -31,7 +31,7 @@ func TestTimeframe(t *testing.T) {
 
 func TestTimeframeBackwards(t *testing.T) {
 	now := time.Now()
-	f := smath.NewTimeframe(now, 1000).MakeBackwards()
+	f := scath.NewTimeframe(now, 1000).MakeBackwards()
 
 	t.Run("works as expected", func(t *testing.T) {
 		assert.Equal(t, 0*time.Nanosecond, f.Remaining(now))
@@ -50,7 +50,7 @@ func TestTimeframeBackwards(t *testing.T) {
 
 func TestTimeframeAddDelay(t *testing.T) {
 	now := time.Now()
-	f := smath.NewTimeframe(now, 1000).AddDelay(300 * time.Nanosecond)
+	f := scath.NewTimeframe(now, 1000).AddDelay(300 * time.Nanosecond)
 
 	t.Run("works as expected", func(t *testing.T) {
 		assert.Equal(t, 1000*time.Nanosecond, f.Remaining(now))

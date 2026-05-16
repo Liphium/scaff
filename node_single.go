@@ -9,14 +9,11 @@ import (
 // If you want to have one or multiple children for this node, CreateSingleNode or CreateMultiNode might be a better fit for your use case.
 func UseNode[P any](id string, create func(props *SingleChildProps[P])) NodeBuilder {
 	node := &SingleChildNode[P]{
-		id:      id,
-		tracker: NewTracker(),
+		id:          id,
+		tracker:     NewTracker(),
+		singleProps: &SingleChildProps[P]{},
 	}
-
-	// Create the actual node
-	singleProps := &SingleChildProps[P]{}
-	create(singleProps)
-	node.singleProps = singleProps
+	create(node.singleProps)
 
 	return func() Node {
 		return node
@@ -31,14 +28,13 @@ func UseNode[P any](id string, create func(props *SingleChildProps[P])) NodeBuil
 //
 // create is the function actually specifying your node. You can overwrite all of the functions of the node interface there, with some exceptions that we implement for you.
 func CreateSingleNode[P ChildProps](id string, propsCreator func(t *Tracker, props *P), create func(props *SingleChildProps[P])) NodeBuilder {
-	node := &SingleChildNode[P]{
-		id: id,
-	}
 
 	// Create the actual node
-	singleProps := &SingleChildProps[P]{}
-	create(singleProps)
-	node.singleProps = singleProps
+	node := &SingleChildNode[P]{
+		id:          id,
+		singleProps: &SingleChildProps[P]{},
+	}
+	create(node.singleProps)
 
 	return func() Node {
 		node.tracker = NewTracker()
@@ -47,6 +43,8 @@ func CreateSingleNode[P ChildProps](id string, propsCreator func(t *Tracker, pro
 		var props P
 		propsCreator(node.Tracker(), &props)
 		node.props = props
+
+		// Build the children, in case there are any
 		if len(props.GetBuilders()) > 1 {
 			log.Error("node can not have multiple children", "id", id, "children", len(props.GetBuilders()))
 		}
@@ -152,6 +150,11 @@ func (s *SingleChildNode[P]) Update(c *Context) *TracedError {
 		return nil
 	}
 
+	// Forward the update to the child
+	if err := s.current.Update(c); err != nil {
+		return err
+	}
+
 	// If dirty, rebuild
 	if s.current.Tracker().Changed() {
 		s.current.Unload()
@@ -159,8 +162,7 @@ func (s *SingleChildNode[P]) Update(c *Context) *TracedError {
 		s.current.Load(s)
 	}
 
-	// Forward the update to the child
-	return s.current.Update(c)
+	return nil
 }
 
 func (s *SingleChildNode[P]) Unload() {

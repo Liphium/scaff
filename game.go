@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/Liphium/scaff/optional"
-	"github.com/Liphium/scaff/smath"
+	"github.com/Liphium/scaff/scath"
 	"github.com/Liphium/scaff/util"
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -15,7 +15,7 @@ type Game struct {
 	mu               *sync.Mutex
 	waitingSceneList []Scene
 	modified         bool
-	width, height    int
+	width, height    float64
 
 	sceneList []*TransitioningState[Scene] // THIS SHOULD NOT BE SET OUTSIDE OF UPDATE
 }
@@ -37,7 +37,9 @@ func (g *Game) Layout(width, height int) (int, int) {
 // This makes sure the monitor's resolution is actually properly respected (Source: https://github.com/tinne26/kage-desk/blob/main/docs/tutorials/ebitengine_game.md#layout)
 func (g *Game) LayoutF(logicWinWidth, logicWinHeight float64) (float64, float64) {
 	scale := ebiten.Monitor().DeviceScaleFactor()
-	return logicWinWidth * scale, logicWinHeight * scale
+	g.width = logicWinWidth * scale
+	g.height = logicWinHeight * scale
+	return g.width, g.height
 }
 
 func (g *Game) Update() error {
@@ -73,7 +75,7 @@ func (g *Game) Update() error {
 
 	// Update all of the scenes in proper order (this is backward because the front of the scene list is the topmost scene)
 	for i, scene := range slices.Backward(g.sceneList) {
-		if err := scene.Update(now, func(s Scene, tf smath.Timeframe) error {
+		if err := scene.Update(now, func(s Scene, tf scath.Timeframe) error {
 			return s.Update(g.buildSceneContext(i, now, util.Ptr(tf)))
 		}); err != nil {
 			return err
@@ -87,27 +89,28 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 	// Draw all of the scenes in proper order (this is forward because the front of the scene list is the scene that is in the background)
 	for i, scene := range g.sceneList {
-		scene.Update(now, func(s Scene, tf smath.Timeframe) error {
+		scene.Update(now, func(s Scene, tf scath.Timeframe) error {
 			s.Draw(g.buildSceneContext(i, now, util.Ptr(tf)), screen)
 			return nil
 		})
 	}
 }
 
-func (g *Game) buildSceneContext(i int, now time.Time, frame *smath.Timeframe) SceneContext {
+func (g *Game) buildSceneContext(i int, now time.Time, frame *scath.Timeframe) *Context {
 
 	// Create default frame if not set
 	if frame == nil {
 		// This is the default to make sure the transition is immediately over and no transition occurs
-		frame = util.Ptr(smath.NewTimeframe(now, 0*time.Nanosecond))
+		frame = util.Ptr(scath.NewTimeframe(now, 0*time.Nanosecond))
 	}
 
-	return SceneContext{
+	return &Context{
 		Focused:         i == len(g.sceneList)-1,
 		Now:             now,
 		TransitionFrame: *frame,
 		Width:           g.width,
 		Height:          g.height,
+		events:          []EventId{},
 	}
 }
 

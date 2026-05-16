@@ -5,6 +5,7 @@ import (
 
 	"github.com/Liphium/scaff"
 	"github.com/Liphium/scaff/scaffui"
+	"github.com/Liphium/scaff/scath"
 )
 
 type ThrowerProps struct {
@@ -16,9 +17,9 @@ func (tp *ThrowerProps) Message(message string) {
 }
 
 func Thrower(create func(t *scaff.Tracker, tp *ThrowerProps)) scaffui.NodeBuilder {
-	return scaffui.UseSingleNode("thrower", create, func(core *scaffui.SingleChildConstruct[ThrowerProps]) {
-		core.Layout(func(node *scaffui.SingleChildNode[ThrowerProps]) (scaffui.Size, error) {
-			return scaffui.Size{}, errors.New(node.Props().msg)
+	return scaffui.CreateSingleNode("thrower", create, func(core *scaffui.SingleChildProps[ThrowerProps]) {
+		core.Layout(func(node *scaffui.SingleChildNode[ThrowerProps]) (scath.Vec, error) {
+			return scath.Vec{}, errors.New(node.Props().msg)
 		})
 	})
 }

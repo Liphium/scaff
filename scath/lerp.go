@@ -1,4 +1,4 @@
-package smath
+package scath
 
 import (
 	"math"
