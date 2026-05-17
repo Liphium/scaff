@@ -10,16 +10,13 @@ import (
 	"errors"
 )
 
-var _ scaff.ChildProps[scaffui.NodeBuilder] = &AlignProps{}
+var _ scaff.ChildProps[scaffui.NodeBuilder] = AlignProps{}
 
 type AlignProps struct {
-	child              optional.O[scaffui.NodeBuilder]
 	verticalAlignment  optional.O[VerticalAlignment]
 	horizontalAligment optional.O[HorizontalAlignment]
-}
 
-func (ap *AlignProps) Child(builder scaffui.NodeBuilder) {
-	ap.child.SetValue(builder)
+	*scaffui.AcceptChild
 }
 
 func (pp *AlignProps) Vertical(alignment VerticalAlignment) {
@@ -28,13 +25,6 @@ func (pp *AlignProps) Vertical(alignment VerticalAlignment) {
 
 func (pp *AlignProps) Horizontal(alignment HorizontalAlignment) {
 	pp.horizontalAligment.SetValue(alignment)
-}
-
-func (ap AlignProps) GetBuilders() []scaffui.NodeBuilder {
-	if builder, ok := ap.child.Value(); ok {
-		return []scaffui.NodeBuilder{builder}
-	}
-	return nil
 }
 
 func Align(create func(t *scaff.Tracker, props *AlignProps)) scaffui.NodeBuilder {

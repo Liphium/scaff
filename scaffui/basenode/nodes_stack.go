@@ -6,19 +6,11 @@ import (
 )
 
 type StackProps struct {
-	children []scaffui.NodeBuilder
-}
-
-func (sp *StackProps) Child(builder scaffui.NodeBuilder) {
-	sp.children = append(sp.children, builder)
+	*scaffui.AcceptChildren
 }
 
 func Stack(create func(t *scaff.Tracker, props *StackProps)) scaffui.NodeBuilder {
 
 	// The default behavior of multi-node covers all of the things we want the stack to do, so no work for us :D
-	return scaffui.CreateMultiNode("stack", create, func(core *scaffui.MultiChildConstruct[StackProps]) {
-		for _, child := range core.Props().children {
-			core.Child(child)
-		}
-	})
+	return scaffui.CreateMultiNode[StackProps]("stack", create, nil)
 }

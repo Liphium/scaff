@@ -28,8 +28,9 @@ func (cp ClickableProps) GetBuilders() []scaffui.NodeBuilder {
 }
 
 func Clickable(create func(t *scaff.Tracker, props *ClickableProps)) scaffui.NodeBuilder {
+	pressed := make(map[ebiten.MouseButton]bool)
+
 	return scaffui.CreateSingleNode("clickable", create, func(core *scaffui.SingleChildProps[ClickableProps]) {
-		pressed := make(map[ebiten.MouseButton]bool)
 
 		core.Child(Input(func(t *scaff.Tracker, ip *InputProps) {
 			if child, ok := core.Props().child.Value(); ok {

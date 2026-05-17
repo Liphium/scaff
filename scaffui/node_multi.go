@@ -20,15 +20,26 @@ func CreateMultiNode[P scaff.ChildProps[NodeBuilder]](id string, propsCreator fu
 		id:         id,
 		multiProps: &MultiChildProps[P]{},
 	}
-	create(node.multiProps)
+	if create != nil {
+		create(node.multiProps)
+	}
 
 	return func() Node {
 		node.tracker = NewMultiTracker(node)
 
-		// Create the props
-		var props P
-		propsCreator(node.Tracker(), &props)
-		node.props = props
+		// Create the props (if desired)
+		if propsCreator != nil {
+			var props P
+			propsCreator(node.Tracker(), &props)
+			node.props = props
+
+			// Add children (if desired)
+			if builders := props.GetBuilders(); builders != nil && len(builders) > 0 {
+				for _, builder := range builders {
+					node.tracker.Add(NewMountedFromBuilder(builder))
+				}
+			}
+		}
 
 		return node
 	}

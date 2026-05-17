@@ -11,38 +11,35 @@ import (
 
 // Props for creating a new Input node. All of the listeners should return wether or not the event was handled, meaning no other UI components should handle the event.
 type InputProps struct {
-	child optional.O[scaffui.NodeBuilder]
 
 	// When a mouse button is pressed.
-	onDown optional.O[func(handled, inside bool, event scaffui.DownEvent) bool]
+	onDown optional.O[func(handled, inside bool, event scaff.DownEvent) bool]
 
 	// When a mouse button is released.
-	onRelease optional.O[func(handled, inside bool, event scaffui.ReleaseEvent) bool]
+	onRelease optional.O[func(handled, inside bool, event scaff.ReleaseEvent) bool]
 
 	// When the mouse is moved.
-	onMove optional.O[func(handled, inside bool, event scaffui.MoveEvent) bool]
+	onMove optional.O[func(handled, inside bool, event scaff.MoveEvent) bool]
 
 	// When scrolling with the mouse or potentially differnet methods when no mouse is available.
-	onScroll optional.O[func(handled, inside bool, event scaffui.ScrollEvent) bool]
+	onScroll optional.O[func(handled, inside bool, event scaff.ScrollEvent) bool]
+
+	*scaffui.AcceptChild
 }
 
-func (o *InputProps) Child(builder scaffui.NodeBuilder) {
-	o.child.SetValue(builder)
-}
-
-func (o *InputProps) OnDown(fn func(handled, inside bool, event scaffui.DownEvent) bool) {
+func (o *InputProps) OnDown(fn func(handled, inside bool, event scaff.DownEvent) bool) {
 	o.onDown.SetValue(fn)
 }
 
-func (o *InputProps) OnRelease(fn func(handled, inside bool, event scaffui.ReleaseEvent) bool) {
+func (o *InputProps) OnRelease(fn func(handled, inside bool, event scaff.ReleaseEvent) bool) {
 	o.onRelease.SetValue(fn)
 }
 
-func (o *InputProps) OnMove(fn func(handled, inside bool, event scaffui.MoveEvent) bool) {
+func (o *InputProps) OnMove(fn func(handled, inside bool, event scaff.MoveEvent) bool) {
 	o.onMove.SetValue(fn)
 }
 
-func (o *InputProps) OnScroll(fn func(handled, inside bool, event scaffui.ScrollEvent) bool) {
+func (o *InputProps) OnScroll(fn func(handled, inside bool, event scaff.ScrollEvent) bool) {
 	o.onScroll.SetValue(fn)
 }
 

@@ -19,15 +19,24 @@ func CreateSingleNode[P scaff.ChildProps[NodeBuilder]](id string, propsCreator f
 		id:          id,
 		singleProps: &SingleChildProps[P]{},
 	}
-	create(node.singleProps)
+	if create != nil {
+		create(node.singleProps)
+	}
 
 	return func() Node {
 		node.tracker = NewSingleTracker(node)
 
-		// Fill the props
-		var props P
-		propsCreator(node.Tracker(), &props)
-		node.props = props
+		// Fill the props (if desired)
+		if propsCreator != nil {
+			var props P
+			propsCreator(node.Tracker(), &props)
+			node.props = props
+
+			// Add child (if desired)
+			if builders := props.GetBuilders(); builders != nil && len(builders) == 1 {
+				node.tracker.SetNode(NewMountedFromBuilder(builders[0]))
+			}
+		}
 
 		return node
 	}

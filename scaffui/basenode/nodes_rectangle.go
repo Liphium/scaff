@@ -13,22 +13,18 @@ import (
 )
 
 type RectangleProps struct {
-	child             optional.O[scaffui.NodeBuilder]
-	wantedConstraints optional.O[scaffui.Constraints]
-	padding           optional.O[scaffui.scath.Padding]
+	wantedConstraints optional.O[scath.Constraints]
+	padding           optional.O[scath.Padding]
 	fillColor         optional.O[color.RGBA]
 	borderRadius      optional.O[int]
+	*scaffui.AcceptChild
 }
 
-func (rp *RectangleProps) Child(builder scaffui.NodeBuilder) {
-	rp.child.SetValue(builder)
-}
-
-func (rp *RectangleProps) WantedConstraints(constraints scaffui.Constraints) {
+func (rp *RectangleProps) WantedConstraints(constraints scath.Constraints) {
 	rp.wantedConstraints.SetValue(constraints)
 }
 
-func (rp *RectangleProps) scath.Padding(padding scaffui.scath.Padding) {
+func (rp *RectangleProps) Padding(padding scath.Padding) {
 	rp.padding.SetValue(padding)
 }
 
@@ -41,23 +37,17 @@ func (rp *RectangleProps) BorderRadius(borderRadius int) {
 }
 
 func Rectangle(create func(t *scaff.Tracker, props *RectangleProps)) scaffui.NodeBuilder {
-	return scaffui.CreateSingleNode("rectangle", create, func(core *scaffui.SingleChildProps[RectangleProps]) {
-
-		// Pass the child to the single node (when there)
-		if child, ok := core.Props().child.Value(); ok {
-			core.Child(child)
-		}
-
-		core.WantedConstraints(func(node *scaffui.SingleChildNode[RectangleProps], _ scaffui.Constraints) scaffui.Constraints {
-			return core.Props().wantedConstraints.Or(scaffui.Unconstrained())
+	return scaffui.CreateSingleNode("rectangle", create, func(props *scaffui.SingleChildProps[RectangleProps]) {
+		props.WantedConstraints(func(node *scaffui.SingleChildNode[RectangleProps], _ scath.Constraints) scath.Constraints {
+			return node.Props().wantedConstraints.Or(scath.Unconstrained())
 		})
 
-		core.Layout(func(node *scaffui.SingleChildNode[RectangleProps]) (scath.Vec, error) {
-			props := core.Props()
+		props.Layout(func(node *scaffui.SingleChildNode[RectangleProps]) (scath.Vec, error) {
+			props := node.Props()
 			spec := uispec.SingleChildBoxSpec{
 				Parent:  node.Constraints(),
 				Wanted:  props.wantedConstraints,
-				scath.Padding: props.padding.Or(scaffui.Pad(0)),
+				Padding: props.padding.Or(scath.Pad(0)),
 			}
 
 			child, ok := node.Child()
@@ -68,16 +58,16 @@ func Rectangle(create func(t *scaff.Tracker, props *RectangleProps)) scaffui.Nod
 			return spec.LayoutWithoutChild()
 		})
 
-		core.Draw(func(node *scaffui.SingleChildNode[RectangleProps], position scath.Vec, renderer paint.Painter) {
+		props.Draw(func(node *scaffui.SingleChildNode[RectangleProps], position scath.Vec, renderer paint.Painter) {
 			props := node.Props()
-			renderer.DrawOne(scaffui.RectangleCommand{
+			renderer.Paint(paint.Rectangle{
 				Position:     position,
 				Size:         node.Size(),
 				FillColor:    props.fillColor.Or(color.RGBA{255, 255, 255, 255}),
 				BorderRadius: props.borderRadius.Or(0),
 			})
 
-			node.DrawChild(position.Add(props.padding.Or(scaffui.Pad(0)).ToVecTopLeft()), renderer)
+			node.DrawChild(position.Add(props.padding.Or(scath.Pad(0)).ToVecTopLeft()), renderer)
 		})
 	})
 }

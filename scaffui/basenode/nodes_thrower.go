@@ -10,6 +10,7 @@ import (
 
 type ThrowerProps struct {
 	msg string
+	*scaffui.AcceptNoChild
 }
 
 func (tp *ThrowerProps) Message(message string) {
