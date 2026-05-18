@@ -9,6 +9,7 @@ import (
 
 type ClickableProps struct {
 	onClick optional.O[func(button ebiten.MouseButton) bool]
+	*scaffui.AcceptChild
 }
 
 func (cp *ClickableProps) OnClick(fn func(button ebiten.MouseButton) bool) {
@@ -18,34 +19,36 @@ func (cp *ClickableProps) OnClick(fn func(button ebiten.MouseButton) bool) {
 func Clickable(create func(t *scaff.Tracker, props *ClickableProps)) scaffui.NodeBuilder {
 	pressed := make(map[ebiten.MouseButton]bool)
 
-	return scaffui.CreateSingleNode("clickable", create, func(core *scaffui.SingleChildProps[ClickableProps]) {
+	// Create an input node for actually listening to the events
+	return Input(func(t *scaff.Tracker, input *InputProps) {
+		props := &ClickableProps{}
+		create(t, props)
 
-		core.Child(Input(func(t *scaff.Tracker, ip *InputProps) {
-			if child, ok := core.Props().child.Value(); ok {
-				ip.Child(child)
+		// Pass the child to the input node
+		if builder, ok := props.GetChild().Value(); ok {
+			input.Child(builder)
+		}
+
+		input.OnDown(func(handled, inside bool, event scaff.DownEvent) bool {
+			if inside {
+				pressed[event.Button] = true
+			}
+			return inside
+		})
+
+		input.OnRelease(func(handled, inside bool, event scaff.ReleaseEvent) bool {
+			wasPressed := pressed[event.Button]
+			pressed[event.Button] = false
+
+			// If the event was not handled before and the button was pressed before + released inside of this element, a click has been detected
+			if wasPressed && inside && !handled {
+				if fn, ok := props.onClick.Value(); ok {
+					return fn(event.Button)
+				}
+				return true
 			}
 
-			ip.OnDown(func(handled, inside bool, event scaff.DownEvent) bool {
-				if inside {
-					pressed[event.Button] = true
-				}
-				return inside
-			})
-
-			ip.OnRelease(func(handled, inside bool, event scaff.ReleaseEvent) bool {
-				wasPressed := pressed[event.Button]
-				pressed[event.Button] = false
-
-				// If the event was not handled before and the button was pressed before + released inside of this element, a click has been detected
-				if wasPressed && inside && !handled {
-					if fn, ok := core.Props().onClick.Value(); ok {
-						return fn(event.Button)
-					}
-					return true
-				}
-
-				return false
-			})
-		}))
+			return false
+		})
 	})
 }

@@ -30,6 +30,10 @@ func (ac *AcceptChild) Child(builder NodeBuilder) {
 	ac.child.SetValue(builder)
 }
 
+func (ac *AcceptChild) GetChild() optional.O[NodeBuilder] {
+	return ac.child
+}
+
 func (ac AcceptChild) GetBuilders() []NodeBuilder {
 	if child, ok := ac.child.Value(); ok {
 		return []NodeBuilder{child}
@@ -46,6 +50,10 @@ type AcceptChildren struct {
 
 func (ac *AcceptChildren) Child(builder NodeBuilder) {
 	ac.children = append(ac.children, builder)
+}
+
+func (ac *AcceptChildren) GetChildren() []NodeBuilder {
+	return ac.children
 }
 
 func (ac AcceptChildren) GetBuilders() []NodeBuilder {
