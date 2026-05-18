@@ -19,7 +19,7 @@ func UseNode(id string, create func(props *SingleChildProps[any])) NodeBuilder {
 		create(node.singleProps)
 	}
 
-	return func() Node {
+	return func(bc *BuildContext) Node {
 		return node
 	}
 }
@@ -42,8 +42,9 @@ func CreateSingleNode[P ChildProps[NodeBuilder]](id string, propsCreator func(t 
 		create(node.singleProps)
 	}
 
-	return func() Node {
+	return func(context *BuildContext) Node {
 		node.tracker = NewTracker()
+		node.context = context
 
 		// Fill the props
 		if propsCreator != nil {
@@ -100,8 +101,12 @@ type SingleChildNode[P any] struct {
 	parent  Node
 	current Node
 	builder NodeBuilder
+
+	// Things internal to the node
+	context *BuildContext
 	tracker *Tracker
 
+	// Configuration of the node
 	id          string
 	props       P
 	singleProps *SingleChildProps[P]
@@ -115,12 +120,16 @@ func (s *SingleChildNode[P]) Props() P {
 	return s.props
 }
 
+func (s *SingleChildNode[P]) Context() *BuildContext {
+	return s.context
+}
+
 func (s *SingleChildNode[P]) Load(parent Node) {
 	s.parent = parent
 
 	// If there is a builder, load the child
 	if s.builder != nil {
-		s.current = s.builder()
+		s.current = s.builder(s.context)
 		s.current.Load(s)
 	}
 
@@ -168,7 +177,7 @@ func (s *SingleChildNode[P]) Update(c *Context) TracedError {
 	// If dirty, rebuild
 	if s.current.Tracker().Changed() {
 		s.current.Unload()
-		s.current = s.builder()
+		s.current = s.builder(s.context)
 		s.current.Load(s)
 	}
 

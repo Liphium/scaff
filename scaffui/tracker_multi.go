@@ -40,10 +40,10 @@ func (m *MultiTracker) Load(parent Node) {
 	}
 }
 
-func (m *MultiTracker) Update(parent Node, c *scaff.Context) (UpdateResult, scaff.TracedError) {
+func (m *MultiTracker) Update(parent Node, c *scaff.Context, bc *scaff.BuildContext) (UpdateResult, scaff.TracedError) {
 	result := NoUpdate()
 	for _, node := range m.nodes {
-		change, err := node.Update(parent, c)
+		change, err := node.Update(parent, c, bc)
 		if err != nil {
 			return NoUpdate(), err
 		}

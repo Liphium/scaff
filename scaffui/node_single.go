@@ -33,8 +33,9 @@ func CreateSingleNode[P scaff.ChildProps[NodeBuilder]](create SingleNodeCreate[P
 		create.Create(node.singleProps)
 	}
 
-	return func() Node {
+	return func(context *scaff.BuildContext) Node {
 		node.tracker = NewSingleTracker(node)
+		node.context = context
 
 		// Fill the props (if desired)
 		if create.PropsCreator != nil {
@@ -44,7 +45,7 @@ func CreateSingleNode[P scaff.ChildProps[NodeBuilder]](create SingleNodeCreate[P
 
 			// Add child (if desired)
 			if builders := props.GetBuilders(); len(builders) == 1 {
-				node.tracker.SetNode(NewMountedFromBuilder(builders[0]))
+				node.tracker.SetNode(NewMountedFromBuilder(builders[0], context))
 			}
 		}
 
@@ -86,7 +87,7 @@ func (s *SingleChildProps[P]) Update(fn func(node *SingleChildNode[P], c *scaff.
 	s.onUpdate = fn
 }
 
-func (s *SingleChildProps[P]) Draw(fn func(node *SingleChildNode[P], position scath.Vec, renderer paint.Painter)) {
+func (s *SingleChildProps[P]) Draw(fn func(node *SingleChildNode[P], position scath.Vec, painter paint.Painter)) {
 	s.onDraw = fn
 }
 
@@ -94,6 +95,7 @@ var _ Node = &SingleChildNode[any]{}
 var _ WantsConstraints = &SingleChildNode[any]{}
 
 type SingleChildNode[P any] struct {
+	context     *scaff.BuildContext
 	tracker     *SingleTracker
 	size        scath.Vec
 	constraints scath.Constraints
@@ -109,6 +111,10 @@ func (s *SingleChildNode[P]) ID() string {
 
 func (s *SingleChildNode[P]) Props() P {
 	return s.props
+}
+
+func (s *SingleChildNode[P]) Context() *scaff.BuildContext {
+	return s.context
 }
 
 func (s *SingleChildNode[P]) Load(parent Node) {
@@ -201,7 +207,7 @@ func (s *SingleChildNode[P]) Update(c *scaff.Context) (UpdateResult, scaff.Trace
 	}
 
 	// We should still update all the children after our own update
-	result, updateErr := s.tracker.Update(s, c)
+	result, updateErr := s.tracker.Update(s, c, s.context)
 	if updateErr != nil {
 		return NoUpdate(), scaff.NewTracedError(s, updateErr)
 	}

@@ -1,15 +1,17 @@
 package scaffui
 
-import "github.com/Liphium/scaff"
+import (
+	"github.com/Liphium/scaff"
+)
 
-func NewMountedFromBuilder(builder NodeBuilder) *MountedNode {
+func NewMountedFromBuilder(builder NodeBuilder, context *scaff.BuildContext) *MountedNode {
 	return &MountedNode{
-		current:   builder(),
+		current:   builder(context),
 		construct: builder,
 	}
 }
 
-type NodeBuilder func() Node
+type NodeBuilder func(*scaff.BuildContext) Node
 
 type MountedNode struct {
 	current   Node
@@ -31,7 +33,7 @@ func (w *MountedNode) Unload() {
 }
 
 // Should be called for an update from the parent, the boolean indicates whether a re-layout should be done (forwards errors from the update of the child)
-func (w *MountedNode) Update(parent Node, c *scaff.Context) (UpdateResult, scaff.TracedError) {
+func (w *MountedNode) Update(parent Node, c *scaff.Context, bc *scaff.BuildContext) (UpdateResult, scaff.TracedError) {
 	result, err := w.current.Update(c)
 	if err != nil {
 		return result, err
@@ -40,7 +42,7 @@ func (w *MountedNode) Update(parent Node, c *scaff.Context) (UpdateResult, scaff
 	if w.current.Tracker() != nil && w.current.Tracker().Changed() {
 		w.current.Unload()
 		w.current = nil // For GC to absolutely know that this Node is no longer needed
-		w.Rebuild()
+		w.Rebuild(bc)
 		w.current.Load(parent)
 
 		// Technically our size didn't change, but we need our parent to check that for us
@@ -49,6 +51,6 @@ func (w *MountedNode) Update(parent Node, c *scaff.Context) (UpdateResult, scaff
 	return result, nil
 }
 
-func (w *MountedNode) Rebuild() {
-	w.current = w.construct()
+func (w *MountedNode) Rebuild(bc *scaff.BuildContext) {
+	w.current = w.construct(bc)
 }

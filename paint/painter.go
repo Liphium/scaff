@@ -13,10 +13,10 @@ type RenderCommand interface {
 }
 
 type Rectangle struct {
-	Position     scath.Vec  `json:"position"`
-	Size         scath.Vec  `json:"size"`
-	FillColor    color.RGBA `json:"fillColor"`
-	BorderRadius int        `json:"borderRadius"`
+	Position     scath.Vec   `json:"position"`
+	Size         scath.Vec   `json:"size"`
+	FillColor    color.Color `json:"fillColor"`
+	BorderRadius int         `json:"borderRadius"`
 }
 
 func (Rectangle) ID() string {
@@ -24,11 +24,11 @@ func (Rectangle) ID() string {
 }
 
 type RectangleStroke struct {
-	Position     scath.Vec  `json:"position"`
-	Size         scath.Vec  `json:"size"`
-	Color        color.RGBA `json:"color"`
-	BorderRadius int        `json:"borderRadius"`
-	Thickness    int        `json:"thickness"`
+	Position     scath.Vec   `json:"position"`
+	Size         scath.Vec   `json:"size"`
+	Color        color.Color `json:"color"`
+	BorderRadius int         `json:"borderRadius"`
+	Thickness    int         `json:"thickness"`
 }
 
 func (RectangleStroke) ID() string {
@@ -47,11 +47,11 @@ func (Image) ID() string {
 }
 
 type Text struct {
-	Font     string    `json:"font"`
-	Text     string    `json:"text"`
-	Position scath.Vec `json:"position"`
-	FontSize int       `json:"fontSize"`
-	Weight   int       `json:"weight"`
+	Font     string      `json:"font"`
+	Color    color.Color `json:"color"`
+	FontSize float64     `json:"fontSize"`
+	Text     string      `json:"text"`
+	Position scath.Vec   `json:"position"`
 }
 
 func (Text) ID() string {

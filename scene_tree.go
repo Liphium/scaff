@@ -1,14 +1,16 @@
 package scaff
 
 import (
+	"github.com/Liphium/scaff/paint"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
 // NewSceneTree makes a new scene tree based on an identifier. This tree supports a builder pattern, just use .Mount(<node>) to mount a node into it or add a transition with SetTransitionProps.
-func NewSceneTree(id string) *SceneTree {
+func NewSceneTree(id string, assetManager *paint.AssetManager) *SceneTree {
 	return &SceneTree{
-		id: id,
+		id:           id,
+		assetManager: assetManager,
 	}
 }
 
@@ -17,6 +19,7 @@ var _ Scene = &SceneTree{}
 
 type SceneTree struct {
 	id              string                          // ID of the scene (MUST BE SET)
+	assetManager    *paint.AssetManager             // Asset manager for the scene
 	transitionProps func(bool) TransitionProperties // Set the transition properties for this scene
 	sceneRoot       Node                            // Node at the root of the scene tree
 
@@ -29,8 +32,11 @@ func (st *SceneTree) Mount(create func(t *Tracker, props *RootProps)) *SceneTree
 
 	// Create a single child node that essentially just exists to refresh the builder passed in
 	node := &SingleChildNode[int8]{
-		id:          "root",
-		tracker:     NewTracker(),
+		id:      "root",
+		tracker: NewTracker(),
+		context: &BuildContext{
+			assetManager: st.assetManager,
+		},
 		singleProps: &SingleChildProps[int8]{},
 	}
 	node.builder = root(create) // Node will automatically be built on load

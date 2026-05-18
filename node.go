@@ -1,8 +1,20 @@
 package scaff
 
 import (
+	"github.com/Liphium/scaff/paint"
 	"github.com/hajimehoshi/ebiten/v2"
 )
+
+// All the context for nodes being created within ScaffUI
+type BuildContext struct {
+	assetManager *paint.AssetManager
+}
+
+func (bc BuildContext) AssetManager() *paint.AssetManager {
+	return bc.assetManager
+}
+
+type NodeBuilder func(*BuildContext) Node
 
 type Loadable[T any] interface {
 

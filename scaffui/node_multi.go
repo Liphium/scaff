@@ -40,8 +40,9 @@ func CreateMultiNode[P scaff.ChildProps[NodeBuilder]](create MultiNodeCreate[P])
 		create.Create(node.multiProps)
 	}
 
-	return func() Node {
+	return func(context *scaff.BuildContext) Node {
 		node.tracker = NewMultiTracker(node)
+		node.context = context
 
 		// Create the props (if desired)
 		if create.PropsCreator != nil {
@@ -52,7 +53,7 @@ func CreateMultiNode[P scaff.ChildProps[NodeBuilder]](create MultiNodeCreate[P])
 			// Add children (if desired)
 			if builders := props.GetBuilders(); len(builders) > 0 {
 				for _, builder := range builders {
-					node.tracker.Add(NewMountedFromBuilder(builder))
+					node.tracker.Add(NewMountedFromBuilder(builder, context))
 				}
 			}
 		}
@@ -103,6 +104,7 @@ var _ Node = &MultiChildNode[any]{}
 var _ WantsConstraints = &MultiChildNode[any]{}
 
 type MultiChildNode[P any] struct {
+	context     *scaff.BuildContext
 	tracker     *MultiTracker
 	size        scath.Vec
 	constraints scath.Constraints
@@ -118,6 +120,10 @@ func (m *MultiChildNode[P]) ID() string {
 
 func (m *MultiChildNode[P]) Props() P {
 	return m.props
+}
+
+func (s *MultiChildNode[P]) Context() *scaff.BuildContext {
+	return s.context
 }
 
 func (m *MultiChildNode[P]) Load(parent Node) {
@@ -201,7 +207,7 @@ func (m *MultiChildNode[P]) Update(c *scaff.Context) (UpdateResult, scaff.Traced
 			return NoUpdate(), scaff.NewTracedError(m, err)
 		}
 
-		result, updateErr := m.tracker.Update(m, c)
+		result, updateErr := m.tracker.Update(m, c, m.context)
 		if updateErr != nil {
 			return NoUpdate(), scaff.NewTracedError(m, updateErr)
 		}
@@ -214,7 +220,7 @@ func (m *MultiChildNode[P]) Update(c *scaff.Context) (UpdateResult, scaff.Traced
 		return result, nil
 	}
 
-	return m.tracker.Update(m, c)
+	return m.tracker.Update(m, c, m.context)
 }
 
 func (m *MultiChildNode[P]) Unload() {

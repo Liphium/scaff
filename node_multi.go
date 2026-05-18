@@ -18,8 +18,9 @@ func CreateMultiNode[P ChildProps[NodeBuilder]](id string, propsCreator func(t *
 		create(node.multiProps)
 	}
 
-	return func() Node {
+	return func(context *BuildContext) Node {
 		node.tracker = NewTracker()
+		node.context = context
 
 		// Fill the props
 		if propsCreator != nil {
@@ -69,7 +70,9 @@ type MultiChildNode[P any] struct {
 	parent   Node
 	children []Node
 	builders []NodeBuilder
-	tracker  *Tracker
+
+	tracker *Tracker
+	context *BuildContext
 
 	id         string
 	props      P
@@ -91,7 +94,7 @@ func (s *MultiChildNode[P]) Load(parent Node) {
 	if s.builders != nil {
 		s.children = make([]Node, len(s.builders))
 		for i, builder := range s.builders {
-			s.children[i] = builder()
+			s.children[i] = builder(s.context)
 			s.children[i].Load(s)
 		}
 	}
@@ -138,7 +141,7 @@ func (s *MultiChildNode[P]) Update(c *Context) TracedError {
 	for i, child := range s.children {
 		if child.Tracker().Changed() {
 			child.Unload()
-			s.children[i] = s.builders[i]()
+			s.children[i] = s.builders[i](s.context)
 			s.children[i].Load(s)
 		}
 	}

@@ -1,14 +1,30 @@
 package paint
 
 import (
+	"bytes"
 	_ "image/gif"
 	_ "image/jpeg"
 	_ "image/png"
 	"math"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/examples/resources/fonts"
+	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
+
+var (
+	// Default font face
+	mplusFaceSource *text.GoTextFaceSource
+)
+
+func init() {
+	s, err := text.NewGoTextFaceSource(bytes.NewReader(fonts.MPlus1pRegular_ttf))
+	if err != nil {
+		log.Error("could not load default font", "err", err)
+	}
+	mplusFaceSource = s
+}
 
 var _ Painter = &EbitenPainter{}
 
@@ -44,7 +60,7 @@ func (er *EbitenPainter) Paint(command RenderCommand) {
 	case Image:
 		er.drawImage(c)
 	case Text:
-		log.Warn("text command not implemented in ebiten renderer yet")
+		er.drawText(c)
 	default:
 		log.Warn("unknown render command", "id", command.ID())
 	}
@@ -111,6 +127,32 @@ func (er *EbitenPainter) drawImage(command Image) {
 	opts.GeoM.Scale(command.Size.X/float64(w), command.Size.Y/float64(h))
 	opts.GeoM.Translate(command.Position.X, command.Position.Y)
 	er.screen.DrawImage(img, opts)
+}
+
+func (er *EbitenPainter) drawText(command Text) {
+	font := mplusFaceSource
+
+	if command.Font == "" {
+		log.Warn("no font specified, using default font")
+	} else if wanted, err := er.assets.GetFont(command.Font); err == nil {
+		font = wanted
+	} else {
+		log.Warn("font not found, using default font", "name", command.Font, "text", command.Text)
+	}
+
+	op := &text.DrawOptions{}
+	op.GeoM.Translate(command.Position.X, command.Position.Y)
+	op.ColorScale.ScaleWithColor(command.Color)
+	text.Measure(command.Text, &text.GoTextFace{
+		Source:    font,
+		Direction: text.DirectionLeftToRight,
+		Size:      command.FontSize,
+	}, 0)
+	text.Draw(er.screen, command.Text, &text.GoTextFace{
+		Source:    font,
+		Direction: text.DirectionLeftToRight,
+		Size:      command.FontSize,
+	}, op)
 }
 
 func roundedRectPath(x, y, width, height float64, borderRadius int) *vector.Path {

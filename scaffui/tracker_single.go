@@ -42,14 +42,14 @@ func (s *SingleTracker) Node() (*MountedNode, bool) {
 	return s.node, s.node != nil
 }
 
-func (s *SingleTracker) Update(parent Node, c *scaff.Context) (UpdateResult, scaff.TracedError) {
+func (s *SingleTracker) Update(parent Node, c *scaff.Context, bc *scaff.BuildContext) (UpdateResult, scaff.TracedError) {
 
 	// If there is no node, nothing to check
 	if s.node == nil {
 		return NoUpdate(), nil
 	}
 
-	result, err := s.node.Update(parent, c)
+	result, err := s.node.Update(parent, c, bc)
 	if err != nil {
 		return NoUpdate(), err
 	}

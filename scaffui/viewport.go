@@ -13,6 +13,10 @@ type ViewportProps struct {
 	child  optional.O[NodeBuilder]
 }
 
+func (vp *ViewportProps) AssetManager(assets *paint.AssetManager) {
+	vp.assets = assets
+}
+
 func (vp *ViewportProps) Child(builder NodeBuilder) {
 	vp.child.SetValue(builder)
 }
@@ -22,18 +26,22 @@ func (vp ViewportProps) GetBuilders() []scaff.NodeBuilder {
 }
 
 // Viewport creates a viewport node that can be used to essentially mount a
-func Viewport(assets *paint.AssetManager, create func(t *scaff.Tracker, props *ViewportProps)) scaff.NodeBuilder {
+func Viewport(create func(t *scaff.Tracker, props *ViewportProps)) scaff.NodeBuilder {
 	return scaff.CreateSingleNode("viewport", create, func(props *scaff.SingleChildProps[ViewportProps]) {
 		var root *MountedNode
 		var renderer *paint.EbitenPainter
 
 		props.Load(func(node *scaff.SingleChildNode[ViewportProps], parent scaff.Node) {
+			if node.Props().assets == nil {
+				log.Warn("no asset manager found, this might cause errors with text and images")
+			}
+
 			child, ok := node.Props().child.Value()
 			if !ok {
 				return
 			}
 
-			root = NewMountedFromBuilder(child)
+			root = NewMountedFromBuilder(child, node.Context())
 			root.Load(nil)
 		})
 
@@ -50,7 +58,7 @@ func Viewport(assets *paint.AssetManager, create func(t *scaff.Tracker, props *V
 
 			// Initialize the UI and stuff
 			if renderer == nil {
-				renderer = paint.NewEbitenPainter(ebiten.NewImage(screen.Bounds().Dx(), screen.Bounds().Dy()), true, assets)
+				renderer = paint.NewEbitenPainter(ebiten.NewImage(screen.Bounds().Dx(), screen.Bounds().Dy()), true, node.Props().assets)
 				root.Current().SetConstraints(scath.Loose(float64(c.Width), float64(c.Height)))
 				_, err := root.Current().Layout()
 				if err != nil {
@@ -59,7 +67,7 @@ func Viewport(assets *paint.AssetManager, create func(t *scaff.Tracker, props *V
 			}
 
 			// Update all of the stuff
-			result, err := root.Update(nil, c)
+			result, err := root.Update(nil, c, node.Context())
 			if result.SizeChanged || err != nil {
 				log.Warn("relayout or error happend", "result", result, "err", err)
 				return
