@@ -1,6 +1,7 @@
 package paint
 
 import (
+	"bytes"
 	"image"
 	_ "image/gif"
 	_ "image/jpeg"
@@ -9,8 +10,22 @@ import (
 	"sync"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/examples/resources/fonts"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
+
+var (
+	// Default font face
+	defaultFontFace *text.GoTextFaceSource
+)
+
+func init() {
+	s, err := text.NewGoTextFaceSource(bytes.NewReader(fonts.MPlus1pRegular_ttf))
+	if err != nil {
+		log.Error("could not load default font", "err", err)
+	}
+	defaultFontFace = s
+}
 
 // TODO for this thing:
 // - Cache dropping when not used for a few frames
@@ -63,7 +78,7 @@ func (am *AssetManager) GetFont(path string) (*text.GoTextFaceSource, error) {
 
 	f, err := am.fs.Open(path)
 	if err != nil {
-		return nil, err
+		return defaultFontFace, nil
 	}
 	defer f.Close()
 

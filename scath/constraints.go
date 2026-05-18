@@ -171,6 +171,10 @@ func Loose(maxX, maxY float64) Constraints {
 	return NewConstraints(0, maxX, 0, maxY)
 }
 
+func Minimum(minX, minY float64) Constraints {
+	return NewConstraints(minX, Infinite, minY, Infinite)
+}
+
 // Expand returns constraints that fill specified finite axes.
 func Expand(width, height float64) Constraints {
 	minX, maxX := 0.0, Infinite
