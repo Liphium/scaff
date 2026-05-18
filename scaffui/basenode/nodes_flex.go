@@ -9,6 +9,8 @@ import (
 	"github.com/Liphium/scaff/scath"
 )
 
+var _ scaff.ChildProps[scaffui.NodeBuilder] = FlexProps{}
+
 type FlexProps struct {
 	children      []scaffui.NodeBuilder
 	stretchFactor map[int]optional.O[int]
@@ -37,14 +39,12 @@ func (fp *FlexProps) Direction(direction LayoutDirection) {
 	fp.direction.SetValue(direction)
 }
 
+func (fp FlexProps) GetBuilders() []scaffui.NodeBuilder {
+	return fp.children
+}
+
 func Flex(create func(t *scaff.Tracker, props *FlexProps)) scaffui.NodeBuilder {
-	return scaffui.CreateMultiNode("flex", create, func(core *scaffui.MultiChildConstruct[FlexProps]) {
-
-		// Pass all of the children to the multi child node
-		for _, child := range core.Props().children {
-			core.Child(child)
-		}
-
+	return scaffui.CreateMultiNode("flex", create, func(core *scaffui.MultiChildProps[FlexProps]) {
 		core.Layout(func(node *scaffui.MultiChildNode[FlexProps]) (scath.Vec, error) {
 			return flexLayout(node)
 		})
@@ -123,9 +123,9 @@ func flexLayoutLinear(node *scaffui.MultiChildNode[FlexProps], horizontal bool) 
 		return clampLinearSize(totalSize, horizontal, mainMin, mainMax, crossMin, crossMax), nil
 	}
 
-	if mainMax == scaffui.Infinite {
+	if mainMax == scath.Infinite {
 		for _, child := range children {
-			child.Current().SetConstraints(newChildConstraints(horizontal, 0, scaffui.Infinite, crossMin, crossMax))
+			child.Current().SetConstraints(newChildConstraints(horizontal, 0, scath.Infinite, crossMin, crossMax))
 			size, err := child.Current().Layout()
 			if err != nil {
 				return scath.Vec{}, err
@@ -138,7 +138,7 @@ func flexLayoutLinear(node *scaffui.MultiChildNode[FlexProps], horizontal bool) 
 
 	remainder := mainMax
 	childCount := len(children)
-	share := remainder / childCount
+	share := remainder / float64(childCount)
 
 	// Lay out non-stretchable children
 	for i, child := range node.Children() {
@@ -158,7 +158,7 @@ func flexLayoutLinear(node *scaffui.MultiChildNode[FlexProps], horizontal bool) 
 		remainder -= mainSize(size, horizontal)
 		childCount--
 		if childCount > 0 {
-			share = remainder / childCount
+			share = remainder / float64(childCount)
 		}
 	}
 
@@ -180,7 +180,7 @@ func flexLayoutLinear(node *scaffui.MultiChildNode[FlexProps], horizontal bool) 
 			continue
 		}
 
-		child.Current().SetConstraints(newChildConstraints(horizontal, 0, remainder/factorSum*factor.Or(1), crossMin, crossMax))
+		child.Current().SetConstraints(newChildConstraints(horizontal, 0, (remainder/float64(factorSum))*float64(factor.Or(1)), crossMin, crossMax))
 		size, err := child.Current().Layout()
 		if err != nil {
 			return scath.Vec{}, err
@@ -192,7 +192,7 @@ func flexLayoutLinear(node *scaffui.MultiChildNode[FlexProps], horizontal bool) 
 }
 
 // Maps constraints to main/cross axis values based on direction.
-func axisConstraints(c scaffui.Constraints, horizontal bool) (mainMin, mainMax, crossMin, crossMax int) {
+func axisConstraints(c scath.Constraints, horizontal bool) (mainMin, mainMax, crossMin, crossMax float64) {
 	if horizontal {
 		return c.MinX, c.MaxX, c.MinY, c.MaxY
 	}
@@ -201,16 +201,16 @@ func axisConstraints(c scaffui.Constraints, horizontal bool) (mainMin, mainMax, 
 }
 
 // Builds child constraints from main/cross axis values.
-func newChildConstraints(horizontal bool, mainMin, mainMax, crossMin, crossMax int) scaffui.Constraints {
+func newChildConstraints(horizontal bool, mainMin, mainMax, crossMin, crossMax float64) scath.Constraints {
 	if horizontal {
-		return scaffui.NewConstraints(mainMin, mainMax, crossMin, crossMax)
+		return scath.NewConstraints(mainMin, mainMax, crossMin, crossMax)
 	}
 
-	return scaffui.NewConstraints(crossMin, crossMax, mainMin, mainMax)
+	return scath.NewConstraints(crossMin, crossMax, mainMin, mainMax)
 }
 
 // Find the max size in the axis of a child.
-func mainSize(size scath.Vec, horizontal bool) int {
+func mainSize(size scath.Vec, horizontal bool) float64 {
 	if horizontal {
 		return size.X
 	}
@@ -235,7 +235,7 @@ func addChildSize(total, child scath.Vec, horizontal bool) scath.Vec {
 	return total
 }
 
-func clampLinearSize(size scath.Vec, horizontal bool, mainMin, mainMax, crossMin, crossMax int) scath.Vec {
+func clampLinearSize(size scath.Vec, horizontal bool, mainMin, mainMax, crossMin, crossMax float64) scath.Vec {
 	main := mainSize(size, horizontal)
 	cross := mainSize(size, !horizontal)
 
@@ -249,9 +249,9 @@ func clampLinearSize(size scath.Vec, horizontal bool, mainMin, mainMax, crossMin
 	return scath.Vec{X: cross, Y: main}
 }
 
-func clampAxis(v, minV, maxV int) int {
+func clampAxis(v, minV, maxV float64) float64 {
 	v = max(v, minV)
-	if maxV != scaffui.Infinite {
+	if maxV != scath.Infinite {
 		v = min(v, maxV)
 	}
 	return v

@@ -45,46 +45,41 @@ func (o *InputProps) OnScroll(fn func(handled, inside bool, event scaff.ScrollEv
 
 // Create a new input node exposing a better interface to handle all kinds of input events coming down from scaffui.
 func Input(create func(t *scaff.Tracker, props *InputProps)) scaffui.NodeBuilder {
-	return scaffui.CreateSingleNode("input", create, func(core *scaffui.SingleChildProps[InputProps]) {
-
+	return scaffui.CreateSingleNode("input", create, func(props *scaffui.SingleChildProps[InputProps]) {
 		lastPosition := scath.Vec{X: 0, Y: 0}
 
-		if child, ok := core.Props().child.Value(); ok {
-			core.Child(child)
-		}
-
-		core.HandleEvent(func(node *scaffui.SingleChildNode[InputProps], c *scaff.LayerContext, event scaffui.Event) error {
+		props.HandleEvent(func(node *scaffui.SingleChildNode[InputProps], c *scaff.Context, event scaff.Event) error {
 			handled := c.IsHandled(event.EventID())
 
 			// If it is a positional event, check if the event was done within the current bounds
 			isInside := false
-			if posEvent, ok := event.(scaffui.PositionalEvent); ok {
-				isInside = scaffui.IsWithin(lastPosition, node.Size(), posEvent.Position())
+			if posEvent, ok := event.(scaff.PositionalEvent); ok {
+				isInside = posEvent.Position().IsWithinRectangle(lastPosition, node.Size())
 			} else {
 				return nil
 			}
 
 			switch ev := event.(type) {
-			case scaffui.DownEvent:
-				if fn, ok := core.Props().onDown.Value(); ok {
+			case scaff.DownEvent:
+				if fn, ok := node.Props().onDown.Value(); ok {
 					if fn(handled, isInside, ev) {
 						c.Handled(event.EventID())
 					}
 				}
-			case scaffui.ReleaseEvent:
-				if fn, ok := core.Props().onRelease.Value(); ok {
+			case scaff.ReleaseEvent:
+				if fn, ok := node.Props().onRelease.Value(); ok {
 					if fn(handled, isInside, ev) {
 						c.Handled(event.EventID())
 					}
 				}
-			case scaffui.MoveEvent:
-				if fn, ok := core.Props().onMove.Value(); ok {
+			case scaff.MoveEvent:
+				if fn, ok := node.Props().onMove.Value(); ok {
 					if fn(handled, isInside, ev) {
 						c.Handled(event.EventID())
 					}
 				}
-			case scaffui.ScrollEvent:
-				if fn, ok := core.Props().onScroll.Value(); ok {
+			case scaff.ScrollEvent:
+				if fn, ok := node.Props().onScroll.Value(); ok {
 					if fn(handled, isInside, ev) {
 						c.Handled(event.EventID())
 					}
@@ -94,7 +89,7 @@ func Input(create func(t *scaff.Tracker, props *InputProps)) scaffui.NodeBuilder
 			return nil
 		})
 
-		core.Draw(func(node *scaffui.SingleChildNode[InputProps], position scath.Vec, renderer paint.Painter) {
+		props.Draw(func(node *scaffui.SingleChildNode[InputProps], position scath.Vec, renderer paint.Painter) {
 			lastPosition = position
 			node.DrawChild(position, renderer)
 		})

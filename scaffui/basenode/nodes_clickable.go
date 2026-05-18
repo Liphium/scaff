@@ -8,23 +8,11 @@ import (
 )
 
 type ClickableProps struct {
-	child   optional.O[scaffui.NodeBuilder]
 	onClick optional.O[func(button ebiten.MouseButton) bool]
-}
-
-func (cp *ClickableProps) Child(builder scaffui.NodeBuilder) {
-	cp.child.SetValue(builder)
 }
 
 func (cp *ClickableProps) OnClick(fn func(button ebiten.MouseButton) bool) {
 	cp.onClick.SetValue(fn)
-}
-
-func (cp ClickableProps) GetBuilders() []scaffui.NodeBuilder {
-	if builder, ok := cp.child.Value(); ok {
-		return []scaffui.NodeBuilder{builder}
-	}
-	return nil
 }
 
 func Clickable(create func(t *scaff.Tracker, props *ClickableProps)) scaffui.NodeBuilder {

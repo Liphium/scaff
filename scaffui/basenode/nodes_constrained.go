@@ -11,31 +11,22 @@ import (
 )
 
 type ConstrainedProps struct {
-	child       optional.O[scaffui.NodeBuilder]
-	constraints optional.O[scaffui.Constraints]
+	constraints optional.O[scath.Constraints]
+	*scaffui.AcceptChild
 }
 
-func (cp *ConstrainedProps) Constraints(constraints scaffui.Constraints) {
+func (cp *ConstrainedProps) Constraints(constraints scath.Constraints) {
 	cp.constraints.SetValue(constraints)
-}
-
-func (cp *ConstrainedProps) Child(builder scaffui.NodeBuilder) {
-	cp.child.SetValue(builder)
 }
 
 func Constrained(create func(t *scaff.Tracker, props *ConstrainedProps)) scaffui.NodeBuilder {
 	return scaffui.CreateSingleNode("constrained", create, func(core *scaffui.SingleChildProps[ConstrainedProps]) {
 
-		// Pass the child to the core node
-		if child, ok := core.Props().child.Value(); ok {
-			core.Child(child)
-		}
-
 		core.Layout(func(node *scaffui.SingleChildNode[ConstrainedProps]) (scath.Vec, error) {
 			spec := uispec.SingleChildBoxSpec{
-				Parent:        node.Constraints(),
-				Wanted:        node.Props().constraints,
-				scath.Padding: scaffui.Pad(0),
+				Parent:  node.Constraints(),
+				Wanted:  node.Props().constraints,
+				Padding: scath.Pad(0),
 			}
 
 			if child, ok := node.Child(); ok {

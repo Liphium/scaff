@@ -14,9 +14,10 @@ import (
 )
 
 type ImageProps struct {
-	constraints optional.O[scaffui.Constraints]
+	constraints optional.O[scath.Constraints]
 	path        optional.O[string]
 	filterMode  optional.O[ebiten.Filter]
+	*scaffui.AcceptNoChild
 }
 
 // The path to the image (renderer-specific but probably to the file in your assets file system)
@@ -30,31 +31,31 @@ func (i *ImageProps) Filter(filter ebiten.Filter) {
 }
 
 // Set the constraints for the image
-func (i *ImageProps) Constraints(constraints scaffui.Constraints) {
+func (i *ImageProps) Constraints(constraints scath.Constraints) {
 	i.constraints.SetValue(constraints)
 }
 
 func Image(create func(t *scaff.Tracker, props *ImageProps)) scaffui.NodeBuilder {
 	return scaffui.CreateSingleNode("image", create, func(core *scaffui.SingleChildProps[ImageProps]) {
-		core.WantedConstraints(func(node *scaffui.SingleChildNode[ImageProps], parent scaffui.Constraints) scaffui.Constraints {
-			return node.Props().constraints.Or(scaffui.Unconstrained())
+		core.WantedConstraints(func(node *scaffui.SingleChildNode[ImageProps], parent scath.Constraints) scath.Constraints {
+			return node.Props().constraints.Or(scath.Unconstrained())
 		})
 
 		core.Layout(func(node *scaffui.SingleChildNode[ImageProps]) (scath.Vec, error) {
 			spec := uispec.SingleChildBoxSpec{
-				Parent:        node.Constraints(),
-				Wanted:        node.Props().constraints,
-				scath.Padding: scaffui.Pad(0),
+				Parent:  node.Constraints(),
+				Wanted:  node.Props().constraints,
+				Padding: scath.Pad(0),
 			}
 
 			return spec.LayoutWithoutChild()
 		})
 
-		core.Draw(func(node *scaffui.SingleChildNode[ImageProps], position scath.Vec, renderer paint.Painter) {
+		core.Draw(func(node *scaffui.SingleChildNode[ImageProps], position scath.Vec, painter paint.Painter) {
 			if path, ok := node.Props().path.Value(); ok {
 
 				// Draw the actual image
-				renderer.DrawOne(scaffui.ImageCommand{
+				painter.Paint(paint.Image{
 					Path:       path,
 					Position:   position,
 					Size:       node.Size(),
@@ -63,7 +64,7 @@ func Image(create func(t *scaff.Tracker, props *ImageProps)) scaffui.NodeBuilder
 			} else {
 
 				// Draw a red rectangle to signal an error
-				renderer.DrawOne(scaffui.RectangleCommand{
+				painter.Paint(paint.Rectangle{
 					Position:  position,
 					Size:      node.Size(),
 					FillColor: color.RGBA{255, 0, 0, 255},

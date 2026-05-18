@@ -48,175 +48,175 @@ type Vec struct {
 }
 
 // Add returns this + a
-func (v Vec) Add(a Vec) Vec {
-	return Vec{v.X + a.X, v.Y + a.Y}
+func (toCheck Vec) Add(a Vec) Vec {
+	return Vec{toCheck.X + a.X, toCheck.Y + a.Y}
 }
 
 // Sub returns this - a
-func (v Vec) Sub(a Vec) Vec {
-	return Vec{v.X - a.X, v.Y - a.Y}
+func (toCheck Vec) Sub(a Vec) Vec {
+	return Vec{toCheck.X - a.X, toCheck.Y - a.Y}
 }
 
 // Div divides this vector by a.
-func (v Vec) Div(a Vec) Vec {
-	return Vec{v.X / a.X, v.Y / a.Y}
+func (toCheck Vec) Div(a Vec) Vec {
+	return Vec{toCheck.X / a.X, toCheck.Y / a.Y}
 }
 
 // DivS divides this vector by scalar value s.
-func (v Vec) DivS(s float64) Vec {
-	return Vec{v.X / s, v.Y / s}
+func (toCheck Vec) DivS(s float64) Vec {
+	return Vec{toCheck.X / s, toCheck.Y / s}
 }
 
 // Mul returns this * a
-func (v Vec) Mul(a Vec) Vec {
-	return Vec{v.X * a.X, v.Y * a.Y}
+func (toCheck Vec) Mul(a Vec) Vec {
+	return Vec{toCheck.X * a.X, toCheck.Y * a.Y}
 }
 
 // Scale scales vector
-func (v Vec) Scale(s float64) Vec {
-	return Vec{v.X * s, v.Y * s}
+func (toCheck Vec) Scale(s float64) Vec {
+	return Vec{toCheck.X * s, toCheck.Y * s}
 }
 
 // Unit returns a normalized copy of this vector (unit vector).
-func (v Vec) Unit() Vec {
+func (toCheck Vec) Unit() Vec {
 	// return v.Mult(1.0 / (v.Length() + math.SmallestNonzeroFloat64))
-	return v.Scale(1.0 / (v.Mag() + 1e-50))
+	return toCheck.Scale(1.0 / (toCheck.Mag() + 1e-50))
 }
 
 // Abs returns the absolute value of vector.
-func (v Vec) Abs() Vec {
-	return Vec{math.Abs(v.X), math.Abs(v.Y)}
+func (toCheck Vec) Abs() Vec {
+	return Vec{math.Abs(toCheck.X), math.Abs(toCheck.Y)}
 }
 
 // AbsX returns the absolute X value of vector.
-func (v Vec) AbsX() float64 {
-	return math.Abs(v.X)
+func (toCheck Vec) AbsX() float64 {
+	return math.Abs(toCheck.X)
 }
 
 // AbsY returns the absolute Y value of vector.
-func (v Vec) AbsY() float64 {
-	return math.Abs(v.Y)
+func (toCheck Vec) AbsY() float64 {
+	return math.Abs(toCheck.Y)
 }
 
 // Neg negates a vector.
-func (v Vec) Neg() Vec {
-	return Vec{-v.X, -v.Y}
+func (toCheck Vec) Neg() Vec {
+	return Vec{-toCheck.X, -toCheck.Y}
 }
 
 // NegY negates X.
-func (v Vec) NegX() Vec {
-	return Vec{-v.X, v.Y}
+func (toCheck Vec) NegX() Vec {
+	return Vec{-toCheck.X, toCheck.Y}
 }
 
 // NegY negates Y.
-func (v Vec) NegY() Vec {
-	return Vec{v.X, -v.Y}
+func (toCheck Vec) NegY() Vec {
+	return Vec{toCheck.X, -toCheck.Y}
 }
 
 // Dot returns dot product
-func (v Vec) Dot(other Vec) float64 {
-	return v.X*other.X + v.Y*other.Y
+func (toCheck Vec) Dot(other Vec) float64 {
+	return toCheck.X*other.X + toCheck.Y*other.Y
 }
 
 // Cross calculates the 2D vector cross product analog.
 // The cross product of 2D vectors results in a 3D vector with only a z component.
 // This function returns the magnitude of the z value.
-func (v Vec) Cross(other Vec) float64 {
-	return v.X*other.Y - v.Y*other.X
+func (toCheck Vec) Cross(other Vec) float64 {
+	return toCheck.X*other.Y - toCheck.Y*other.X
 }
 
 // Returns the vector projection onto other.
-func (v Vec) Project(other Vec) Vec {
-	return other.Scale(v.Dot(other) / other.Dot(other))
+func (toCheck Vec) Project(other Vec) Vec {
+	return other.Scale(toCheck.Dot(other) / other.Dot(other))
 }
 
 // Angle returns the angular direction v is pointing in (in radians).
-func (v Vec) Angle() float64 {
-	return math.Atan2(v.Y, v.X)
+func (toCheck Vec) Angle() float64 {
+	return math.Atan2(toCheck.Y, toCheck.X)
 }
 
 // Rotate a vector by an angle in radians
-func (v Vec) Rotate(angle float64) Vec {
+func (toCheck Vec) Rotate(angle float64) Vec {
 	return Vec{
-		X: v.X*math.Cos(angle) - v.Y*math.Sin(angle),
-		Y: v.X*math.Sin(angle) + v.Y*math.Cos(angle),
+		X: toCheck.X*math.Cos(angle) - toCheck.Y*math.Sin(angle),
+		Y: toCheck.X*math.Sin(angle) + toCheck.Y*math.Cos(angle),
 	}
 }
 
 // Mag returns the magnitude (length) of the vector.
-func (v Vec) Mag() float64 {
-	return math.Hypot(v.X, v.Y)
+func (toCheck Vec) Mag() float64 {
+	return math.Hypot(toCheck.X, toCheck.Y)
 }
 
 // MagSq returns the magnitude (length) of the vector, squared.
 //
 // This method is often used to improve performance since, unlike Mag(),
 // it does not require a Sqrt() operation.
-func (v Vec) MagSq() float64 {
-	return v.X*v.X + v.Y*v.Y
+func (toCheck Vec) MagSq() float64 {
+	return toCheck.X*toCheck.X + toCheck.Y*toCheck.Y
 }
 
 // Slerp performs spherical linear interpolation between two vectors with given weight value in [0,1] range, returning interpolated vector
-func (v Vec) Slerp(to Vec, weight float64) Vec {
-	startLengthSq := v.MagSq()
+func (toCheck Vec) Slerp(to Vec, weight float64) Vec {
+	startLengthSq := toCheck.MagSq()
 	endLengthSq := to.MagSq()
 	if startLengthSq == 0.0 || endLengthSq == 0.0 {
-		return v.Lerp(to, weight)
+		return toCheck.Lerp(to, weight)
 	}
 	startLength := math.Sqrt(startLengthSq)
 	resultLength := (1-weight)*startLength + weight*math.Sqrt(endLengthSq)
-	angle := v.AngleTo(to)
-	return v.Rotate(angle * weight).Scale(resultLength / startLength)
+	angle := toCheck.AngleTo(to)
+	return toCheck.Rotate(angle * weight).Scale(resultLength / startLength)
 }
 
 // AngleTo returns the angle to the given vector, in radians.
-func (v Vec) AngleTo(other Vec) float64 {
-	return math.Atan2(v.Cross(other), v.Dot(other))
+func (toCheck Vec) AngleTo(other Vec) float64 {
+	return math.Atan2(toCheck.Cross(other), toCheck.Dot(other))
 }
 
 // Limits a vector's magnitude to a maximum value.
-func (v Vec) Limit(max float64) Vec {
-	if v.Mag() > max {
-		return v.Unit().Scale(max)
+func (toCheck Vec) Limit(max float64) Vec {
+	if toCheck.Mag() > max {
+		return toCheck.Unit().Scale(max)
 	}
-	return v
+	return toCheck
 }
 
 // Lerp linearly interpolates between this and other vector.
-func (v Vec) Lerp(other Vec, t float64) Vec {
-	return v.Scale(1.0 - t).Add(other.Scale(t))
+func (toCheck Vec) Lerp(other Vec, t float64) Vec {
+	return toCheck.Scale(1.0 - t).Add(other.Scale(t))
 }
 
 // IsZero returns true if vector is zero vector
-func (v Vec) IsZero() bool {
-	return v == Vec{}
+func (toCheck Vec) IsZero() bool {
+	return toCheck == Vec{}
 }
 
 // Dist returns distance between v and other.
-func (v Vec) Dist(other Vec) float64 {
-	return math.Hypot(v.X-other.X, v.Y-other.Y)
+func (toCheck Vec) Dist(other Vec) float64 {
+	return math.Hypot(toCheck.X-other.X, toCheck.Y-other.Y)
 }
 
 // DistSq returns the squared distance between this and other.
 //
 // Faster than v.Dist() when you only need to compare distances.
-func (v Vec) DistSq(other Vec) float64 {
-	return v.Sub(other).MagSq()
+func (toCheck Vec) DistSq(other Vec) float64 {
+	return toCheck.Sub(other).MagSq()
 }
 
 // Round returns the nearest integer Vector, rounding half away from zero.
-func (v Vec) Round() Vec {
-	return Vec{math.Round(v.X), math.Round(v.Y)}
+func (toCheck Vec) Round() Vec {
+	return Vec{math.Round(toCheck.X), math.Round(toCheck.Y)}
 }
 
 // Floor returns vector with all components rounded down (towards negative infinity).
-func (v Vec) Floor() Vec {
-	return Vec{math.Floor(v.X), math.Floor(v.Y)}
+func (toCheck Vec) Floor() Vec {
+	return Vec{math.Floor(toCheck.X), math.Floor(toCheck.Y)}
 }
 
 // Ceil returns vector with all components rounded up (towards positive infinity).
-func (v Vec) Ceil() Vec {
-	return Vec{math.Ceil(v.X), math.Ceil(v.Y)}
+func (toCheck Vec) Ceil() Vec {
+	return Vec{math.Ceil(toCheck.X), math.Ceil(toCheck.Y)}
 }
 
 // FromAngle makes a new 2D unit vector from an angle
@@ -225,47 +225,47 @@ func FromAngle(angle float64) Vec {
 }
 
 // EqualsP returns they are practically equal with each other within a delta tolerance.
-func (v Vec) EqualsPr(other Vec, allowedDelta float64) bool {
-	return (math.Abs(v.X-other.X) <= allowedDelta) &&
-		(math.Abs(v.Y-other.Y) <= allowedDelta)
+func (toCheck Vec) EqualsPr(other Vec, allowedDelta float64) bool {
+	return (math.Abs(toCheck.X-other.X) <= allowedDelta) &&
+		(math.Abs(toCheck.Y-other.Y) <= allowedDelta)
 }
 
 // Equals checks if two vectors are equal. (Be careful when comparing floating point numbers!)
-func (v Vec) Equals(other Vec) bool {
-	return v.X == other.X && v.Y == other.Y
+func (toCheck Vec) Equals(other Vec) bool {
+	return toCheck.X == other.X && toCheck.Y == other.Y
 }
 
 // Reflect returns the reflection of the vector v over the given normal.
 // normal should be a normalized (unit) vector.
-func (v Vec) Reflect(normal Vec) Vec {
-	return v.Sub(normal.Scale(2 * v.Dot(normal)))
+func (toCheck Vec) Reflect(normal Vec) Vec {
+	return toCheck.Sub(normal.Scale(2 * toCheck.Dot(normal)))
 }
 
 // String returns string representation of this vector.
-func (v Vec) String() string {
-	return fmt.Sprintf("(%.1f, %.1f)", v.X, v.Y)
+func (toCheck Vec) String() string {
+	return fmt.Sprintf("(%.1f, %.1f)", toCheck.X, toCheck.Y)
 }
 
 // MODIFIED BY SCAFF CONTRIBUTORS
 
-// IsWithin checks, from the current vector as a position, with the size added if toCheck is within that rectangle.
-func (v Vec) IsWithinRectangle(size Vec, toCheck Vec) bool {
-	return toCheck.X >= v.X && toCheck.X <= v.X+size.X &&
-		toCheck.Y >= v.Y && toCheck.Y <= v.Y+size.Y
+// IsWithin checks if the current position is in the rectangle starting at start with size.
+func (v Vec) IsWithinRectangle(start Vec, size Vec) bool {
+	return v.X >= start.X && v.X <= start.X+size.X &&
+		v.Y >= start.Y && v.Y <= start.Y+size.Y
 }
 
 // SubtractPadding shrinks v by horizontal and vertical padding totals.
-func (v Vec) SubtractPadding(padding Padding) Vec {
+func (toCheck Vec) SubtractPadding(padding Padding) Vec {
 	return Vec{
-		X: max(0, v.X-(padding.Left+padding.Right)),
-		Y: max(0, v.Y-(padding.Top+padding.Bottom)),
+		X: max(0, toCheck.X-(padding.Left+padding.Right)),
+		Y: max(0, toCheck.Y-(padding.Top+padding.Bottom)),
 	}
 }
 
 // AddPadding grows v by horizontal and vertical padding totals.
-func (v Vec) AddPadding(padding Padding) Vec {
+func (toCheck Vec) AddPadding(padding Padding) Vec {
 	return Vec{
-		X: v.X + padding.Left + padding.Right,
-		Y: v.Y + padding.Top + padding.Bottom,
+		X: toCheck.X + padding.Left + padding.Right,
+		Y: toCheck.Y + padding.Top + padding.Bottom,
 	}
 }
