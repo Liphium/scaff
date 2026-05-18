@@ -7,7 +7,7 @@ import (
 
 	"github.com/Liphium/scaff/optional"
 	"github.com/Liphium/scaff/scath"
-	"github.com/Liphium/scaff/util"
+	sutil "github.com/Liphium/scaff/util"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -76,7 +76,7 @@ func (g *Game) Update() error {
 	// Update all of the scenes in proper order (this is backward because the front of the scene list is the topmost scene)
 	for i, scene := range slices.Backward(g.sceneList) {
 		if err := scene.Update(now, func(s Scene, tf scath.Timeframe) error {
-			return s.Update(g.buildSceneContext(i, now, util.Ptr(tf)))
+			return s.Update(g.buildSceneContext(i, now, sutil.Ptr(tf)))
 		}); err != nil {
 			return err
 		}
@@ -90,7 +90,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	// Draw all of the scenes in proper order (this is forward because the front of the scene list is the scene that is in the background)
 	for i, scene := range g.sceneList {
 		scene.Update(now, func(s Scene, tf scath.Timeframe) error {
-			s.Draw(g.buildSceneContext(i, now, util.Ptr(tf)), screen)
+			s.Draw(g.buildSceneContext(i, now, sutil.Ptr(tf)), screen)
 			return nil
 		})
 	}
@@ -101,7 +101,7 @@ func (g *Game) buildSceneContext(i int, now time.Time, frame *scath.Timeframe) *
 	// Create default frame if not set
 	if frame == nil {
 		// This is the default to make sure the transition is immediately over and no transition occurs
-		frame = util.Ptr(scath.NewTimeframe(now, 0*time.Nanosecond))
+		frame = sutil.Ptr(scath.NewTimeframe(now, 0*time.Nanosecond))
 	}
 
 	return &Context{

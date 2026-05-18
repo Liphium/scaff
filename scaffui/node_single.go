@@ -7,33 +7,43 @@ import (
 	"github.com/Liphium/scaff/scath"
 )
 
+// Struct for defining a new single child node.
+//
+// ID should be a unique id for the node, but also probably be readable as it shows up in error messages.
+//
+// DefaultProps are the props as they are by default. Make sure to also specify any embedded struct pointers.
+//
+// PropsCreator should be the function passed in by users of your node (as in it should probably be an argument of the function creating your node).
+//
+// Create is the function actually specifying your node. You can overwrite all of the functions of the node interface there, with some exceptions that we implement for you.
+type SingleNodeCreate[P scaff.ChildProps[NodeBuilder]] struct {
+	ID           string
+	DefaultProps P
+	PropsCreator func(t *scaff.Tracker, props *P)
+	Create       func(props *SingleChildProps[P])
+}
+
 // CreateSingleNode lets you create a node with a single child. Simply implement the ChildProps interface on the props you want to have for your node.
-//
-// id should be a unique id for the node, but also probably be readable as it shows up in error messages.
-//
-// propsCreator should be the function passed in by users of your node (as in it should probably be an argument of the function creating your node).
-//
-// create is the function actually specifying your node. You can overwrite all of the functions of the node interface there, with some exceptions that we implement for you.
-func CreateSingleNode[P scaff.ChildProps[NodeBuilder]](id string, propsCreator func(t *scaff.Tracker, props *P), create func(core *SingleChildProps[P])) NodeBuilder {
+func CreateSingleNode[P scaff.ChildProps[NodeBuilder]](create SingleNodeCreate[P]) NodeBuilder {
 	node := &SingleChildNode[P]{
-		id:          id,
+		id:          create.ID,
 		singleProps: &SingleChildProps[P]{},
 	}
-	if create != nil {
-		create(node.singleProps)
+	if create.Create != nil {
+		create.Create(node.singleProps)
 	}
 
 	return func() Node {
 		node.tracker = NewSingleTracker(node)
 
 		// Fill the props (if desired)
-		if propsCreator != nil {
-			var props P
-			propsCreator(node.Tracker(), &props)
+		if create.PropsCreator != nil {
+			props := create.DefaultProps
+			create.PropsCreator(node.Tracker(), &props)
 			node.props = props
 
 			// Add child (if desired)
-			if builders := props.GetBuilders(); builders != nil && len(builders) == 1 {
+			if builders := props.GetBuilders(); len(builders) == 1 {
 				node.tracker.SetNode(NewMountedFromBuilder(builders[0]))
 			}
 		}
@@ -166,7 +176,7 @@ func (s *SingleChildNode[P]) layout() (scath.Vec, error) {
 	return size, nil
 }
 
-func (s *SingleChildNode[P]) HandleEvent(c *scaff.Context, event scaff.Event) *scaff.TracedError {
+func (s *SingleChildNode[P]) HandleEvent(c *scaff.Context, event scaff.Event) scaff.TracedError {
 	if s.singleProps.onHandleEvent != nil {
 		if err := s.singleProps.onHandleEvent(s, c, event); err != nil {
 			return scaff.NewTracedError(s, err)
@@ -180,7 +190,7 @@ func (s *SingleChildNode[P]) Tracker() *scaff.Tracker {
 	return s.tracker.Tracker()
 }
 
-func (s *SingleChildNode[P]) Update(c *scaff.Context) (UpdateResult, *scaff.TracedError) {
+func (s *SingleChildNode[P]) Update(c *scaff.Context) (UpdateResult, scaff.TracedError) {
 	relayout := false
 	var err error
 	if s.singleProps.onUpdate != nil {
@@ -235,7 +245,7 @@ func (s *SingleChildNode[P]) LayoutChild(constraints scath.Constraints) (scath.V
 	return child.Current().Layout()
 }
 
-func (s *SingleChildNode[P]) HandleEventChild(c *scaff.Context, event scaff.Event) *scaff.TracedError {
+func (s *SingleChildNode[P]) HandleEventChild(c *scaff.Context, event scaff.Event) scaff.TracedError {
 	child, ok := s.tracker.Node()
 	if !ok {
 		return nil

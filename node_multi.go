@@ -14,20 +14,20 @@ func CreateMultiNode[P ChildProps[NodeBuilder]](id string, propsCreator func(t *
 		id:         id,
 		multiProps: &MultiChildProps[P]{},
 	}
-	create(node.multiProps)
+	if create != nil {
+		create(node.multiProps)
+	}
 
 	return func() Node {
 		node.tracker = NewTracker()
 
 		// Fill the props
-		var props P
-		propsCreator(node.Tracker(), &props)
-		node.props = props
+		if propsCreator != nil {
+			var props P
+			propsCreator(node.Tracker(), &props)
+			node.props = props
 
-		node.builders = props.GetBuilders()
-		node.children = make([]Node, len(node.builders))
-		for i, builder := range node.builders {
-			node.children[i] = builder()
+			node.builders = props.GetBuilders()
 		}
 
 		return node
@@ -87,9 +87,13 @@ func (s *MultiChildNode[P]) Props() P {
 func (s *MultiChildNode[P]) Load(parent Node) {
 	s.parent = parent
 
-	// Actually load the children
-	for _, child := range s.children {
-		child.Load(s)
+	// Actually load the children and build them
+	if s.builders != nil {
+		s.children = make([]Node, len(s.builders))
+		for i, builder := range s.builders {
+			s.children[i] = builder()
+			s.children[i].Load(s)
+		}
 	}
 
 	if s.multiProps.onLoad != nil {
@@ -97,7 +101,7 @@ func (s *MultiChildNode[P]) Load(parent Node) {
 	}
 }
 
-func (s *MultiChildNode[P]) HandleEvent(c *Context, event Event) *TracedError {
+func (s *MultiChildNode[P]) HandleEvent(c *Context, event Event) TracedError {
 
 	// First handle event on this node
 	if s.multiProps.onHandleEvent != nil {
@@ -114,7 +118,7 @@ func (s *MultiChildNode[P]) Tracker() *Tracker {
 	return s.tracker
 }
 
-func (s *MultiChildNode[P]) Update(c *Context) *TracedError {
+func (s *MultiChildNode[P]) Update(c *Context) TracedError {
 
 	// First call the update handler on the props for this node
 	if s.multiProps.onUpdate != nil {
@@ -174,7 +178,7 @@ func (s *MultiChildNode[P]) Children() []Node {
 	return s.children
 }
 
-func (s *MultiChildNode[P]) HandleEventChild(c *Context, event Event) *TracedError {
+func (s *MultiChildNode[P]) HandleEventChild(c *Context, event Event) TracedError {
 	// Event should always be passed to the children as well so it doesn't get missed (even if already handled)
 	for _, child := range s.children {
 		if err := child.HandleEvent(c, event); err != nil {

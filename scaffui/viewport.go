@@ -72,5 +72,11 @@ func Viewport(assets *paint.AssetManager, create func(t *scaff.Tracker, props *V
 			screen.DrawImage(renderer.Screen(), &ebiten.DrawImageOptions{})
 		})
 
+		props.HandleEvent(func(node *scaff.SingleChildNode[ViewportProps], c *scaff.Context, event scaff.Event) error {
+			if root != nil {
+				root.Current().HandleEvent(c, event)
+			}
+			return nil
+		})
 	})
 }

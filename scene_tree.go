@@ -25,14 +25,15 @@ type SceneTree struct {
 }
 
 // Mount a node as the root of the scene tree.
-func (st *SceneTree) Mount(builder NodeBuilder) *SceneTree {
+func (st *SceneTree) Mount(create func(t *Tracker, props *RootProps)) *SceneTree {
 
 	// Create a single child node that essentially just exists to refresh the builder passed in
 	node := &SingleChildNode[int8]{
-		id:      "root",
-		tracker: NewTracker(),
+		id:          "root",
+		tracker:     NewTracker(),
+		singleProps: &SingleChildProps[int8]{},
 	}
-	node.builder = builder // Node will automatically be built on load
+	node.builder = root(create) // Node will automatically be built on load
 
 	// Mount the node inside of a node that can refresh
 	st.sceneRoot = node
@@ -94,10 +95,10 @@ func (st *SceneTree) Update(c *Context) error {
 		ebiten.MouseButton4,
 	}
 
-	// Check all of the common mouse buttons for release events
+	// Check all of the common mouse buttons for press events
 	for _, button := range buttons {
-		if inpututil.IsMouseButtonJustReleased(button) {
-			if err := st.sceneRoot.HandleEvent(ctx, ReleaseEvent{
+		if inpututil.IsMouseButtonJustPressed(button) {
+			if err := st.sceneRoot.HandleEvent(ctx, DownEvent{
 				X:      x,
 				Y:      y,
 				Button: button,
@@ -107,9 +108,9 @@ func (st *SceneTree) Update(c *Context) error {
 		}
 	}
 
-	// Check all of the common mouse buttons for press events
+	// Check all of the common mouse buttons for release events
 	for _, button := range buttons {
-		if inpututil.IsMouseButtonJustPressed(button) {
+		if inpututil.IsMouseButtonJustReleased(button) {
 			if err := st.sceneRoot.HandleEvent(ctx, ReleaseEvent{
 				X:      x,
 				Y:      y,

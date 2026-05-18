@@ -10,46 +10,38 @@ type Identifiable interface {
 // Create a new error that actually traces the path of different identifiable objects. This makes it visible where an error happened for more easy debugging.
 //
 // To use this, just wrap all of the times you return an error with this function.
-func NewTracedError(identifiable Identifiable, err error) *TracedError {
-	if err == nil {
-		return nil
-	}
+func NewTracedError(identifiable Identifiable, err error) TracedError {
+	if cerr, ok := err.(errorTrace); ok {
 
-	if cerr, ok := err.(*TracedError); ok {
-		if cerr == nil {
-			return nil
-		}
-
-		cerr.add(identifiable)
+		cerr.path = append([]string{identifiable.ID()}, cerr.path...)
 		return cerr
 	}
 
-	return &TracedError{
+	return errorTrace{
 		path: []string{identifiable.ID()},
 		err:  err,
 	}
 }
 
-var _ error = &TracedError{}
+type TracedError interface {
+	error
+	diufhdsufhuidshuif()
+}
+
+var _ TracedError = errorTrace{}
 
 // An error that actually traces the path of all the nodes hit by the error (for easier error readability)
-type TracedError struct {
+type errorTrace struct {
 	path []string
 	err  error
 }
 
-func (e *TracedError) add(identifiable Identifiable) {
-	e.path = append([]string{identifiable.ID()}, e.path...)
-}
+func (et errorTrace) diufhdsufhuidshuif() {}
 
 // Get the actual error that happened. This will append all collected identifiables to the path of the error for debugging.
 //
 // If the error is nil, this will just return <nil> to prevent crashes.
-func (e *TracedError) Error() string {
-	if e == nil {
-		return "<nil>"
-	}
-
+func (e errorTrace) Error() string {
 	formattedPath := strings.Join(e.path, " -> ")
 	if e.err == nil {
 		return formattedPath + ": <nil error>"

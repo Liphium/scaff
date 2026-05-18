@@ -36,40 +36,47 @@ func (i *ImageProps) Constraints(constraints scath.Constraints) {
 }
 
 func Image(create func(t *scaff.Tracker, props *ImageProps)) scaffui.NodeBuilder {
-	return scaffui.CreateSingleNode("image", create, func(core *scaffui.SingleChildProps[ImageProps]) {
-		core.WantedConstraints(func(node *scaffui.SingleChildNode[ImageProps], parent scath.Constraints) scath.Constraints {
-			return node.Props().constraints.Or(scath.Unconstrained())
-		})
+	return scaffui.CreateSingleNode(scaffui.SingleNodeCreate[ImageProps]{
+		ID: "image",
+		DefaultProps: ImageProps{
+			AcceptNoChild: &scaffui.AcceptNoChild{},
+		},
+		PropsCreator: create,
+		Create: func(props *scaffui.SingleChildProps[ImageProps]) {
+			props.WantedConstraints(func(node *scaffui.SingleChildNode[ImageProps], parent scath.Constraints) scath.Constraints {
+				return node.Props().constraints.Or(scath.Unconstrained())
+			})
 
-		core.Layout(func(node *scaffui.SingleChildNode[ImageProps]) (scath.Vec, error) {
-			spec := uispec.SingleChildBoxSpec{
-				Parent:  node.Constraints(),
-				Wanted:  node.Props().constraints,
-				Padding: scath.Pad(0),
-			}
+			props.Layout(func(node *scaffui.SingleChildNode[ImageProps]) (scath.Vec, error) {
+				spec := uispec.SingleChildBoxSpec{
+					Parent:  node.Constraints(),
+					Wanted:  node.Props().constraints,
+					Padding: scath.Pad(0),
+				}
 
-			return spec.LayoutWithoutChild()
-		})
+				return spec.LayoutWithoutChild()
+			})
 
-		core.Draw(func(node *scaffui.SingleChildNode[ImageProps], position scath.Vec, painter paint.Painter) {
-			if path, ok := node.Props().path.Value(); ok {
+			props.Draw(func(node *scaffui.SingleChildNode[ImageProps], position scath.Vec, painter paint.Painter) {
+				if path, ok := node.Props().path.Value(); ok {
 
-				// Draw the actual image
-				painter.Paint(paint.Image{
-					Path:       path,
-					Position:   position,
-					Size:       node.Size(),
-					FilterMode: node.Props().filterMode.Or(ebiten.FilterLinear),
-				})
-			} else {
+					// Draw the actual image
+					painter.Paint(paint.Image{
+						Path:       path,
+						Position:   position,
+						Size:       node.Size(),
+						FilterMode: node.Props().filterMode.Or(ebiten.FilterLinear),
+					})
+				} else {
 
-				// Draw a red rectangle to signal an error
-				painter.Paint(paint.Rectangle{
-					Position:  position,
-					Size:      node.Size(),
-					FillColor: color.RGBA{255, 0, 0, 255},
-				})
-			}
-		})
+					// Draw a red rectangle to signal an error
+					painter.Paint(paint.Rectangle{
+						Position:  position,
+						Size:      node.Size(),
+						FillColor: color.RGBA{255, 0, 0, 255},
+					})
+				}
+			})
+		},
 	})
 }

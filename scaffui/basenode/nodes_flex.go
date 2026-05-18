@@ -44,14 +44,18 @@ func (fp FlexProps) GetBuilders() []scaffui.NodeBuilder {
 }
 
 func Flex(create func(t *scaff.Tracker, props *FlexProps)) scaffui.NodeBuilder {
-	return scaffui.CreateMultiNode("flex", create, func(core *scaffui.MultiChildProps[FlexProps]) {
-		core.Layout(func(node *scaffui.MultiChildNode[FlexProps]) (scath.Vec, error) {
-			return flexLayout(node)
-		})
+	return scaffui.CreateMultiNode(scaffui.MultiNodeCreate[FlexProps]{
+		ID:           "flex",
+		PropsCreator: create,
+		Create: func(props *scaffui.MultiChildProps[FlexProps]) {
+			props.Layout(func(node *scaffui.MultiChildNode[FlexProps]) (scath.Vec, error) {
+				return flexLayout(node)
+			})
 
-		core.Draw(func(node *scaffui.MultiChildNode[FlexProps], position scath.Vec, renderer paint.Painter) {
-			flexDraw(node, position, renderer)
-		})
+			props.Draw(func(node *scaffui.MultiChildNode[FlexProps], position scath.Vec, renderer paint.Painter) {
+				flexDraw(node, position, renderer)
+			})
+		},
 	})
 }
 

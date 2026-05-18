@@ -28,68 +28,76 @@ func (pp *AlignProps) Horizontal(alignment HorizontalAlignment) {
 }
 
 func Align(create func(t *scaff.Tracker, props *AlignProps)) scaffui.NodeBuilder {
-	return scaffui.CreateSingleNode("align", create, func(core *scaffui.SingleChildProps[AlignProps]) {
+	return scaffui.CreateSingleNode(scaffui.SingleNodeCreate[AlignProps]{
+		ID: "align",
+		DefaultProps: AlignProps{
+			horizontalAligment: optional.None[HorizontalAlignment](),
+			verticalAlignment:  optional.None[VerticalAlignment](),
+			AcceptChild:        &scaffui.AcceptChild{},
+		},
+		PropsCreator: create,
+		Create: func(core *scaffui.SingleChildProps[AlignProps]) {
+			// In Layout, we take the biggest we can get in any axis where alignment is given
+			core.Layout(func(node *scaffui.SingleChildNode[AlignProps]) (scath.Vec, error) {
 
-		// In Layout, we take the biggest we can get in any axis where alignment is given
-		core.Layout(func(node *scaffui.SingleChildNode[AlignProps]) (scath.Vec, error) {
-
-			// Pass down constraints from parent to child and let it pick size
-			// We just edit this size from now on, since we otherwise want to keep the height / width of our child anyway in case alignment is not set
-			size, err := node.LayoutChild(node.Constraints())
-			if err != nil {
-				return size, err
-			}
-
-			if node.Props().horizontalAligment.HasValue() {
-				if node.Constraints().MaxX == scath.Infinite {
-					return size, errors.New("infinite width for horizontal alignment")
+				// Pass down constraints from parent to child and let it pick size
+				// We just edit this size from now on, since we otherwise want to keep the height / width of our child anyway in case alignment is not set
+				size, err := node.LayoutChild(node.Constraints())
+				if err != nil {
+					return size, err
 				}
 
-				size.X = node.Constraints().MaxX
-			}
+				if node.Props().horizontalAligment.HasValue() {
+					if node.Constraints().MaxX == scath.Infinite {
+						return size, errors.New("infinite width for horizontal alignment")
+					}
 
-			if node.Props().verticalAlignment.HasValue() {
-				if node.Constraints().MaxY == scath.Infinite {
-					return size, errors.New("infinite height for vertical alignment")
+					size.X = node.Constraints().MaxX
 				}
 
-				size.Y = node.Constraints().MaxY
-			}
+				if node.Props().verticalAlignment.HasValue() {
+					if node.Constraints().MaxY == scath.Infinite {
+						return size, errors.New("infinite height for vertical alignment")
+					}
 
-			return size, nil
-		})
+					size.Y = node.Constraints().MaxY
+				}
 
-		// Draw child at proper position for alignment
-		core.Draw(func(node *scaffui.SingleChildNode[AlignProps], position scath.Vec, renderer paint.Painter) {
-			offset := scath.Vec{}
+				return size, nil
+			})
 
-			if child, ok := node.Child(); ok {
-				childSize := child.Current().Size()
+			// Draw child at proper position for alignment
+			core.Draw(func(node *scaffui.SingleChildNode[AlignProps], position scath.Vec, renderer paint.Painter) {
+				offset := scath.Vec{}
 
-				if horizontal, ok := node.Props().horizontalAligment.Value(); ok {
-					switch horizontal {
-					case HorizontalAlignmentLeft:
-						offset.X = 0
-					case HorizontalAlignmentCenter:
-						offset.X = float64(node.Size().X-childSize.X) / 2
-					case HorizontalAlignmentRight:
-						offset.X = float64(node.Size().X - childSize.X)
+				if child, ok := node.Child(); ok {
+					childSize := child.Current().Size()
+
+					if value, ok := node.Props().horizontalAligment.Value(); ok {
+						switch value {
+						case HorizontalAlignmentLeft:
+							offset.X = 0
+						case HorizontalAlignmentCenter:
+							offset.X = float64(node.Size().X-childSize.X) / 2
+						case HorizontalAlignmentRight:
+							offset.X = float64(node.Size().X - childSize.X)
+						}
+					}
+
+					if value, ok := node.Props().verticalAlignment.Value(); ok {
+						switch value {
+						case VerticalAlignmentTop:
+							offset.Y = 0
+						case VerticalAlignmentCenter:
+							offset.Y = float64(node.Size().Y-childSize.Y) / 2
+						case VerticalAlignmentBottom:
+							offset.Y = float64(node.Size().Y - childSize.Y)
+						}
 					}
 				}
 
-				if vertical, ok := node.Props().verticalAlignment.Value(); ok {
-					switch vertical {
-					case VerticalAlignmentTop:
-						offset.Y = 0
-					case VerticalAlignmentCenter:
-						offset.Y = float64(node.Size().Y-childSize.Y) / 2
-					case VerticalAlignmentBottom:
-						offset.Y = float64(node.Size().Y - childSize.Y)
-					}
-				}
-			}
-
-			node.DrawChild(position.Add(offset), renderer)
-		})
+				node.DrawChild(position.Add(offset), renderer)
+			})
+		},
 	})
 }

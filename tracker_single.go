@@ -49,7 +49,7 @@ func (s *SingleTracker) Load() {
 	s.current.Load(s.parent)
 }
 
-func (s *SingleTracker) Update(c *Context) *TracedError {
+func (s *SingleTracker) Update(c *Context) TracedError {
 
 	// If there is no node, nothing to check
 	if s.current == nil {

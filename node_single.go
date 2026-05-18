@@ -7,13 +7,17 @@ import (
 // UseNode creates a node without a child. You can use this if you simply want to create a node that does something very custom outside of scaff. This node still gives you access to all all functions on the Node interface through the props, but you can choose which ones you actually want to implement.
 //
 // If you want to have one or multiple children for this node, CreateSingleNode or CreateMultiNode might be a better fit for your use case.
-func UseNode[P any](id string, create func(props *SingleChildProps[P])) NodeBuilder {
-	node := &SingleChildNode[P]{
+//
+// The reason this single child node uses any as the props type is that there should not really be any preference since this method is meant for quickly creating custom nodes.
+func UseNode(id string, create func(props *SingleChildProps[any])) NodeBuilder {
+	node := &SingleChildNode[any]{
 		id:          id,
 		tracker:     NewTracker(),
-		singleProps: &SingleChildProps[P]{},
+		singleProps: &SingleChildProps[any]{},
 	}
-	create(node.singleProps)
+	if create != nil {
+		create(node.singleProps)
+	}
 
 	return func() Node {
 		return node
@@ -34,24 +38,27 @@ func CreateSingleNode[P ChildProps[NodeBuilder]](id string, propsCreator func(t 
 		id:          id,
 		singleProps: &SingleChildProps[P]{},
 	}
-	create(node.singleProps)
+	if create != nil {
+		create(node.singleProps)
+	}
 
 	return func() Node {
 		node.tracker = NewTracker()
 
 		// Fill the props
-		var props P
-		propsCreator(node.Tracker(), &props)
-		node.props = props
+		if propsCreator != nil {
+			var props P
+			propsCreator(node.Tracker(), &props)
+			node.props = props
 
-		// Build the children, in case there are any
-		if builders := props.GetBuilders(); builders != nil {
-			if len(builders) > 1 {
-				log.Error("node can not have multiple children", "id", id, "children", len(props.GetBuilders()))
-			}
-			if len(builders) == 1 {
-				node.builder = props.GetBuilders()[0]
-				node.current = node.builder()
+			// Build the children, in case there are any
+			if builders := props.GetBuilders(); builders != nil {
+				if len(builders) > 1 {
+					log.Error("node can not have multiple children", "id", id, "children", len(props.GetBuilders()))
+				}
+				if len(builders) == 1 {
+					node.builder = props.GetBuilders()[0]
+				}
 			}
 		}
 
@@ -87,7 +94,7 @@ func (s *SingleChildProps[P]) Draw(fn func(node *SingleChildNode[P], c *Context,
 	s.onDraw = fn
 }
 
-var _ Node = &MultiChildNode[any]{}
+var _ Node = &SingleChildNode[any]{}
 
 type SingleChildNode[P any] struct {
 	parent  Node
@@ -111,8 +118,9 @@ func (s *SingleChildNode[P]) Props() P {
 func (s *SingleChildNode[P]) Load(parent Node) {
 	s.parent = parent
 
-	// If there is a builder, actually build and load the child
+	// If there is a builder, load the child
 	if s.builder != nil {
+		s.current = s.builder()
 		s.current.Load(s)
 	}
 
@@ -121,7 +129,7 @@ func (s *SingleChildNode[P]) Load(parent Node) {
 	}
 }
 
-func (s *SingleChildNode[P]) HandleEvent(c *Context, event Event) *TracedError {
+func (s *SingleChildNode[P]) HandleEvent(c *Context, event Event) TracedError {
 
 	// First handle event on this node
 	if s.singleProps.onHandleEvent != nil {
@@ -138,7 +146,7 @@ func (s *SingleChildNode[P]) Tracker() *Tracker {
 	return s.tracker
 }
 
-func (s *SingleChildNode[P]) Update(c *Context) *TracedError {
+func (s *SingleChildNode[P]) Update(c *Context) TracedError {
 
 	// First call the update handler on the props for this node
 	if s.singleProps.onUpdate != nil {
@@ -202,7 +210,7 @@ func (s *SingleChildNode[P]) Children() []Node {
 	return []Node{s.current}
 }
 
-func (s *SingleChildNode[P]) HandleEventChild(c *Context, event Event) *TracedError {
+func (s *SingleChildNode[P]) HandleEventChild(c *Context, event Event) TracedError {
 	if s.current == nil {
 		return nil
 	}

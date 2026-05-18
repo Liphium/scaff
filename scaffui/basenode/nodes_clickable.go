@@ -21,7 +21,9 @@ func Clickable(create func(t *scaff.Tracker, props *ClickableProps)) scaffui.Nod
 
 	// Create an input node for actually listening to the events
 	return Input(func(t *scaff.Tracker, input *InputProps) {
-		props := &ClickableProps{}
+		props := &ClickableProps{
+			AcceptChild: &scaffui.AcceptChild{},
+		}
 		create(t, props)
 
 		// Pass the child to the input node
@@ -30,6 +32,7 @@ func Clickable(create func(t *scaff.Tracker, props *ClickableProps)) scaffui.Nod
 		}
 
 		input.OnDown(func(handled, inside bool, event scaff.DownEvent) bool {
+			log.Debug("clicky")
 			if inside {
 				pressed[event.Button] = true
 			}

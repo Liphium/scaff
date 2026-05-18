@@ -4,10 +4,13 @@ import (
 	"embed"
 	"image/color"
 	"log"
+	"time"
 
 	"github.com/Liphium/scaff"
+	"github.com/Liphium/scaff/paint"
 	"github.com/Liphium/scaff/scaffui"
 	"github.com/Liphium/scaff/scaffui/basenode"
+	"github.com/Liphium/scaff/scath"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -21,59 +24,70 @@ func main() {
 	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
 
 	scaling := scaff.NewSignal(false)
+	scaleFactor := scaff.NewSignal(float64(1))
 
-	layer := scaffui.NewInterfaceLayer(assetsFS, basenode.Root(func(t *scaff.Tracker, props *basenode.RootProps) {
-		props.Child(basenode.Stack(func(t *scaff.Tracker, props *basenode.StackProps) {
-			props.Child(basenode.Align(func(t *scaff.Tracker, props *basenode.AlignProps) {
-				props.Horizontal(basenode.HorizontalAlignmentCenter)
-				props.Vertical(basenode.VerticalAlignmentCenter)
+	tree := scaff.NewSceneTree("scaffui-image-sample")
+	assetManager := paint.NewAssetManager(assetsFS)
 
-				props.Child(basenode.Image(func(t *scaff.Tracker, props *basenode.ImageProps) {
-					props.Path("assets/icon.png")
-					if scaling.Track(t) {
-						props.Constraints(scaffui.Tight(int(150*scaleFactor.Track(t)), int(150*scaleFactor.Track(t))))
-					} else {
-						props.Constraints(scaffui.Tight(100, 100))
-					}
-					props.Filter(ebiten.FilterPixelated)
-				}))
-			}))
+	tree.Mount(func(t *scaff.Tracker, props *scaff.RootProps) {
+		props.Child(scaff.UseNode("scaling", func(props *scaff.SingleChildProps[any]) {
+			props.Draw(func(node *scaff.SingleChildNode[any], c *scaff.Context, image *ebiten.Image) {
+				const cycleDuration = 5 * time.Second
 
-			props.Child(basenode.Align(func(t *scaff.Tracker, props *basenode.AlignProps) {
-				props.Horizontal(basenode.HorizontalAlignmentCenter)
-				props.Vertical(basenode.VerticalAlignmentBottom)
+				cyclePosition := float64(c.Now.UnixNano()%int64(cycleDuration)) / float64(cycleDuration)
+				cyclePosition *= 2
+				if cyclePosition > 1 {
+					cyclePosition = (2 - cyclePosition) / 2
+				} else {
+					cyclePosition /= 2
+				}
+				scaleFactor.Set(0.5 + cyclePosition*4)
+			})
+		}))
 
-				props.Child(basenode.Clickable(func(t *scaff.Tracker, props *basenode.ClickableProps) {
-					props.OnClick(func(button int) bool {
-						scaling.Set(!scaling.Value())
-						return true
-					})
+		props.Child(scaffui.Viewport(assetManager, func(t *scaff.Tracker, props *scaffui.ViewportProps) {
+			props.Child(basenode.Stack(func(t *scaff.Tracker, props *basenode.StackProps) {
+				props.Child(basenode.Align(func(t *scaff.Tracker, props *basenode.AlignProps) {
+					props.Horizontal(basenode.HorizontalAlignmentCenter)
+					props.Vertical(basenode.VerticalAlignmentCenter)
 
-					props.Child(basenode.Rectangle(func(t *scaff.Tracker, props *basenode.RectangleProps) {
-						props.WantedConstraints(scaffui.Tight(100, 20))
+					props.Child(basenode.Image(func(t *scaff.Tracker, props *basenode.ImageProps) {
+						props.Path("assets/icon.png")
 						if scaling.Track(t) {
-							props.FillColor(color.RGBA{0, 255, 0, 255})
+							props.Constraints(scath.Tight(150*scaleFactor.Track(t), 150*scaleFactor.Track(t)))
 						} else {
-							props.FillColor(color.RGBA{255, 255, 255, 255})
+							props.Constraints(scath.Tight(100, 100))
 						}
+						props.Filter(ebiten.FilterPixelated)
+					}))
+				}))
+
+				props.Child(basenode.Align(func(t *scaff.Tracker, props *basenode.AlignProps) {
+					props.Horizontal(basenode.HorizontalAlignmentCenter)
+					props.Vertical(basenode.VerticalAlignmentBottom)
+
+					props.Child(basenode.Clickable(func(t *scaff.Tracker, props *basenode.ClickableProps) {
+						props.OnClick(func(button ebiten.MouseButton) bool {
+							scaling.Set(!scaling.Value())
+							return true
+						})
+
+						props.Child(basenode.Rectangle(func(t *scaff.Tracker, props *basenode.RectangleProps) {
+							props.WantedConstraints(scath.Tight(100, 20))
+							if scaling.Track(t) {
+								props.FillColor(color.RGBA{0, 255, 0, 255})
+							} else {
+								props.FillColor(color.RGBA{255, 255, 255, 255})
+							}
+						}))
 					}))
 				}))
 			}))
 		}))
-	}))
-
-	var scaffUiSample scaff.Scene = &scaff.LayeredScene{
-		ID: "scaffui-image-sample",
-		WorldLayers: []scaff.WorldLayer{
-			&scaleLayer{},
-		},
-		UILayers: []scaff.UILayer{
-			layer,
-		},
-	}
+	})
 
 	g := scaff.NewGame()
-	g.Goto(scaffUiSample)
+	g.Goto(tree)
 	if err := ebiten.RunGame(g); err != nil {
 		log.Fatal(err)
 	}

@@ -4,7 +4,7 @@ package scaffui
 import (
 	"log/slog"
 
-	"github.com/Liphium/scaff"
+	sutil "github.com/Liphium/scaff/util"
 )
 
-var log *slog.Logger = scaff.NewLogger("scaffui")
+var log *slog.Logger = sutil.NewLogger("scaffui")

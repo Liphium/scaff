@@ -3,12 +3,9 @@ package paint
 import (
 	"image/color"
 
-	"github.com/Liphium/scaff"
 	"github.com/Liphium/scaff/scath"
 	"github.com/hajimehoshi/ebiten/v2"
 )
-
-var log = scaff.NewLogger("paint")
 
 // This is so we can actually parse commands to JSON. Why? For live-reloading, but that's a future ambition.
 type RenderCommand interface {

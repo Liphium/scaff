@@ -1,6 +1,6 @@
 // This package provides support for creating world layers using declarative state.
 package scaffcv
 
-import "github.com/Liphium/scaff"
+import sutil "github.com/Liphium/scaff/util"
 
-var log = scaff.NewLogger("scaffcv")
+var log = sutil.NewLogger("scaffcv")

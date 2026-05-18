@@ -60,13 +60,13 @@ type Node interface {
 	Layout() (scath.Vec, error)
 
 	// Called on every tick, use to handle state updates, etc.
-	Update(c *scaff.Context) (UpdateResult, *scaff.TracedError)
+	Update(c *scaff.Context) (UpdateResult, scaff.TracedError)
 
 	// Draw the thing onto the screen at a specified position (next step is getting this to work)
 	Draw(position scath.Vec, renderer paint.Painter)
 
 	// Handle events from cgui (you do not have to handle any, but should always push them along to children at least)
-	HandleEvent(c *scaff.Context, event scaff.Event) *scaff.TracedError
+	HandleEvent(c *scaff.Context, event scaff.Event) scaff.TracedError
 }
 
 type WantsConstraints interface {

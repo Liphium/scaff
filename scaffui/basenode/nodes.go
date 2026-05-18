@@ -2,10 +2,10 @@
 package basenode
 
 import (
-	"github.com/Liphium/scaff"
+	sutil "github.com/Liphium/scaff/util"
 )
 
-var log = scaff.NewLogger("basenode")
+var log = sutil.NewLogger("basenode")
 
 // Deletes an element without preserving order.
 func deleteUnordered[T any](s []T, i int) []T {

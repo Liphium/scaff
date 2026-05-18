@@ -8,6 +8,22 @@ import (
 	"github.com/Liphium/scaff/scath"
 )
 
+// Struct for defining a new multi child node.
+//
+// ID should be a unique id for the node, but also probably be readable as it shows up in error messages.
+//
+// DefaultProps are the props as they are by default. Make sure to also specify any embedded struct pointers.
+//
+// PropsCreator should be the function passed in by users of your node (as in it should probably be an argument of the function creating your node).
+//
+// Create is the function actually specifying your node. You can overwrite all of the functions of the node interface there, with some exceptions that we implement for you.
+type MultiNodeCreate[P scaff.ChildProps[NodeBuilder]] struct {
+	ID           string
+	DefaultProps P
+	PropsCreator func(t *scaff.Tracker, props *P)
+	Create       func(props *MultiChildProps[P])
+}
+
 // CreateMultiNode lets you create a node with multiple children. Simply implement the ChildProps interface on the props you want to have for your node.
 //
 // id should be a unique id for the node, but also probably be readable as it shows up in error messages.
@@ -15,26 +31,26 @@ import (
 // propsCreator should be the function passed in by users of your node (as in it should probably be an argument of the function creating your node).
 //
 // create is the function actually specifying your node. You can overwrite all of the functions of the node interface there, with some exceptions that we implement for you.
-func CreateMultiNode[P scaff.ChildProps[NodeBuilder]](id string, propsCreator func(t *scaff.Tracker, props *P), create func(core *MultiChildProps[P])) NodeBuilder {
+func CreateMultiNode[P scaff.ChildProps[NodeBuilder]](create MultiNodeCreate[P]) NodeBuilder {
 	node := &MultiChildNode[P]{
-		id:         id,
+		id:         create.ID,
 		multiProps: &MultiChildProps[P]{},
 	}
-	if create != nil {
-		create(node.multiProps)
+	if create.Create != nil {
+		create.Create(node.multiProps)
 	}
 
 	return func() Node {
 		node.tracker = NewMultiTracker(node)
 
 		// Create the props (if desired)
-		if propsCreator != nil {
-			var props P
-			propsCreator(node.Tracker(), &props)
+		if create.PropsCreator != nil {
+			props := create.DefaultProps
+			create.PropsCreator(node.Tracker(), &props)
 			node.props = props
 
 			// Add children (if desired)
-			if builders := props.GetBuilders(); builders != nil && len(builders) > 0 {
+			if builders := props.GetBuilders(); len(builders) > 0 {
 				for _, builder := range builders {
 					node.tracker.Add(NewMountedFromBuilder(builder))
 				}
@@ -158,7 +174,7 @@ func (m *MultiChildNode[P]) Layout() (scath.Vec, error) {
 	return size, nil
 }
 
-func (m *MultiChildNode[P]) HandleEvent(c *scaff.Context, event scaff.Event) *scaff.TracedError {
+func (m *MultiChildNode[P]) HandleEvent(c *scaff.Context, event scaff.Event) scaff.TracedError {
 	if m.multiProps.onHandleEvent != nil {
 		if err := m.multiProps.onHandleEvent(m, c, event); err != nil {
 			return scaff.NewTracedError(m, err)
@@ -178,7 +194,7 @@ func (m *MultiChildNode[P]) Tracker() *scaff.Tracker {
 	return m.tracker.Tracker()
 }
 
-func (m *MultiChildNode[P]) Update(c *scaff.Context) (UpdateResult, *scaff.TracedError) {
+func (m *MultiChildNode[P]) Update(c *scaff.Context) (UpdateResult, scaff.TracedError) {
 	if m.multiProps.onUpdate != nil {
 		changed, err := m.multiProps.onUpdate(m, c)
 		if err != nil {

@@ -12,5 +12,11 @@ type StackProps struct {
 func Stack(create func(t *scaff.Tracker, props *StackProps)) scaffui.NodeBuilder {
 
 	// The default behavior of multi-node covers all of the things we want the stack to do, so no work for us :D
-	return scaffui.CreateMultiNode[StackProps]("stack", create, nil)
+	return scaffui.CreateMultiNode(scaffui.MultiNodeCreate[StackProps]{
+		ID: "stack",
+		DefaultProps: StackProps{
+			AcceptChildren: &scaffui.AcceptChildren{},
+		},
+		PropsCreator: create,
+	})
 }

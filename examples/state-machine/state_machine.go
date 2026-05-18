@@ -11,16 +11,12 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
 
-var _ scaff.Scene = &StateMachineScene{}
+func main() {
+	ebiten.SetWindowSize(900, 600)
+	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
 
-type StateMachineScene struct {
-	images      map[int]*ebiten.Image
-	timeMachine *scaff.StateMachine[int64, int]
-}
-
-func (t *StateMachineScene) Load() {
-	t.images = map[int]*ebiten.Image{}
-	t.timeMachine = scaff.NewStateMachine(scaff.StateMachineCreate[int64, int]{
+	images := map[int]*ebiten.Image{}
+	timeMachine := scaff.NewStateMachine(scaff.StateMachineCreate[int64, int]{
 		Transition: optional.With(scaff.TransitionProperties{
 			Isolated: false,
 			Duration: 500 * time.Millisecond,
@@ -32,63 +28,53 @@ func (t *StateMachineScene) Load() {
 			}),
 		},
 	})
-}
 
-func (t *StateMachineScene) Unload() {}
+	tree := scaff.NewSceneTree("state_machine_scene")
+	tree.Mount(func(t *scaff.Tracker, props *scaff.RootProps) {
+		props.Child(scaff.UseNode("state_machine", func(props *scaff.SingleChildProps[any]) {
+			props.Update(func(node *scaff.SingleChildNode[any], c *scaff.Context) error {
+				timeMachine.Update(c.Now, c.Now.UnixMilli())
+				return nil
+			})
 
-func (t *StateMachineScene) GetId() string {
-	return "state_machine_scene"
-}
+			props.Draw(func(node *scaff.SingleChildNode[any], c *scaff.Context, screen *ebiten.Image) {
+				timeMachine.Draw(c.Now, func(state int, frame scath.Timeframe) {
+					text := "Scrolling text"
+					if state == 1 {
+						text = "is kinda cool"
+					}
 
-func (t *StateMachineScene) Update(c scaff.SceneContext) error {
-	t.timeMachine.Update(c.Now, c.Now.UnixMilli())
-	return nil
-}
+					if images[state] == nil || images[state].Bounds() != screen.Bounds() {
+						images[state] = ebiten.NewImage(screen.Bounds().Dx(), screen.Bounds().Dy())
+					}
 
-func (t *StateMachineScene) Draw(c scaff.SceneContext, screen *ebiten.Image) {
-	t.timeMachine.Draw(c.Now, func(state int, frame scath.Timeframe) {
-		text := "Scrolling text"
-		if state == 1 {
-			text = "is kinda cool"
-		}
+					bounds := screen.Bounds()
+					x := bounds.Min.X + (bounds.Dx()-7*len(text))/2
+					y := bounds.Min.Y + bounds.Dy()/2 - 8
 
-		if t.images[state] == nil || t.images[state].Bounds() != screen.Bounds() {
-			t.images[state] = ebiten.NewImage(screen.Bounds().Dx(), screen.Bounds().Dy())
-		}
+					// Add a little bit of offset based on the transition direction
+					if frame.IsBackwards() {
+						y += frame.LerpInt(c.Now, -50, 0)
+					} else {
+						y += frame.LerpInt(c.Now, 50, 0)
+					}
 
-		bounds := screen.Bounds()
-		x := bounds.Min.X + (bounds.Dx()-7*len(text))/2
-		y := bounds.Min.Y + bounds.Dy()/2 - 8
+					// Draw the text at the proper location to the text image
+					images[state].Clear()
+					ebitenutil.DebugPrintAt(images[state], text, x, y)
 
-		// Add a little bit of offset based on the transition direction
-		if frame.IsBackwards() {
-			y += frame.LerpInt(c.Now, -50, 0)
-		} else {
-			y += frame.LerpInt(c.Now, 50, 0)
-		}
-
-		// Draw the text at the proper location to the text image
-		t.images[state].Clear()
-		ebitenutil.DebugPrintAt(t.images[state], text, x, y)
-
-		// Draw the text image with a change in opacity for a fade effect
-		op := &ebiten.DrawImageOptions{}
-		op.Blend = ebiten.BlendLighter
-		op.ColorScale.ScaleAlpha(float32(frame.LerpFloat(c.Now, 0, 1)))
-		screen.DrawImage(t.images[state], op)
+					// Draw the text image with a change in opacity for a fade effect
+					op := &ebiten.DrawImageOptions{}
+					op.Blend = ebiten.BlendLighter
+					op.ColorScale.ScaleAlpha(float32(frame.LerpFloat(c.Now, 0, 1)))
+					screen.DrawImage(images[state], op)
+				})
+			})
+		}))
 	})
-}
-
-func (t *StateMachineScene) Transition(in bool) scaff.TransitionProperties {
-	return scaff.NoTransition()
-}
-
-func main() {
-	ebiten.SetWindowSize(900, 600)
-	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
 
 	g := scaff.NewGame()
-	g.Goto(&StateMachineScene{})
+	g.Goto(tree)
 	if err := ebiten.RunGame(g); err != nil {
 		log.Fatal(err)
 	}

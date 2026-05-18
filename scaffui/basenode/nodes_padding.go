@@ -22,25 +22,31 @@ func (pp *PaddingProps) Padding(padding scath.Padding) {
 }
 
 func Padding(create func(t *scaff.Tracker, props *PaddingProps)) scaffui.NodeBuilder {
-	return scaffui.CreateSingleNode("padding", create, func(props *scaffui.SingleChildProps[PaddingProps]) {
+	return scaffui.CreateSingleNode(scaffui.SingleNodeCreate[PaddingProps]{
+		ID: "padding",
+		DefaultProps: PaddingProps{
+			AcceptChild: &scaffui.AcceptChild{},
+		},
+		PropsCreator: create,
+		Create: func(props *scaffui.SingleChildProps[PaddingProps]) {
+			// In Layout, make sure to give the child less constraints (subtracted by padding, handled by uispec)
+			props.Layout(func(node *scaffui.SingleChildNode[PaddingProps]) (scath.Vec, error) {
+				spec := uispec.SingleChildBoxSpec{
+					Parent:  node.Constraints(),
+					Wanted:  optional.None[scath.Constraints](),
+					Padding: node.Props().padding.Or(scath.Pad(0)),
+				}
 
-		// In Layout, make sure to give the child less constraints (subtracted by padding, handled by uispec)
-		props.Layout(func(node *scaffui.SingleChildNode[PaddingProps]) (scath.Vec, error) {
-			spec := uispec.SingleChildBoxSpec{
-				Parent:  node.Constraints(),
-				Wanted:  optional.None[scath.Constraints](),
-				Padding: node.Props().padding.Or(scath.Pad(0)),
-			}
+				if child, ok := node.Child(); ok {
+					return spec.LayoutWithChild(child.Current())
+				}
+				return spec.LayoutWithoutChild()
+			})
 
-			if child, ok := node.Child(); ok {
-				return spec.LayoutWithChild(child.Current())
-			}
-			return spec.LayoutWithoutChild()
-		})
-
-		// Draw child at padded position
-		props.Draw(func(node *scaffui.SingleChildNode[PaddingProps], position scath.Vec, renderer paint.Painter) {
-			node.DrawChild(position.Add(node.Props().padding.Or(scath.Pad(0)).ToVecTopLeft()), renderer)
-		})
+			// Draw child at padded position
+			props.Draw(func(node *scaffui.SingleChildNode[PaddingProps], position scath.Vec, renderer paint.Painter) {
+				node.DrawChild(position.Add(node.Props().padding.Or(scath.Pad(0)).ToVecTopLeft()), renderer)
+			})
+		},
 	})
 }
