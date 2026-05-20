@@ -126,7 +126,11 @@ func (er *EbitenPainter) drawText(command Text) {
 		log.Warn("font not found, using default font", "name", command.Font, "text", command.Text)
 	}
 
-	op := &text.DrawOptions{}
+	op := &text.DrawOptions{
+		LayoutOptions: text.LayoutOptions{
+			LineSpacing: command.FontSize + command.LineSpacing,
+		},
+	}
 	op.GeoM.Translate(command.Position.X, command.Position.Y)
 	op.ColorScale.ScaleWithColor(command.Color)
 	text.Measure(command.Text, &text.GoTextFace{

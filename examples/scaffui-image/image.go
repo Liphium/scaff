@@ -26,8 +26,8 @@ func main() {
 	scaling := scaff.NewSignal(false)
 	scaleFactor := scaff.NewSignal(float64(1))
 
-	tree := scaff.NewSceneTree("scaffui-image-sample")
 	assetManager := paint.NewAssetManager(assetsFS)
+	tree := scaff.NewSceneTree("scaffui-image-sample", assetManager)
 
 	tree.Mount(func(t *scaff.Tracker, props *scaff.RootProps) {
 		props.Child(scaff.UseNode("scaling", func(props *scaff.SingleChildProps[any]) {
@@ -45,7 +45,7 @@ func main() {
 			})
 		}))
 
-		props.Child(scaffui.Viewport(assetManager, func(t *scaff.Tracker, props *scaffui.ViewportProps) {
+		props.Child(scaffui.Viewport(func(t *scaff.Tracker, props *scaffui.ViewportProps) {
 			props.Child(basenode.Stack(func(t *scaff.Tracker, props *basenode.StackProps) {
 				props.Child(basenode.Align(func(t *scaff.Tracker, props *basenode.AlignProps) {
 					props.Horizontal(basenode.HorizontalAlignmentCenter)
@@ -59,6 +59,22 @@ func main() {
 							props.Constraints(scath.Tight(100, 100))
 						}
 						props.Filter(ebiten.FilterPixelated)
+					}))
+				}))
+
+				props.Child(basenode.Align(func(t *scaff.Tracker, props *basenode.AlignProps) {
+					props.Horizontal(basenode.HorizontalAlignmentCenter)
+					props.Vertical(basenode.VerticalAlignmentTop)
+
+					props.Child(basenode.Constrained(func(t *scaff.Tracker, props *basenode.ConstrainedProps) {
+						props.Constraints(scath.Tight(100, 300))
+
+						props.Child(basenode.Text(func(t *scaff.Tracker, props *basenode.TextProps) {
+							props.Text("ScaffUI Image Sample")
+							props.FontSize(24)
+							props.Wrapping(true)
+							props.Color(color.White)
+						}))
 					}))
 				}))
 

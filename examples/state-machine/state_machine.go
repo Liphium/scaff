@@ -29,7 +29,7 @@ func main() {
 		},
 	})
 
-	tree := scaff.NewSceneTree("state_machine_scene")
+	tree := scaff.NewSceneTree("state_machine_scene", nil)
 	tree.Mount(func(t *scaff.Tracker, props *scaff.RootProps) {
 		props.Child(scaff.UseNode("state_machine", func(props *scaff.SingleChildProps[any]) {
 			props.Update(func(node *scaff.SingleChildNode[any], c *scaff.Context) error {

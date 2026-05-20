@@ -5,6 +5,7 @@ import (
 	"math"
 	"strings"
 	"unicode"
+	"unicode/utf8"
 
 	"github.com/Liphium/scaff"
 	"github.com/Liphium/scaff/paint"
@@ -45,7 +46,11 @@ func (tp *TextProps) LineSpacing(lineSpacing float64) {
 	tp.lineSpacing = lineSpacing
 }
 
-func (tp *TextProps) Color(color color.RGBA) {
+func (tp *TextProps) Wrapping(wrapping bool) {
+	tp.wrapping = wrapping
+}
+
+func (tp *TextProps) Color(color color.Color) {
 	tp.color = color
 }
 
@@ -63,6 +68,8 @@ func Text(create func(t *scaff.Tracker, props *TextProps)) scaffui.NodeBuilder {
 		},
 		PropsCreator: create,
 		Create: func(props *scaffui.SingleChildProps[TextProps]) {
+			finalText := ""
+
 			props.WantedConstraints(func(node *scaffui.SingleChildNode[TextProps], parent scath.Constraints) scath.Constraints {
 				font, err := node.Context().AssetManager().GetFont(node.Props().font)
 				if err != nil {
@@ -105,77 +112,106 @@ func Text(create func(t *scaff.Tracker, props *TextProps)) scaffui.NodeBuilder {
 					return scath.Vec{}, nil
 				}
 
-				lineSpacing := node.Props().fontSize * node.Props().lineSpacing
 				measure := func(t string) (width, height float64) {
 					return text.Measure(t, &text.GoTextFace{
 						Source:    font,
 						Direction: node.Props().textDirection,
 						Size:      node.Props().fontSize,
-					}, lineSpacing)
+					}, 0)
 				}
 
 				constraints := node.Constraints()
 				maxX := constraints.RealMaxX()
 				maxY := constraints.RealMaxY()
 
-				text := ""
+				finalText = ""
 				line := ""
 				width, height := float64(0), float64(0)
 				lineWidth, lineHeight := float64(0), float64(0)
 				lineOffset := 0
 				lastSpace := 0
 
-				// TODO:
-				// - Properly handle line spacing (based on text direction)
-				// - Properly calculate global size
+				// Line spacing based on the text direction (for width + height)
+				lineSpacing := node.Props().fontSize * node.Props().lineSpacing
+				lineSpacingWidth, lineSpacingHeight := lineSpacing, lineSpacing
+				vertical := node.Props().textDirection == text.DirectionTopToBottomAndLeftToRight || node.Props().textDirection == text.DirectionTopToBottomAndRightToLeft
+				if vertical {
+					lineSpacingHeight = 0
+				} else {
+					lineSpacingWidth = 0
+				}
+
+				commitLine := func(i int, tillSpace bool) {
+					if line == "" {
+						return
+					}
+
+					// Cut line to stuff with last space
+					if tillSpace {
+						line = line[0:(lastSpace - lineOffset)]
+						lineOffset = lastSpace - lineOffset
+					} else {
+						lineOffset = i
+					}
+					finalText += line + "\n"
+					line = ""
+					i = lineOffset
+
+					// Add to global width / height
+					width += lineWidth
+					height += lineHeight
+				}
 
 				i := 0
 				for i < len(node.Props().text) {
-					rune := rune(node.Props().text[i])
+					rune, size := utf8.DecodeRuneInString(node.Props().text[i:])
 					char := string(rune)
-					w, h := measure(char)
-					lineWidth, lineHeight = lineWidth+w, lineHeight+h
+					line += char
+					lineWidth, lineHeight = measure(line)
+					lineWidth, lineHeight = lineWidth+lineSpacingWidth, lineHeight+lineSpacingHeight
 
 					// If the global limit is ever reached, just stop calculating
-					if width+lineWidth > maxX || height+lineHeight > maxY {
-						// Cut line to stuff with last space
-						text += line[0:(i - 1)]
-						width += lineWidth
-						height += lineHeight
+					if width+lineWidth >= maxX && height+lineHeight >= maxY {
+						commitLine(i, false)
+						log.Debug("commit, max reached")
 						break
 					}
 
 					// If max for a line reached (and the text should wrap), make sure to go back
-					if !node.Props().wrapping && (lineWidth > maxX || lineHeight > maxY) {
-						// Cut line to stuff with last space
-						line = line[0:(lastSpace - lineOffset)]
-						text += line + "\n"
-						line = ""
-						lineOffset = lastSpace - lineOffset
-						i = lineOffset
-						continue
+					if lineWidth > maxX || lineHeight > maxY {
+						if node.Props().wrapping {
+							commitLine(i, true)
+							continue
+						}
+
+						commitLine(i, false)
+						break
 					}
 
 					if unicode.IsSpace(rune) {
 						lastSpace = i
 					}
 
-					i++
+					i += size
 				}
 
-				return scath.Vec{X: 0, Y: 0}, nil
-			})
+				// Commit the line when not committed yet
+				if line != "" {
+					commitLine(len(node.Props().text)-1, false)
+				}
 
-			props.Update(func(node *scaffui.SingleChildNode[TextProps], c *scaff.Context) (bool, error) {
-				return false, nil
+				return scath.Vec{X: width, Y: height}, nil
 			})
 
 			props.Draw(func(node *scaffui.SingleChildNode[TextProps], position scath.Vec, painter paint.Painter) {
 				painter.Paint(paint.Text{
-					Font:     node.Props().font,
-					Text:     node.Props().text,
-					Color:    node.Props().color,
-					FontSize: node.Props().fontSize,
+					Direction:   node.Props().textDirection,
+					Font:        node.Props().font,
+					Text:        finalText,
+					Color:       node.Props().color,
+					FontSize:    node.Props().fontSize,
+					LineSpacing: node.Props().fontSize * node.Props().lineSpacing,
+					Position:    position,
 				})
 			})
 		},

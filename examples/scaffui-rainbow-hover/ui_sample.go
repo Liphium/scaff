@@ -20,7 +20,7 @@ func main() {
 	hovered := scaff.NewSignal(false)
 	rainbow := scaff.NewSignal(color.RGBA{255, 255, 255, 255})
 
-	tree := scaff.NewSceneTree("scaffui-rainbow-hover")
+	tree := scaff.NewSceneTree("scaffui-rainbow-hover", nil)
 
 	tree.Mount(func(t *scaff.Tracker, props *scaff.RootProps) {
 		props.Child(scaff.UseNode("rainbow", func(props *scaff.SingleChildProps[any]) {
@@ -32,7 +32,7 @@ func main() {
 			})
 		}))
 
-		props.Child(scaffui.Viewport(nil, func(t *scaff.Tracker, props *scaffui.ViewportProps) {
+		props.Child(scaffui.Viewport(func(t *scaff.Tracker, props *scaffui.ViewportProps) {
 			props.Child(basenode.Align(func(t *scaff.Tracker, props *basenode.AlignProps) {
 				props.Horizontal(basenode.HorizontalAlignmentCenter)
 				props.Vertical(basenode.VerticalAlignmentCenter)

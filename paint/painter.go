@@ -5,6 +5,7 @@ import (
 
 	"github.com/Liphium/scaff/scath"
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
 
 // This is so we can actually parse commands to JSON. Why? For live-reloading, but that's a future ambition.
@@ -47,11 +48,13 @@ func (Image) ID() string {
 }
 
 type Text struct {
-	Font     string      `json:"font"`
-	Color    color.Color `json:"color"`
-	FontSize float64     `json:"fontSize"`
-	Text     string      `json:"text"`
-	Position scath.Vec   `json:"position"`
+	Direction   text.Direction `json:"direction"`
+	Font        string         `json:"font"`
+	Color       color.Color    `json:"color"`
+	FontSize    float64        `json:"fontSize"`
+	LineSpacing float64        `json:"lineSpacing"`
+	Text        string         `json:"text"`
+	Position    scath.Vec      `json:"position"`
 }
 
 func (Text) ID() string {

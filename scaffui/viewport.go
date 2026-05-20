@@ -9,12 +9,7 @@ import (
 )
 
 type ViewportProps struct {
-	assets *paint.AssetManager
-	child  optional.O[NodeBuilder]
-}
-
-func (vp *ViewportProps) AssetManager(assets *paint.AssetManager) {
-	vp.assets = assets
+	child optional.O[NodeBuilder]
 }
 
 func (vp *ViewportProps) Child(builder NodeBuilder) {
@@ -32,10 +27,6 @@ func Viewport(create func(t *scaff.Tracker, props *ViewportProps)) scaff.NodeBui
 		var renderer *paint.EbitenPainter
 
 		props.Load(func(node *scaff.SingleChildNode[ViewportProps], parent scaff.Node) {
-			if node.Props().assets == nil {
-				log.Warn("no asset manager found, this might cause errors with text and images")
-			}
-
 			child, ok := node.Props().child.Value()
 			if !ok {
 				return
@@ -57,13 +48,15 @@ func Viewport(create func(t *scaff.Tracker, props *ViewportProps)) scaff.NodeBui
 			}
 
 			// Initialize the UI and stuff
+			firstRender := false
 			if renderer == nil {
-				renderer = paint.NewEbitenPainter(ebiten.NewImage(screen.Bounds().Dx(), screen.Bounds().Dy()), true, node.Props().assets)
+				renderer = paint.NewEbitenPainter(ebiten.NewImage(screen.Bounds().Dx(), screen.Bounds().Dy()), true, node.Context().AssetManager())
 				root.Current().SetConstraints(scath.Loose(float64(c.Width), float64(c.Height)))
 				_, err := root.Current().Layout()
 				if err != nil {
 					log.Error("layout error", "err", err)
 				}
+				firstRender = true
 			}
 
 			// Update all of the stuff
@@ -73,9 +66,11 @@ func Viewport(create func(t *scaff.Tracker, props *ViewportProps)) scaff.NodeBui
 				return
 			}
 
-			// Draw the stuff
-			renderer.Clear()
-			root.Current().Draw(scath.Zero, renderer)
+			// Draw the stuff (only if changed)
+			if result.AnythingChanged || firstRender {
+				renderer.Clear()
+				root.Current().Draw(scath.Zero, renderer)
+			}
 
 			screen.DrawImage(renderer.Screen(), &ebiten.DrawImageOptions{})
 		})
