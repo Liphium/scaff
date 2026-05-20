@@ -5,7 +5,6 @@ import (
 	"math"
 	"strings"
 	"unicode"
-	"unicode/utf8"
 
 	"github.com/Liphium/scaff"
 	"github.com/Liphium/scaff/paint"
@@ -124,6 +123,7 @@ func Text(create func(t *scaff.Tracker, props *TextProps)) scaffui.NodeBuilder {
 				maxX := constraints.RealMaxX()
 				maxY := constraints.RealMaxY()
 
+				runes := []rune(node.Props().text)
 				finalText = ""
 				line := ""
 				width, height := float64(0), float64(0)
@@ -141,38 +141,60 @@ func Text(create func(t *scaff.Tracker, props *TextProps)) scaffui.NodeBuilder {
 					lineSpacingWidth = 0
 				}
 
-				commitLine := func(i int, tillSpace bool) {
+				// Commits a line and returns new index
+				commitLine := func(i int, tillSpace bool) int {
 					if line == "" {
-						return
+						return i
 					}
 
 					// Cut line to stuff with last space
 					if tillSpace {
-						line = line[0:(lastSpace - lineOffset)]
-						lineOffset = lastSpace - lineOffset
+						if lastSpace <= lineOffset {
+							// There is no space within the current line, cut the line till the next space (this is just to clip text, but is in fact a rendering error)
+							log.Warn("word is too long for size of text", "w", line)
+							line = line[0:i]
+							found := false
+							for si, rune := range runes[i:] {
+								log.Debug("trying to find space", "r", string(rune))
+								if unicode.IsSpace(rune) {
+									lineOffset = i + si + 1
+									found = true
+									break
+								}
+							}
+							if !found {
+								lineOffset = len(runes)
+							}
+						} else {
+							// There was a space, wrap after that space
+							line = line[0:(lastSpace - lineOffset)]
+							lineOffset = lastSpace + 1
+						}
 					} else {
 						lineOffset = i
 					}
+					log.Debug("line", "l", line)
 					finalText += line + "\n"
 					line = ""
-					i = lineOffset
 
 					// Add to global width / height
 					width += lineWidth
 					height += lineHeight
+					return lineOffset
 				}
 
 				i := 0
-				for i < len(node.Props().text) {
-					rune, size := utf8.DecodeRuneInString(node.Props().text[i:])
+				for i < len(runes) {
+					rune := runes[i]
 					char := string(rune)
+					log.Debug("iteration", "c", char)
 					line += char
 					lineWidth, lineHeight = measure(line)
 					lineWidth, lineHeight = lineWidth+lineSpacingWidth, lineHeight+lineSpacingHeight
 
 					// If the global limit is ever reached, just stop calculating
 					if width+lineWidth >= maxX && height+lineHeight >= maxY {
-						commitLine(i, false)
+						i = commitLine(i, false)
 						log.Debug("commit, max reached")
 						break
 					}
@@ -180,11 +202,11 @@ func Text(create func(t *scaff.Tracker, props *TextProps)) scaffui.NodeBuilder {
 					// If max for a line reached (and the text should wrap), make sure to go back
 					if lineWidth > maxX || lineHeight > maxY {
 						if node.Props().wrapping {
-							commitLine(i, true)
+							i = commitLine(i, true)
 							continue
 						}
 
-						commitLine(i, false)
+						i = commitLine(i, false)
 						break
 					}
 
@@ -192,7 +214,7 @@ func Text(create func(t *scaff.Tracker, props *TextProps)) scaffui.NodeBuilder {
 						lastSpace = i
 					}
 
-					i += size
+					i++
 				}
 
 				// Commit the line when not committed yet
