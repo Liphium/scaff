@@ -154,10 +154,10 @@ func Text(create func(t *scaff.Tracker, props *TextProps)) scaffui.NodeBuilder {
 							log.Warn("word is too long for size of text", "w", line)
 							line = line[0:i]
 							found := false
-							for si, rune := range runes[i:] {
+							for j, rune := range runes[i:] {
 								log.Debug("trying to find space", "r", string(rune))
 								if unicode.IsSpace(rune) {
-									lineOffset = i + si + 1
+									lineOffset = i + j + 1
 									found = true
 									break
 								}
