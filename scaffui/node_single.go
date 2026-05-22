@@ -1,6 +1,8 @@
 package scaffui
 
 import (
+	"fmt"
+
 	"github.com/Liphium/scaff/paint"
 
 	"github.com/Liphium/scaff"
@@ -151,8 +153,9 @@ func (s *SingleChildNode[P]) Layout() (scath.Vec, error) {
 		return scath.Vec{}, err
 	}
 
-	s.size = size
-	return size, nil
+	finalSize, err := s.finalSize(size)
+	s.size = finalSize
+	return finalSize, err
 }
 
 func (s *SingleChildNode[P]) layout() (scath.Vec, error) {
@@ -161,11 +164,13 @@ func (s *SingleChildNode[P]) layout() (scath.Vec, error) {
 		if err != nil {
 			return size, scaff.NewTracedError(s, err)
 		}
-		s.size = size
-		return size, nil
+
+		finalSize, err := s.finalSize(size)
+		s.size = finalSize
+		return finalSize, err
 	}
 
-	// As a default just take the size of the child
+	// As a default just take the size of the child or the minimum size
 	size := scath.Vec{X: s.constraints.MinX, Y: s.constraints.MinY}
 
 	if child, ok := s.tracker.Node(); ok {
@@ -177,6 +182,27 @@ func (s *SingleChildNode[P]) layout() (scath.Vec, error) {
 
 		size.X = max(size.X, childSize.X)
 		size.Y = max(size.Y, childSize.Y)
+	}
+
+	finalSize, err := s.finalSize(size)
+	s.size = size
+	return finalSize, err
+}
+
+// TODO: Fix thight constraint handling everywhere to make sure we always check that the size fits within the parent + that when we get get a min width or height but our child is smaller, we still take the minimum height / width
+func (s *SingleChildNode[P]) finalSize(size scath.Vec) (scath.Vec, error) {
+
+	// Still size bigger when the parent gives us larger constraints with minimums
+	if size.X < s.constraints.MinX {
+		size.X = s.constraints.MinX
+	}
+	if size.Y < s.constraints.MinY {
+		size.Y = s.constraints.MinY
+	}
+
+	// Make sure the size is actually correct
+	if !size.FitsWithin(s.constraints) {
+		return scath.Vec{}, fmt.Errorf("child size is too big for parent constraints w=%v h=%v parent=%v", size.X, size.Y, s.constraints)
 	}
 
 	return size, nil

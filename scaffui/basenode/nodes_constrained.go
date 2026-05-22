@@ -30,7 +30,7 @@ func Constrained(create func(t *scaff.Tracker, props *ConstrainedProps)) scaffui
 		Create: func(props *scaffui.SingleChildProps[ConstrainedProps]) {
 			props.Layout(func(node *scaffui.SingleChildNode[ConstrainedProps]) (scath.Vec, error) {
 				spec := uispec.SingleChildBoxSpec{
-					Parent:  node.Constraints(),
+					Parent:  node.Props().constraints.Or(node.Constraints()),
 					Wanted:  node.Props().constraints,
 					Padding: scath.Pad(0),
 				}

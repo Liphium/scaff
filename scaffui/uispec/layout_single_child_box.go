@@ -33,7 +33,8 @@ func (s SingleChildBoxSpec) ChildConstraints() (scath.Constraints, error) {
 		}
 	}
 
-	return childConstraints.SubtractPadding(s.Padding), nil
+	calculated := childConstraints.SubtractPadding(s.Padding)
+	return calculated, nil
 }
 
 func (s SingleChildBoxSpec) LayoutWithChild(child scaffui.Node) (scath.Vec, error) {

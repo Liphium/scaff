@@ -32,7 +32,6 @@ func Clickable(create func(t *scaff.Tracker, props *ClickableProps)) scaffui.Nod
 		}
 
 		input.OnDown(func(handled, inside bool, event scaff.DownEvent) bool {
-			log.Debug("clicky")
 			if inside {
 				pressed[event.Button] = true
 			}

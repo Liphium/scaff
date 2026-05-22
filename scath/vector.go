@@ -248,6 +248,11 @@ func (v Vec) String() string {
 
 // MODIFIED BY SCAFF CONTRIBUTORS
 
+// FitsWithin checks if x and y (treated as width and height) fit into constraints
+func (v Vec) FitsWithin(c Constraints) bool {
+	return c.Fits(Tight(v.X, v.Y))
+}
+
 // IsWithin checks if the current position is in the rectangle starting at start with size.
 func (v Vec) IsWithinRectangle(start Vec, size Vec) bool {
 	return v.X >= start.X && v.X <= start.X+size.X &&

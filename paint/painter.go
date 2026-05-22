@@ -48,13 +48,15 @@ func (Image) ID() string {
 }
 
 type Text struct {
-	Direction   text.Direction `json:"direction"`
-	Font        string         `json:"font"`
-	Color       color.Color    `json:"color"`
-	FontSize    float64        `json:"fontSize"`
-	LineSpacing float64        `json:"lineSpacing"`
-	Text        string         `json:"text"`
-	Position    scath.Vec      `json:"position"`
+	Direction      text.Direction `json:"direction"`
+	Font           string         `json:"font"`
+	Color          color.Color    `json:"color"`
+	FontSize       float64        `json:"fontSize"`
+	LineSpacing    float64        `json:"lineSpacing"`
+	Text           string         `json:"text"`
+	Position       scath.Vec      `json:"position"`
+	PrimaryAlign   text.Align     `json:"primaryAlign"`
+	SecondaryAlign text.Align     `json:"secondaryAlign"`
 }
 
 func (Text) ID() string {

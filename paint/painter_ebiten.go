@@ -128,7 +128,9 @@ func (er *EbitenPainter) drawText(command Text) {
 
 	op := &text.DrawOptions{
 		LayoutOptions: text.LayoutOptions{
-			LineSpacing: command.FontSize + command.LineSpacing,
+			LineSpacing:    command.FontSize + command.LineSpacing,
+			PrimaryAlign:   command.PrimaryAlign,
+			SecondaryAlign: command.SecondaryAlign,
 		},
 	}
 	op.GeoM.Translate(command.Position.X, command.Position.Y)

@@ -71,7 +71,6 @@ func main() {
 
 						props.Child(basenode.Rectangle(func(t *scaff.Tracker, props *basenode.RectangleProps) {
 							props.FillColor(color.RGBA{255, 0, 0, 255})
-							props.WantedConstraints(scath.Tight(120, 300))
 
 							props.Child(basenode.Text(func(t *scaff.Tracker, props *basenode.TextProps) {
 								props.Text("ScaffUIdfshfsudhusf Image Sample")
