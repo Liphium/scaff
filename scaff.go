@@ -6,4 +6,4 @@ import (
 	sutil "github.com/Liphium/scaff/util"
 )
 
-var log *slog.Logger = sutil.NewLogger("base")
+var log *slog.Logger = sutil.NewLogger("scaff")
