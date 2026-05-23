@@ -1,4 +1,4 @@
-package basenode
+package uinode
 
 import (
 	"github.com/Liphium/scaff/paint"
@@ -13,7 +13,7 @@ import (
 type InputProps struct {
 
 	// When a mouse button is pressed.
-	onDown optional.O[func(handled, inside bool, event scaff.DownEvent) bool]
+	onDown optional.O[func(handled, inside bool, event scaff.PressEvent) bool]
 
 	// When a mouse button is released.
 	onRelease optional.O[func(handled, inside bool, event scaff.ReleaseEvent) bool]
@@ -27,7 +27,7 @@ type InputProps struct {
 	*scaffui.AcceptChild
 }
 
-func (o *InputProps) OnDown(fn func(handled, inside bool, event scaff.DownEvent) bool) {
+func (o *InputProps) OnDown(fn func(handled, inside bool, event scaff.PressEvent) bool) {
 	o.onDown.SetValue(fn)
 }
 
@@ -66,7 +66,7 @@ func Input(create func(t *scaff.Tracker, props *InputProps)) scaffui.NodeBuilder
 				}
 
 				switch ev := event.(type) {
-				case scaff.DownEvent:
+				case scaff.PressEvent:
 					if fn, ok := node.Props().onDown.Value(); ok {
 						if fn(handled, isInside, ev) {
 							c.Handled(event.EventID())

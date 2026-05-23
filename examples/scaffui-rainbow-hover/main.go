@@ -8,7 +8,7 @@ import (
 
 	"github.com/Liphium/scaff"
 	"github.com/Liphium/scaff/scaffui"
-	"github.com/Liphium/scaff/scaffui/basenode"
+	"github.com/Liphium/scaff/scaffui/uinode"
 	"github.com/Liphium/scaff/scath"
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -33,18 +33,18 @@ func main() {
 		}))
 
 		props.Child(scaffui.Viewport(func(t *scaff.Tracker, props *scaffui.ViewportProps) {
-			props.Child(basenode.Align(func(t *scaff.Tracker, props *basenode.AlignProps) {
-				props.Horizontal(basenode.HorizontalAlignmentCenter)
-				props.Vertical(basenode.VerticalAlignmentCenter)
+			props.Child(uinode.Align(func(t *scaff.Tracker, props *uinode.AlignProps) {
+				props.Horizontal(uinode.HorizontalAlignmentCenter)
+				props.Vertical(uinode.VerticalAlignmentCenter)
 
-				props.Child(basenode.Flex(func(t *scaff.Tracker, props *basenode.FlexProps) {
-					props.Child(basenode.Input(func(t *scaff.Tracker, props *basenode.InputProps) {
+				props.Child(uinode.Flex(func(t *scaff.Tracker, props *uinode.FlexProps) {
+					props.Child(uinode.Input(func(t *scaff.Tracker, props *uinode.InputProps) {
 						props.OnMove(func(handled, inside bool, event scaff.MoveEvent) bool {
 							hovered.Set(inside)
 							return false
 						})
 
-						props.Child(basenode.Rectangle(func(t *scaff.Tracker, props *basenode.RectangleProps) {
+						props.Child(uinode.Rectangle(func(t *scaff.Tracker, props *uinode.RectangleProps) {
 							props.WantedConstraints(scath.Tight(100, 100))
 							props.BorderRadius(8)
 							if hovered.Track(t) {

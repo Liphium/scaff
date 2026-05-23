@@ -1,4 +1,4 @@
-package basenode
+package uinode
 
 import (
 	"image/color"

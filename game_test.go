@@ -46,6 +46,10 @@ func (s *TestScene) Transition(in bool) scaff.TransitionProperties {
 	return scaff.NoTransition()
 }
 
+func (s *TestScene) HandleEvent(c *scaff.Context, e scaff.Event) error {
+	return nil
+}
+
 func createMockScene(id string, updates *[]string, loads *[]string, unloads *[]string) *TestScene {
 	return &TestScene{
 		ID: id,

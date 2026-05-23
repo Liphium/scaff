@@ -1,4 +1,4 @@
-package basenode
+package uinode
 
 import (
 	"github.com/Liphium/scaff"
@@ -31,7 +31,7 @@ func Clickable(create func(t *scaff.Tracker, props *ClickableProps)) scaffui.Nod
 			input.Child(builder)
 		}
 
-		input.OnDown(func(handled, inside bool, event scaff.DownEvent) bool {
+		input.OnDown(func(handled, inside bool, event scaff.PressEvent) bool {
 			if inside {
 				pressed[event.Button] = true
 			}

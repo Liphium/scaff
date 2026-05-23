@@ -3,7 +3,6 @@ package scaff
 import (
 	"github.com/Liphium/scaff/paint"
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
 // NewSceneTree makes a new scene tree based on an identifier. This tree supports a builder pattern, just use .Mount(<node>) to mount a node into it or add a transition with SetTransitionProps.
@@ -22,9 +21,6 @@ type SceneTree struct {
 	assetManager    *paint.AssetManager             // Asset manager for the scene
 	transitionProps func(bool) TransitionProperties // Set the transition properties for this scene
 	sceneRoot       Node                            // Node at the root of the scene tree
-
-	prevCursorX int
-	prevCursorY int
 }
 
 // Mount a node as the root of the scene tree.
@@ -89,57 +85,13 @@ func (st *SceneTree) Update(c *Context) error {
 		return nil
 	}
 
-	ctx := st.buildContext(c)
-	x, y := ebiten.CursorPosition()
-
-	// For mouse events, it's important that release is checked before pressed since the user may have released the button and pressed it again between the frame so both events could be emitted. In such a case, the release event should always be first.
-	buttons := []ebiten.MouseButton{
-		ebiten.MouseButton0,
-		ebiten.MouseButton1,
-		ebiten.MouseButton2,
-		ebiten.MouseButton3,
-		ebiten.MouseButton4,
-	}
-
-	// Check all of the common mouse buttons for press events
-	for _, button := range buttons {
-		if inpututil.IsMouseButtonJustPressed(button) {
-			if err := st.sceneRoot.HandleEvent(ctx, DownEvent{
-				X:      x,
-				Y:      y,
-				Button: button,
-			}); err != nil {
-				return err
-			}
-		}
-	}
-
-	// Check all of the common mouse buttons for release events
-	for _, button := range buttons {
-		if inpututil.IsMouseButtonJustReleased(button) {
-			if err := st.sceneRoot.HandleEvent(ctx, ReleaseEvent{
-				X:      x,
-				Y:      y,
-				Button: button,
-			}); err != nil {
-				return err
-			}
-		}
-	}
-
-	// Check for any delta in scroll
-	scrollX, scrollY := ebiten.Wheel()
-	if scrollX != 0 || scrollY != 0 {
-		st.sceneRoot.HandleEvent(ctx, ScrollEvent{
-			X:       x,
-			Y:       y,
-			ScrollX: scrollX,
-			ScrollY: scrollY,
-		})
-	}
-
 	// Let the actual scene root update itself
-	return st.sceneRoot.Update(ctx)
+	return st.sceneRoot.Update(c)
+}
+
+// Pass events to the root node
+func (st *SceneTree) HandleEvent(c *Context, e Event) error {
+	return st.sceneRoot.HandleEvent(c, e)
 }
 
 // Pass Draw to the layers in the correct order
@@ -148,33 +100,5 @@ func (st *SceneTree) Draw(c *Context, screen *ebiten.Image) {
 		return
 	}
 
-	ctx := st.buildContext(c)
-	x, y := ebiten.CursorPosition()
-
-	deltaX := x - st.prevCursorX
-	deltaY := y - st.prevCursorY
-	st.prevCursorX = x
-	st.prevCursorY = y
-
-	if deltaX != 0 || deltaY != 0 {
-		// Move events are emitted every frame to make sure dragging is smooth
-		st.sceneRoot.HandleEvent(st.buildContext(c), MoveEvent{
-			X:      x,
-			Y:      y,
-			DeltaX: deltaX,
-			DeltaY: deltaY,
-		})
-	}
-
-	st.sceneRoot.Draw(ctx, screen)
-}
-
-func (st *SceneTree) buildContext(c *Context) *Context {
-	return &Context{
-		Now:             c.Now,
-		TransitionFrame: c.TransitionFrame,
-		Width:           c.Width,
-		Height:          c.Height,
-		events:          []EventId{},
-	}
+	st.sceneRoot.Draw(c, screen)
 }

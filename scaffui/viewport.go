@@ -76,6 +76,12 @@ func Viewport(create func(t *scaff.Tracker, props *ViewportProps)) scaff.NodeBui
 		})
 
 		props.HandleEvent(func(node *scaff.SingleChildNode[ViewportProps], c *scaff.Context, event scaff.Event) error {
+
+			// When the size changes, delete the renderer (screen size changes and stuff and we can't use the old stuff anymore anyway)
+			if event.EventID() == scaff.EventIdSizeChange {
+				renderer = nil
+			}
+
 			if root != nil {
 				root.Current().HandleEvent(c, event)
 			}

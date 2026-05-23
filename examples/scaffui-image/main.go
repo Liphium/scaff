@@ -9,7 +9,7 @@ import (
 	"github.com/Liphium/scaff"
 	"github.com/Liphium/scaff/paint"
 	"github.com/Liphium/scaff/scaffui"
-	"github.com/Liphium/scaff/scaffui/basenode"
+	"github.com/Liphium/scaff/scaffui/uinode"
 	"github.com/Liphium/scaff/scath"
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -46,12 +46,12 @@ func main() {
 		}))
 
 		props.Child(scaffui.Viewport(func(t *scaff.Tracker, props *scaffui.ViewportProps) {
-			props.Child(basenode.Stack(func(t *scaff.Tracker, props *basenode.StackProps) {
-				props.Child(basenode.Align(func(t *scaff.Tracker, props *basenode.AlignProps) {
-					props.Horizontal(basenode.HorizontalAlignmentCenter)
-					props.Vertical(basenode.VerticalAlignmentCenter)
+			props.Child(uinode.Stack(func(t *scaff.Tracker, props *uinode.StackProps) {
+				props.Child(uinode.Align(func(t *scaff.Tracker, props *uinode.AlignProps) {
+					props.Horizontal(uinode.HorizontalAlignmentCenter)
+					props.Vertical(uinode.VerticalAlignmentCenter)
 
-					props.Child(basenode.Image(func(t *scaff.Tracker, props *basenode.ImageProps) {
+					props.Child(uinode.Image(func(t *scaff.Tracker, props *uinode.ImageProps) {
 						props.Path("assets/icon.png")
 						if scaling.Track(t) {
 							props.Constraints(scath.Tight(150*scaleFactor.Track(t), 150*scaleFactor.Track(t)))
@@ -62,37 +62,29 @@ func main() {
 					}))
 				}))
 
-				props.Child(basenode.Align(func(t *scaff.Tracker, props *basenode.AlignProps) {
-					props.Horizontal(basenode.HorizontalAlignmentCenter)
-					props.Vertical(basenode.VerticalAlignmentTop)
+				props.Child(uinode.Align(func(t *scaff.Tracker, props *uinode.AlignProps) {
+					props.Horizontal(uinode.HorizontalAlignmentCenter)
+					props.Vertical(uinode.VerticalAlignmentTop)
 
-					props.Child(basenode.Constrained(func(t *scaff.Tracker, props *basenode.ConstrainedProps) {
-						props.Constraints(scath.Tight(120, 300))
-
-						props.Child(basenode.Rectangle(func(t *scaff.Tracker, props *basenode.RectangleProps) {
-							props.FillColor(color.RGBA{255, 0, 0, 255})
-
-							props.Child(basenode.Text(func(t *scaff.Tracker, props *basenode.TextProps) {
-								props.Text("ScaffUIdfshfsudhusf Image Sample")
-								props.FontSize(24)
-								props.Wrapping(true)
-								props.Color(color.White)
-							}))
-						}))
+					props.Child(uinode.Text(func(t *scaff.Tracker, props *uinode.TextProps) {
+						props.Text("ScaffUI Image Sample")
+						props.FontSize(24)
+						props.Wrapping(true)
+						props.Color(color.White)
 					}))
 				}))
 
-				props.Child(basenode.Align(func(t *scaff.Tracker, props *basenode.AlignProps) {
-					props.Horizontal(basenode.HorizontalAlignmentCenter)
-					props.Vertical(basenode.VerticalAlignmentBottom)
+				props.Child(uinode.Align(func(t *scaff.Tracker, props *uinode.AlignProps) {
+					props.Horizontal(uinode.HorizontalAlignmentCenter)
+					props.Vertical(uinode.VerticalAlignmentBottom)
 
-					props.Child(basenode.Clickable(func(t *scaff.Tracker, props *basenode.ClickableProps) {
+					props.Child(uinode.Clickable(func(t *scaff.Tracker, props *uinode.ClickableProps) {
 						props.OnClick(func(button ebiten.MouseButton) bool {
 							scaling.Set(!scaling.Value())
 							return true
 						})
 
-						props.Child(basenode.Rectangle(func(t *scaff.Tracker, props *basenode.RectangleProps) {
+						props.Child(uinode.Rectangle(func(t *scaff.Tracker, props *uinode.RectangleProps) {
 							props.WantedConstraints(scath.Tight(100, 20))
 							if scaling.Track(t) {
 								props.FillColor(color.RGBA{0, 255, 0, 255})

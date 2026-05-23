@@ -1,11 +1,11 @@
 // This package provides very basic nodes that work with scaffui. These provide a good baseline for implementing more higher-level components like buttons or input fields.
-package basenode
+package uinode
 
 import (
 	sutil "github.com/Liphium/scaff/util"
 )
 
-var log = sutil.NewLogger("basenode")
+var log = sutil.NewLogger("uinode")
 
 // Deletes an element without preserving order.
 func deleteUnordered[T any](s []T, i int) []T {

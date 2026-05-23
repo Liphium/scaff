@@ -18,14 +18,15 @@ type PositionalEvent interface {
 	Position() scath.Vec
 }
 
-// All types of events in cgui (don't work yet)
+// All types of events in Scaff
 const (
-	EventIdMove   EventId = "scaff::move"
-	EventIdScroll EventId = "scaff::scroll"
+	EventIdMove       EventId = "scaff::move"
+	EventIdScroll     EventId = "scaff::scroll"
+	EventIdSizeChange EventId = "scaff::size-change"
 )
 
 // This event id has the button in it to make sure it can be marked as handled separately from events for other buttons
-func EventIdDown(button ebiten.MouseButton) EventId {
+func EventIdPress(button ebiten.MouseButton) EventId {
 	return EventId(fmt.Sprintf("scaff::down::%d", button))
 }
 
@@ -66,17 +67,17 @@ func (se ScrollEvent) Position() scath.Vec {
 }
 
 // Emitted when the user presses a mouse button down.
-type DownEvent struct {
+type PressEvent struct {
 	X      int
 	Y      int
 	Button ebiten.MouseButton
 }
 
-func (de DownEvent) EventID() EventId {
-	return EventIdDown(de.Button)
+func (de PressEvent) EventID() EventId {
+	return EventIdPress(de.Button)
 }
 
-func (de DownEvent) Position() scath.Vec {
+func (de PressEvent) Position() scath.Vec {
 	return scath.Vec{X: float64(de.X), Y: float64(de.Y)}
 }
 
@@ -93,4 +94,13 @@ func (re ReleaseEvent) EventID() EventId {
 
 func (re ReleaseEvent) Position() scath.Vec {
 	return scath.Vec{X: float64(re.X), Y: float64(re.Y)}
+}
+
+// Emitted when the size of the application changes.
+//
+// This does not contain the new size as the context already does anyway.
+type SizeChangeEvent struct{}
+
+func (sce SizeChangeEvent) EventID() EventId {
+	return EventIdSizeChange
 }

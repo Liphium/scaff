@@ -142,7 +142,7 @@ func (er *EbitenPainter) drawText(command Text) {
 	}, 0)
 	text.Draw(er.screen, command.Text, &text.GoTextFace{
 		Source:    font,
-		Direction: text.DirectionLeftToRight,
+		Direction: command.Direction,
 		Size:      command.FontSize,
 	}, op)
 }

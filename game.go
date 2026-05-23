@@ -16,8 +16,11 @@ type Game struct {
 	waitingSceneList []Scene
 	modified         bool
 	width, height    float64
+	layoutChange     bool // To emit a layout change event in the Update when something changed
 
 	sceneList []*TransitioningState[Scene] // THIS SHOULD NOT BE SET OUTSIDE OF UPDATE
+
+	input *inputHandler
 }
 
 // NewGame returns a new Game instance with default values
@@ -26,6 +29,7 @@ func NewGame() *Game {
 		mu:               &sync.Mutex{},
 		waitingSceneList: []Scene{},
 		sceneList:        []*TransitioningState[Scene]{},
+		input:            &inputHandler{},
 	}
 }
 
@@ -37,11 +41,17 @@ func (g *Game) Layout(width, height int) (int, int) {
 // This makes sure the monitor's resolution is actually properly respected (Source: https://github.com/tinne26/kage-desk/blob/main/docs/tutorials/ebitengine_game.md#layout)
 func (g *Game) LayoutF(logicWinWidth, logicWinHeight float64) (float64, float64) {
 	scale := ebiten.Monitor().DeviceScaleFactor()
-	g.width = logicWinWidth * scale
-	g.height = logicWinHeight * scale
+	newWidth := logicWinWidth * scale
+	newHeight := logicWinHeight * scale
+	if newWidth != g.width || newHeight != g.height {
+		g.layoutChange = true
+	}
+	g.width = newWidth
+	g.height = newHeight
 	return g.width, g.height
 }
 
+// Update forwards Ebiten's Update to all scenes and emits input events from top -> bottom.
 func (g *Game) Update() error {
 	now := time.Now()
 
@@ -73,10 +83,26 @@ func (g *Game) Update() error {
 
 	g.mu.Unlock()
 
+	// Build all of the scene contexts for updating
+	ctx := &eventContext{}
+	contexts := g.buildSceneContexts(now, ctx)
+
+	// Emit all of the events for the update pass
+	for _, event := range g.input.getInputEventsUpdate() {
+		g.EmitEvent(contexts, event)
+	}
+
+	// Emit layout change when one happened
+	if g.layoutChange {
+		g.EmitEvent(contexts, SizeChangeEvent{})
+		g.layoutChange = false
+	}
+
 	// Update all of the scenes in proper order (this is backward because the front of the scene list is the topmost scene)
 	for i, scene := range slices.Backward(g.sceneList) {
 		if err := scene.Update(now, func(s Scene, tf scath.Timeframe) error {
-			return s.Update(g.buildSceneContext(i, now, sutil.Ptr(tf)))
+			// This still requires one more build of the scene thingy since there may be multiple occurences of the same scene updating due to transitioning out and stuff
+			return s.Update(g.buildSceneContext(i, now, sutil.Ptr(tf), ctx))
 		}); err != nil {
 			return err
 		}
@@ -84,19 +110,31 @@ func (g *Game) Update() error {
 	return nil
 }
 
+// Draw handles drawing of the game by drawing the bottom scene first and then going up from there.
 func (g *Game) Draw(screen *ebiten.Image) {
 	now := time.Now()
+
+	// Build all of the scene contexts for drawing
+	ctx := &eventContext{}
+	contexts := g.buildSceneContexts(now, ctx)
+
+	// Emit all of the events for the draw pass
+	for _, event := range g.input.getInputEventsDraw() {
+		g.EmitEvent(contexts, event)
+	}
 
 	// Draw all of the scenes in proper order (this is forward because the front of the scene list is the scene that is in the background)
 	for i, scene := range g.sceneList {
 		scene.Update(now, func(s Scene, tf scath.Timeframe) error {
-			s.Draw(g.buildSceneContext(i, now, sutil.Ptr(tf)), screen)
+			// This still requires one more build of the scene thingy since there may be multiple occurences of the same scene rendering due to transitioning out and stuff
+			s.Draw(g.buildSceneContext(i, now, sutil.Ptr(tf), ctx), screen)
 			return nil
 		})
 	}
 }
 
-func (g *Game) buildSceneContext(i int, now time.Time, frame *scath.Timeframe) *Context {
+// buildSceneContext builds a context for one scene based on its index in sceneList and other parameters from its transition.
+func (g *Game) buildSceneContext(i int, now time.Time, frame *scath.Timeframe, ctx *eventContext) *Context {
 
 	// Create default frame if not set
 	if frame == nil {
@@ -110,8 +148,51 @@ func (g *Game) buildSceneContext(i int, now time.Time, frame *scath.Timeframe) *
 		TransitionFrame: *frame,
 		Width:           g.width,
 		Height:          g.height,
-		events:          []EventId{},
+		eventContext:    ctx,
 	}
+}
+
+// buildSceneContexts builds the context needed for updates, etc. for all scenes in the sceneList, the index matches the one in sceneList.
+//
+// There may be nil contexts for scenes that are currently transitioning out / are not there.
+func (g *Game) buildSceneContexts(now time.Time, ctx *eventContext) []*Context {
+	contexts := make([]*Context, len(g.sceneList))
+
+	// Go through all scenes and build their context
+	for i, scene := range g.sceneList {
+		scene.Update(now, func(s Scene, tf scath.Timeframe) error {
+			// We only want the currently active scene / transitioning in scene
+			if tf.IsBackwards() {
+				return nil
+			}
+
+			contexts[i] = g.buildSceneContext(i, now, sutil.Ptr(tf), ctx)
+			return nil
+		})
+	}
+
+	return contexts
+}
+
+// EmitEvent sends an event to all scenes in the scene list in proper order (top -> bottom)
+func (g *Game) EmitEvent(contexts []*Context, event Event) {
+
+	// Emit events in proper order (this is backward because the front of the scene list is the topmost scene)
+	for i, scene := range slices.Backward(g.sceneList) {
+		if val, ok := scene.GetCurrent().Value(); ok && contexts[i] != nil {
+			if err := val.HandleEvent(contexts[i], event); err != nil {
+				log.Error("error during input handling", "scene", val.GetId(), "err", err)
+				return
+			}
+		}
+	}
+}
+
+// EmitEventNoContext sends an event to all scenes in the scene list in proper order (top -> bottom), but it also builds a context for the scenes at the same time. Scenes that are not fully transitioned will not receive events.
+func (g *Game) EmitEventNoContext(event Event) {
+	ctx := &eventContext{}
+	contexts := g.buildSceneContexts(time.Now(), ctx)
+	g.EmitEvent(contexts, event)
 }
 
 // Get the scene list, this may not be the last updated one, but the one that will be set next time Update is called.
@@ -122,6 +203,7 @@ func (g *Game) GetSceneList() []Scene {
 	return slices.Clone(g.waitingSceneList)
 }
 
+// Goto completely removes all scenes from the scene stack and makes this scene the new one and only scene.
 func (g *Game) Goto(scene Scene) {
 	g.mu.Lock()
 	g.waitingSceneList = []Scene{scene}
@@ -129,6 +211,7 @@ func (g *Game) Goto(scene Scene) {
 	g.mu.Unlock()
 }
 
+// Push adds a scene to the top of the scene stack.
 func (g *Game) Push(scene Scene) {
 	g.mu.Lock()
 	g.waitingSceneList = append(g.waitingSceneList, scene)
@@ -136,6 +219,7 @@ func (g *Game) Push(scene Scene) {
 	g.mu.Unlock()
 }
 
+// Pop removes the top scene from the scene stack.
 func (g *Game) Pop() {
 	g.mu.Lock()
 	if len(g.waitingSceneList) > 0 {
@@ -145,6 +229,7 @@ func (g *Game) Pop() {
 	g.mu.Unlock()
 }
 
+// PopUntil "pops" (removes from the top) all scenes in the scene stack until a scene with a certain id is found (but that one is not removed).
 func (g *Game) PopUntil(id string) {
 	g.mu.Lock()
 	for len(g.waitingSceneList) > 0 {
