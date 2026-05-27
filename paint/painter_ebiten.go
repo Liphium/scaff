@@ -19,22 +19,22 @@ func NewEbitenPainter(screen *ebiten.Image, antialias bool, assets *AssetManager
 		screen:    screen,
 		antialias: antialias,
 		assets:    assets,
-		transform: &ebiten.GeoM{},
+		transform: NewTransform(),
 	}
 }
 
 type EbitenPainter struct {
-	transform *ebiten.GeoM
+	transform Transform
 	screen    *ebiten.Image
 	antialias bool
 	assets    *AssetManager
 }
 
-func (e *EbitenPainter) SetTransform(matrix *ebiten.GeoM) {
-	e.transform = matrix
+func (e *EbitenPainter) SetTransform(transform Transform) {
+	e.transform = transform
 }
 
-func (e *EbitenPainter) Transform() *ebiten.GeoM {
+func (e *EbitenPainter) Transform() Transform {
 	return e.transform
 }
 
@@ -73,6 +73,21 @@ func (er *EbitenPainter) drawRectangle(command Rectangle) {
 	}
 
 	path := roundedRectPath(command.Position.X, command.Position.Y, command.Size.X, command.Size.Y, command.BorderRadius)
+
+	// Apply transform to path
+	if er.transform.ZoomFactor != 1 || er.transform.Angle != 0 || er.transform.CamX != 0 || er.transform.CamY != 0 || er.transform.CenterOffsetX != 0 || er.transform.CenterOffsetY != 0 {
+		geom := ebiten.GeoM{}
+		geom.Translate(-er.transform.CamX, -er.transform.CamY)
+		geom.Translate(er.transform.CenterOffsetX, er.transform.CenterOffsetY)
+		geom.Rotate(er.transform.Angle)
+		geom.Scale(er.transform.ZoomFactor, er.transform.ZoomFactor)
+		geom.Translate(math.Abs(er.transform.CenterOffsetX), math.Abs(er.transform.CenterOffsetY))
+
+		tfPath := &vector.Path{}
+		tfPath.AddPath(path, &vector.AddPathOptions{GeoM: geom})
+		path = tfPath
+	}
+
 	drawOptions := &vector.DrawPathOptions{AntiAlias: er.antialias}
 	drawOptions.ColorScale.ScaleWithColor(command.FillColor)
 	vector.FillPath(er.screen, path, nil, drawOptions)
@@ -89,6 +104,20 @@ func (er *EbitenPainter) drawRectangleStroke(command RectangleStroke) {
 	}
 
 	path := roundedRectPath(command.Position.X, command.Position.Y, command.Size.X, command.Size.Y, command.BorderRadius)
+
+	// Apply transform to path
+	if er.transform.ZoomFactor != 1 || er.transform.Angle != 0 || er.transform.CamX != 0 || er.transform.CamY != 0 || er.transform.CenterOffsetX != 0 || er.transform.CenterOffsetY != 0 {
+		geom := ebiten.GeoM{}
+		geom.Translate(-er.transform.CamX, -er.transform.CamY)
+		geom.Translate(er.transform.CenterOffsetX, er.transform.CenterOffsetY)
+		geom.Rotate(er.transform.Angle)
+		geom.Scale(er.transform.ZoomFactor, er.transform.ZoomFactor)
+		geom.Translate(math.Abs(er.transform.CenterOffsetX), math.Abs(er.transform.CenterOffsetY))
+
+		tfPath := &vector.Path{}
+		tfPath.AddPath(path, &vector.AddPathOptions{GeoM: geom})
+		path = tfPath
+	}
 
 	strokeOptions := &vector.StrokeOptions{
 		Width:    float32(thickness),
@@ -121,6 +150,14 @@ func (er *EbitenPainter) drawImage(command Image) {
 	opts.Filter = command.FilterMode
 	opts.GeoM.Scale(command.Size.X/float64(w), command.Size.Y/float64(h))
 	opts.GeoM.Translate(command.Position.X, command.Position.Y)
+
+	// Apply painter transform
+	opts.GeoM.Translate(-er.transform.CamX, -er.transform.CamY)
+	opts.GeoM.Translate(er.transform.CenterOffsetX, er.transform.CenterOffsetY)
+	opts.GeoM.Rotate(er.transform.Angle)
+	opts.GeoM.Scale(er.transform.ZoomFactor, er.transform.ZoomFactor)
+	opts.GeoM.Translate(math.Abs(er.transform.CenterOffsetX), math.Abs(er.transform.CenterOffsetY))
+
 	er.screen.DrawImage(img, opts)
 }
 
@@ -138,17 +175,32 @@ func (er *EbitenPainter) drawText(command Text) {
 
 	op := &text.DrawOptions{
 		LayoutOptions: text.LayoutOptions{
-			LineSpacing:    command.FontSize + command.LineSpacing,
+			LineSpacing:    (command.FontSize + command.LineSpacing) * er.transform.ZoomFactor,
 			PrimaryAlign:   command.PrimaryAlign,
 			SecondaryAlign: command.SecondaryAlign,
 		},
 	}
 	op.GeoM.Translate(command.Position.X, command.Position.Y)
+
+	// Apply rotation and translation from transform (scaling is done through font size to keep text sharp)
+	op.GeoM.Translate(-er.transform.CamX, -er.transform.CamY)
+	op.GeoM.Translate(er.transform.CenterOffsetX, er.transform.CenterOffsetY)
+	op.GeoM.Rotate(er.transform.Angle)
+	// We do NOT scale the geom for text to prevent blurriness.
+	op.GeoM.Translate(math.Abs(er.transform.CenterOffsetX), math.Abs(er.transform.CenterOffsetY))
+
 	op.ColorScale.ScaleWithColor(command.Color)
+
+	// Multiply font size by ZoomFactor to render sharply at correct scale
+	fontSize := command.FontSize * er.transform.ZoomFactor
+	if fontSize <= 0 {
+		return
+	}
+
 	text.Draw(er.screen, command.Text, &text.GoTextFace{
 		Source:    font,
 		Direction: command.Direction,
-		Size:      command.FontSize,
+		Size:      fontSize,
 	}, op)
 }
 
