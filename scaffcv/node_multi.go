@@ -1,6 +1,9 @@
-package scaff
+package scaffcv
 
-import "github.com/hajimehoshi/ebiten/v2"
+import (
+	"github.com/Liphium/scaff"
+	"github.com/Liphium/scaff/paint"
+)
 
 // CreateMultiNode lets you create a node with multiple children. Simply implement the ChildProps interface on the props you want to have for your node.
 //
@@ -9,7 +12,7 @@ import "github.com/hajimehoshi/ebiten/v2"
 // propsCreator should be the function passed in by users of your node (as in it should probably be an argument of the function creating your node).
 //
 // create is the function actually specifying your node. You can overwrite all of the functions of the node interface there, with some exceptions that we implement for you.
-func CreateMultiNode[P ChildProps[NodeBuilder]](id string, propsCreator func(t *Tracker, props *P), create func(props *MultiChildProps[P])) NodeBuilder {
+func CreateMultiNode[P scaff.ChildProps[NodeBuilder]](id string, propsCreator func(t *scaff.Tracker, props *P), create func(props *MultiChildProps[P])) NodeBuilder {
 	node := &MultiChildNode[P]{
 		id:         id,
 		multiProps: &MultiChildProps[P]{},
@@ -19,7 +22,7 @@ func CreateMultiNode[P ChildProps[NodeBuilder]](id string, propsCreator func(t *
 	}
 
 	return func(context *BuildContext) Node {
-		node.tracker = NewTracker()
+		node.tracker = scaff.NewTracker()
 		node.context = context
 
 		// Fill the props
@@ -42,11 +45,11 @@ func CreateMultiNode[P ChildProps[NodeBuilder]](id string, propsCreator func(t *
 
 type MultiChildProps[P any] struct {
 	onLoad        func(node *MultiChildNode[P], parent Node)
-	onUnload      func(node *MultiChildNode[P])
 	onPropsChange func(node *MultiChildNode[P])
-	onUpdate      func(node *MultiChildNode[P], c *Context) error
-	onHandleEvent func(node *MultiChildNode[P], c *Context, event Event) error
-	onDraw        func(node *MultiChildNode[P], c *Context, image *ebiten.Image)
+	onUnload      func(node *MultiChildNode[P])
+	onUpdate      func(node *MultiChildNode[P], c *scaff.Context) error
+	onHandleEvent func(node *MultiChildNode[P], c *scaff.Context, event scaff.Event) error
+	onDraw        func(node *MultiChildNode[P], c *scaff.Context, image paint.Painter)
 }
 
 func (s *MultiChildProps[P]) Load(fn func(node *MultiChildNode[P], parent Node)) {
@@ -57,15 +60,15 @@ func (s *MultiChildProps[P]) Unload(fn func(node *MultiChildNode[P])) {
 	s.onUnload = fn
 }
 
-func (s *MultiChildProps[P]) Update(fn func(node *MultiChildNode[P], c *Context) error) {
+func (s *MultiChildProps[P]) Update(fn func(node *MultiChildNode[P], c *scaff.Context) error) {
 	s.onUpdate = fn
 }
 
-func (s *MultiChildProps[P]) HandleEvent(fn func(node *MultiChildNode[P], c *Context, event Event) error) {
+func (s *MultiChildProps[P]) HandleEvent(fn func(node *MultiChildNode[P], c *scaff.Context, event scaff.Event) error) {
 	s.onHandleEvent = fn
 }
 
-func (s *MultiChildProps[P]) Draw(fn func(node *MultiChildNode[P], c *Context, image *ebiten.Image)) {
+func (s *MultiChildProps[P]) Draw(fn func(node *MultiChildNode[P], c *scaff.Context, painter paint.Painter)) {
 	s.onDraw = fn
 }
 
@@ -77,7 +80,7 @@ type MultiChildNode[P any] struct {
 	children []Node
 	builders []NodeBuilder
 
-	tracker *Tracker
+	tracker *scaff.Tracker
 	context *BuildContext
 
 	id         string
@@ -110,12 +113,12 @@ func (s *MultiChildNode[P]) Load(parent Node) {
 	}
 }
 
-func (s *MultiChildNode[P]) HandleEvent(c *Context, event Event) TracedError {
+func (s *MultiChildNode[P]) HandleEvent(c *scaff.Context, event scaff.Event) scaff.TracedError {
 
 	// First handle event on this node
 	if s.multiProps.onHandleEvent != nil {
 		if err := s.multiProps.onHandleEvent(s, c, event); err != nil {
-			return NewTracedError(s, err)
+			return scaff.NewTracedError(s, err)
 		}
 	}
 
@@ -123,16 +126,16 @@ func (s *MultiChildNode[P]) HandleEvent(c *Context, event Event) TracedError {
 	return s.HandleEventChild(c, event)
 }
 
-func (s *MultiChildNode[P]) Tracker() *Tracker {
+func (s *MultiChildNode[P]) Tracker() *scaff.Tracker {
 	return s.tracker
 }
 
-func (s *MultiChildNode[P]) Update(c *Context) TracedError {
+func (s *MultiChildNode[P]) Update(c *scaff.Context) scaff.TracedError {
 
 	// First call the update handler on the props for this node
 	if s.multiProps.onUpdate != nil {
 		if err := s.multiProps.onUpdate(s, c); err != nil {
-			return NewTracedError(s, err)
+			return scaff.NewTracedError(s, err)
 		}
 	}
 
@@ -169,13 +172,13 @@ func (s *MultiChildNode[P]) Unload() {
 	s.tracker = nil // Cut tracker off from tree for GC
 }
 
-func (s *MultiChildNode[P]) Draw(c *Context, image *ebiten.Image) {
+func (s *MultiChildNode[P]) Draw(c *scaff.Context, painter paint.Painter) {
 	if s.multiProps.onDraw != nil {
-		s.multiProps.onDraw(s, c, image)
+		s.multiProps.onDraw(s, c, painter)
 	} else {
 
 		// Default implementation: just draw children
-		s.DrawChild(c, image)
+		s.DrawChild(c, painter)
 	}
 }
 
@@ -187,7 +190,7 @@ func (s *MultiChildNode[P]) Children() []Node {
 	return s.children
 }
 
-func (s *MultiChildNode[P]) HandleEventChild(c *Context, event Event) TracedError {
+func (s *MultiChildNode[P]) HandleEventChild(c *scaff.Context, event scaff.Event) scaff.TracedError {
 	// Event should always be passed to the children as well so it doesn't get missed (even if already handled)
 	for _, child := range s.children {
 		if err := child.HandleEvent(c, event); err != nil {
@@ -199,8 +202,8 @@ func (s *MultiChildNode[P]) HandleEventChild(c *Context, event Event) TracedErro
 }
 
 // Draw the children of the node
-func (s *MultiChildNode[P]) DrawChild(c *Context, image *ebiten.Image) {
+func (s *MultiChildNode[P]) DrawChild(c *scaff.Context, painter paint.Painter) {
 	for _, child := range s.children {
-		child.Draw(c, image)
+		child.Draw(c, painter)
 	}
 }

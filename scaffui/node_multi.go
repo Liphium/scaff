@@ -58,12 +58,18 @@ func CreateMultiNode[P scaff.ChildProps[NodeBuilder]](create MultiNodeCreate[P])
 			}
 		}
 
+		// Call props changed hook when defined
+		if node.multiProps.onPropsChanged != nil {
+			node.multiProps.onPropsChanged(node)
+		}
+
 		return node
 	}
 }
 
 type MultiChildProps[P any] struct {
 	onLoad              func(node *MultiChildNode[P])
+	onPropsChanged      func(node *MultiChildNode[P])
 	onUnload            func(node *MultiChildNode[P])
 	onWantedConstraints func(node *MultiChildNode[P], parent scath.Constraints) scath.Constraints
 	onLayout            func(node *MultiChildNode[P]) (scath.Vec, error)
@@ -78,6 +84,10 @@ func (m *MultiChildProps[P]) WantedConstraints(fn func(node *MultiChildNode[P], 
 
 func (m *MultiChildProps[P]) Load(fn func(node *MultiChildNode[P])) {
 	m.onLoad = fn
+}
+
+func (s *MultiChildProps[P]) PropsChanged(fn func(node *MultiChildNode[P])) {
+	s.onPropsChanged = fn
 }
 
 func (m *MultiChildProps[P]) Unload(fn func(node *MultiChildNode[P])) {

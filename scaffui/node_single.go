@@ -51,12 +51,18 @@ func CreateSingleNode[P scaff.ChildProps[NodeBuilder]](create SingleNodeCreate[P
 			}
 		}
 
+		// Call props changed hook when defined
+		if node.singleProps.onPropsChanged != nil {
+			node.singleProps.onPropsChanged(node)
+		}
+
 		return node
 	}
 }
 
 type SingleChildProps[P any] struct {
 	onLoad              func(node *SingleChildNode[P])
+	onPropsChanged      func(node *SingleChildNode[P])
 	onUnload            func(node *SingleChildNode[P])
 	onWantedConstraints func(node *SingleChildNode[P], parent scath.Constraints) scath.Constraints
 	onLayout            func(node *SingleChildNode[P]) (scath.Vec, error)
@@ -71,6 +77,10 @@ func (s *SingleChildProps[P]) WantedConstraints(fn func(node *SingleChildNode[P]
 
 func (s *SingleChildProps[P]) Load(fn func(node *SingleChildNode[P])) {
 	s.onLoad = fn
+}
+
+func (s *SingleChildProps[P]) PropsChanged(fn func(node *SingleChildNode[P])) {
+	s.onPropsChanged = fn
 }
 
 func (s *SingleChildProps[P]) Unload(fn func(node *SingleChildNode[P])) {

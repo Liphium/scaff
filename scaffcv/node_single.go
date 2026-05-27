@@ -1,7 +1,8 @@
-package scaff
+package scaffcv
 
 import (
-	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/Liphium/scaff"
+	"github.com/Liphium/scaff/paint"
 )
 
 // UseNode creates a node without a child. You can use this if you simply want to create a node that does something very custom outside of scaff. This node still gives you access to all functions on the Node interface through the props, but you can choose which ones you actually want to implement.
@@ -12,7 +13,7 @@ import (
 func UseNode(id string, create func(props *SingleChildProps[any])) NodeBuilder {
 	node := &SingleChildNode[any]{
 		id:          id,
-		tracker:     NewTracker(),
+		tracker:     scaff.NewTracker(),
 		singleProps: &SingleChildProps[any]{},
 	}
 	if create != nil {
@@ -20,12 +21,12 @@ func UseNode(id string, create func(props *SingleChildProps[any])) NodeBuilder {
 	}
 
 	return func(context *BuildContext) Node {
-		node.tracker = NewTracker()
+		node.tracker = scaff.NewTracker()
 		node.context = context
 
 		// Run the state change hook
-		if node.singleProps.onPropsChanged != nil {
-			node.singleProps.onPropsChanged(node)
+		if node.singleProps.onPropsChange != nil {
+			node.singleProps.onPropsChange(node)
 		}
 
 		return node
@@ -39,7 +40,7 @@ func UseNode(id string, create func(props *SingleChildProps[any])) NodeBuilder {
 // propsCreator should be the function passed in by users of your node (as in it should probably be an argument of the function creating your node).
 //
 // create is the function actually specifying your node. You can overwrite all of the functions of the node interface there, with some exceptions that we implement for you.
-func SingleNode[P ChildProps[NodeBuilder]](id string, propsCreator func(t *Tracker, props *P), create func(props *SingleChildProps[P])) NodeBuilder {
+func SingleNode[P scaff.ChildProps[NodeBuilder]](id string, propsCreator func(t *scaff.Tracker, props *P), create func(props *SingleChildProps[P])) NodeBuilder {
 
 	// Create the actual node
 	node := &SingleChildNode[P]{
@@ -51,7 +52,7 @@ func SingleNode[P ChildProps[NodeBuilder]](id string, propsCreator func(t *Track
 	}
 
 	return func(context *BuildContext) Node {
-		node.tracker = NewTracker()
+		node.tracker = scaff.NewTracker()
 		node.context = context
 
 		// Fill the props
@@ -72,8 +73,8 @@ func SingleNode[P ChildProps[NodeBuilder]](id string, propsCreator func(t *Track
 		}
 
 		// Run the state change hook
-		if node.singleProps.onPropsChanged != nil {
-			node.singleProps.onPropsChanged(node)
+		if node.singleProps.onPropsChange != nil {
+			node.singleProps.onPropsChange(node)
 		}
 
 		return node
@@ -81,12 +82,12 @@ func SingleNode[P ChildProps[NodeBuilder]](id string, propsCreator func(t *Track
 }
 
 type SingleChildProps[P any] struct {
-	onLoad         func(node *SingleChildNode[P], parent Node)
-	onPropsChanged func(node *SingleChildNode[P])
-	onUnload       func(node *SingleChildNode[P])
-	onUpdate       func(node *SingleChildNode[P], c *Context) error
-	onHandleEvent  func(node *SingleChildNode[P], c *Context, event Event) error
-	onDraw         func(node *SingleChildNode[P], c *Context, image *ebiten.Image)
+	onLoad        func(node *SingleChildNode[P], parent Node)
+	onPropsChange func(node *SingleChildNode[P])
+	onUnload      func(node *SingleChildNode[P])
+	onUpdate      func(node *SingleChildNode[P], c *scaff.Context) error
+	onHandleEvent func(node *SingleChildNode[P], c *scaff.Context, event scaff.Event) error
+	onDraw        func(node *SingleChildNode[P], c *scaff.Context, painter paint.Painter)
 }
 
 func (s *SingleChildProps[P]) Load(fn func(node *SingleChildNode[P], parent Node)) {
@@ -94,22 +95,22 @@ func (s *SingleChildProps[P]) Load(fn func(node *SingleChildNode[P], parent Node
 }
 
 func (s *SingleChildProps[P]) PropsChanged(fn func(node *SingleChildNode[P])) {
-	s.onPropsChanged = fn
+	s.onPropsChange = fn
 }
 
 func (s *SingleChildProps[P]) Unload(fn func(node *SingleChildNode[P])) {
 	s.onUnload = fn
 }
 
-func (s *SingleChildProps[P]) Update(fn func(node *SingleChildNode[P], c *Context) error) {
+func (s *SingleChildProps[P]) Update(fn func(node *SingleChildNode[P], c *scaff.Context) error) {
 	s.onUpdate = fn
 }
 
-func (s *SingleChildProps[P]) HandleEvent(fn func(node *SingleChildNode[P], c *Context, event Event) error) {
+func (s *SingleChildProps[P]) HandleEvent(fn func(node *SingleChildNode[P], c *scaff.Context, event scaff.Event) error) {
 	s.onHandleEvent = fn
 }
 
-func (s *SingleChildProps[P]) Draw(fn func(node *SingleChildNode[P], c *Context, image *ebiten.Image)) {
+func (s *SingleChildProps[P]) Draw(fn func(node *SingleChildNode[P], c *scaff.Context, paint paint.Painter)) {
 	s.onDraw = fn
 }
 
@@ -122,7 +123,7 @@ type SingleChildNode[P any] struct {
 
 	// Things internal to the node
 	context *BuildContext
-	tracker *Tracker
+	tracker *scaff.Tracker
 
 	// Configuration of the node
 	id          string
@@ -156,12 +157,12 @@ func (s *SingleChildNode[P]) Load(parent Node) {
 	}
 }
 
-func (s *SingleChildNode[P]) HandleEvent(c *Context, event Event) TracedError {
+func (s *SingleChildNode[P]) HandleEvent(c *scaff.Context, event scaff.Event) scaff.TracedError {
 
 	// First handle event on this node
 	if s.singleProps.onHandleEvent != nil {
 		if err := s.singleProps.onHandleEvent(s, c, event); err != nil {
-			return NewTracedError(s, err)
+			return scaff.NewTracedError(s, err)
 		}
 	}
 
@@ -169,16 +170,16 @@ func (s *SingleChildNode[P]) HandleEvent(c *Context, event Event) TracedError {
 	return s.HandleEventChild(c, event)
 }
 
-func (s *SingleChildNode[P]) Tracker() *Tracker {
+func (s *SingleChildNode[P]) Tracker() *scaff.Tracker {
 	return s.tracker
 }
 
-func (s *SingleChildNode[P]) Update(c *Context) TracedError {
+func (s *SingleChildNode[P]) Update(c *scaff.Context) scaff.TracedError {
 
 	// First call the update handler on the props for this node
 	if s.singleProps.onUpdate != nil {
 		if err := s.singleProps.onUpdate(s, c); err != nil {
-			return NewTracedError(s, err)
+			return scaff.NewTracedError(s, err)
 		}
 	}
 
@@ -216,13 +217,13 @@ func (s *SingleChildNode[P]) Unload() {
 	s.tracker = nil // Cut tracker off from tree for GC
 }
 
-func (s *SingleChildNode[P]) Draw(c *Context, image *ebiten.Image) {
+func (s *SingleChildNode[P]) Draw(c *scaff.Context, painter paint.Painter) {
 	if s.singleProps.onDraw != nil {
-		s.singleProps.onDraw(s, c, image)
+		s.singleProps.onDraw(s, c, painter)
 	} else {
 
 		// Default implementation: just draw child
-		s.DrawChild(c, image)
+		s.DrawChild(c, painter)
 	}
 }
 
@@ -237,7 +238,7 @@ func (s *SingleChildNode[P]) Children() []Node {
 	return []Node{s.current}
 }
 
-func (s *SingleChildNode[P]) HandleEventChild(c *Context, event Event) TracedError {
+func (s *SingleChildNode[P]) HandleEventChild(c *scaff.Context, event scaff.Event) scaff.TracedError {
 	if s.current == nil {
 		return nil
 	}
@@ -247,8 +248,8 @@ func (s *SingleChildNode[P]) HandleEventChild(c *Context, event Event) TracedErr
 }
 
 // Draw the child of the node
-func (s *SingleChildNode[P]) DrawChild(c *Context, image *ebiten.Image) {
+func (s *SingleChildNode[P]) DrawChild(c *scaff.Context, painter paint.Painter) {
 	if s.current != nil {
-		s.current.Draw(c, image)
+		s.current.Draw(c, painter)
 	}
 }
