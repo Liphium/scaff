@@ -1,4 +1,4 @@
-package scaff
+package scaffcv
 
 // Credit for this code to https://github.com/setanarut/kamera
 

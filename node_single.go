@@ -4,7 +4,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
-// UseNode creates a node without a child. You can use this if you simply want to create a node that does something very custom outside of scaff. This node still gives you access to all all functions on the Node interface through the props, but you can choose which ones you actually want to implement.
+// UseNode creates a node without a child. You can use this if you simply want to create a node that does something very custom outside of scaff. This node still gives you access to all functions on the Node interface through the props, but you can choose which ones you actually want to implement.
 //
 // If you want to have one or multiple children for this node, CreateSingleNode or CreateMultiNode might be a better fit for your use case.
 //
@@ -20,18 +20,25 @@ func UseNode(id string, create func(props *SingleChildProps[any])) NodeBuilder {
 	}
 
 	return func(bc *BuildContext) Node {
+		node.tracker = NewTracker()
+
+		// Run the state change hook
+		if node.singleProps.onStateChange != nil {
+			node.singleProps.onStateChange(node)
+		}
+
 		return node
 	}
 }
 
-// CreateSingleNode lets you create a node with a single child. Simply implement the ChildProps interface on the props you want to have for your node.
+// SingleNode lets you create a node with a single child. Simply implement the ChildProps interface on the props you want to have for your node.
 //
 // id should be a unique id for the node, but also probably be readable as it shows up in error messages.
 //
 // propsCreator should be the function passed in by users of your node (as in it should probably be an argument of the function creating your node).
 //
 // create is the function actually specifying your node. You can overwrite all of the functions of the node interface there, with some exceptions that we implement for you.
-func CreateSingleNode[P ChildProps[NodeBuilder]](id string, propsCreator func(t *Tracker, props *P), create func(props *SingleChildProps[P])) NodeBuilder {
+func SingleNode[P ChildProps[NodeBuilder]](id string, propsCreator func(t *Tracker, props *P), create func(props *SingleChildProps[P])) NodeBuilder {
 
 	// Create the actual node
 	node := &SingleChildNode[P]{
@@ -63,12 +70,18 @@ func CreateSingleNode[P ChildProps[NodeBuilder]](id string, propsCreator func(t 
 			}
 		}
 
+		// Run the state change hook
+		if node.singleProps.onStateChange != nil {
+			node.singleProps.onStateChange(node)
+		}
+
 		return node
 	}
 }
 
 type SingleChildProps[P any] struct {
 	onLoad        func(node *SingleChildNode[P], parent Node)
+	onStateChange func(node *SingleChildNode[P])
 	onUnload      func(node *SingleChildNode[P])
 	onUpdate      func(node *SingleChildNode[P], c *Context) error
 	onHandleEvent func(node *SingleChildNode[P], c *Context, event Event) error
@@ -77,6 +90,10 @@ type SingleChildProps[P any] struct {
 
 func (s *SingleChildProps[P]) Load(fn func(node *SingleChildNode[P], parent Node)) {
 	s.onLoad = fn
+}
+
+func (s *SingleChildProps[P]) StateChanged(fn func(node *SingleChildNode[P])) {
+	s.onStateChange = fn
 }
 
 func (s *SingleChildProps[P]) Unload(fn func(node *SingleChildNode[P])) {

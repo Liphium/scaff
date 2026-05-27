@@ -22,7 +22,7 @@ func (vp ViewportProps) GetBuilders() []scaff.NodeBuilder {
 
 // Viewport creates a viewport node that can be used to essentially mount a
 func Viewport(create func(t *scaff.Tracker, props *ViewportProps)) scaff.NodeBuilder {
-	return scaff.CreateSingleNode("viewport", create, func(props *scaff.SingleChildProps[ViewportProps]) {
+	return scaff.SingleNode("viewport", create, func(props *scaff.SingleChildProps[ViewportProps]) {
 		var root *MountedNode
 		var renderer *paint.EbitenPainter
 
