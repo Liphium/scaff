@@ -64,6 +64,12 @@ func (Text) ID() string {
 }
 
 type Painter interface {
+	// Get the current transform
+	Transform() *ebiten.GeoM
+
+	// Set a transform
+	SetTransform(matrix *ebiten.GeoM)
+
 	// Clear the canvas for a new frame
 	Clear()
 

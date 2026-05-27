@@ -34,7 +34,7 @@ func main() {
 			props.Draw(func(node *scaff.SingleChildNode[any], c *scaff.Context, image *ebiten.Image) {
 				const cycleDuration = 5 * time.Second
 
-				cyclePosition := float64(c.Now.UnixNano()%int64(cycleDuration)) / float64(cycleDuration)
+				cyclePosition := float64(c.Now().UnixNano()%int64(cycleDuration)) / float64(cycleDuration)
 				cyclePosition *= 2
 				if cyclePosition > 1 {
 					cyclePosition = (2 - cyclePosition) / 2

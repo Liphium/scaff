@@ -25,13 +25,38 @@ type Scene interface {
 }
 
 type Context struct {
-	Now             time.Time       // The current time.
-	Focused         bool            // If a scene is in the front of the scene stack, it is focused
-	TransitionFrame scath.Timeframe // The timeframe for the transition.
-	Width           float64         // Width of the game
-	Height          float64         // Height of the game
+	now             time.Time       // The current time.
+	focused         bool            // If a scene is in the front of the scene stack, it is focused
+	transitionFrame scath.Timeframe // The timeframe for the transition.
+	width           float64         // Width of the game
+	height          float64         // Height of the game
 
 	*eventContext
+}
+
+// The current time (use for all things to make testing easier)
+func (c Context) Now() time.Time {
+	return c.now
+}
+
+// If a scene is in the front of the scene stack, it is focused
+func (c Context) Focused() bool {
+	return c.focused
+}
+
+// The timeframe for the transition
+func (c Context) TransitionFrame() scath.Timeframe {
+	return c.transitionFrame
+}
+
+// Width of the game
+func (c Context) Width() float64 {
+	return c.width
+}
+
+// Height of the game
+func (c Context) Height() float64 {
+	return c.height
 }
 
 type eventContext struct {

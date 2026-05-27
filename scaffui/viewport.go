@@ -51,7 +51,7 @@ func Viewport(create func(t *scaff.Tracker, props *ViewportProps)) scaff.NodeBui
 			firstRender := false
 			if renderer == nil {
 				renderer = paint.NewEbitenPainter(ebiten.NewImage(screen.Bounds().Dx(), screen.Bounds().Dy()), true, node.Context().AssetManager())
-				root.Current().SetConstraints(scath.Loose(float64(c.Width), float64(c.Height)))
+				root.Current().SetConstraints(scath.Loose(float64(c.Width()), float64(c.Height())))
 				_, err := root.Current().Layout()
 				if err != nil {
 					log.Error("layout error", "err", err)

@@ -19,8 +19,9 @@ func UseNode(id string, create func(props *SingleChildProps[any])) NodeBuilder {
 		create(node.singleProps)
 	}
 
-	return func(bc *BuildContext) Node {
+	return func(context *BuildContext) Node {
 		node.tracker = NewTracker()
+		node.context = context
 
 		// Run the state change hook
 		if node.singleProps.onStateChange != nil {

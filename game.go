@@ -143,11 +143,11 @@ func (g *Game) buildSceneContext(i int, now time.Time, frame *scath.Timeframe, c
 	}
 
 	return &Context{
-		Focused:         i == len(g.sceneList)-1,
-		Now:             now,
-		TransitionFrame: *frame,
-		Width:           g.width,
-		Height:          g.height,
+		focused:         i == len(g.sceneList)-1,
+		now:             now,
+		transitionFrame: *frame,
+		width:           g.width,
+		height:          g.height,
 		eventContext:    ctx,
 	}
 }

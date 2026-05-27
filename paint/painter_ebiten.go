@@ -19,13 +19,23 @@ func NewEbitenPainter(screen *ebiten.Image, antialias bool, assets *AssetManager
 		screen:    screen,
 		antialias: antialias,
 		assets:    assets,
+		transform: &ebiten.GeoM{},
 	}
 }
 
 type EbitenPainter struct {
+	transform *ebiten.GeoM
 	screen    *ebiten.Image
 	antialias bool
 	assets    *AssetManager
+}
+
+func (e *EbitenPainter) SetTransform(matrix *ebiten.GeoM) {
+	e.transform = matrix
+}
+
+func (e *EbitenPainter) Transform() *ebiten.GeoM {
+	return e.transform
 }
 
 func (er *EbitenPainter) Screen() *ebiten.Image {
@@ -135,11 +145,6 @@ func (er *EbitenPainter) drawText(command Text) {
 	}
 	op.GeoM.Translate(command.Position.X, command.Position.Y)
 	op.ColorScale.ScaleWithColor(command.Color)
-	text.Measure(command.Text, &text.GoTextFace{
-		Source:    font,
-		Direction: text.DirectionLeftToRight,
-		Size:      command.FontSize,
-	}, 0)
 	text.Draw(er.screen, command.Text, &text.GoTextFace{
 		Source:    font,
 		Direction: command.Direction,
