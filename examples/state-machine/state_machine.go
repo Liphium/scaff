@@ -31,45 +31,49 @@ func main() {
 
 	tree := scaff.NewSceneTree("state_machine_scene", nil)
 	tree.Mount(func(t *scaff.Tracker, props *scaff.RootProps) {
-		props.Child(scaff.UseNode("state_machine", func(props *scaff.SingleChildProps[any]) {
-			props.Update(func(node *scaff.SingleChildNode[any], c *scaff.Context) error {
-				timeMachine.Update(c.Now, c.Now.UnixMilli())
-				return nil
-			})
-
-			props.Draw(func(node *scaff.SingleChildNode[any], c *scaff.Context, screen *ebiten.Image) {
-				timeMachine.Draw(c.Now, func(state int, frame scath.Timeframe) {
-					text := "Scrolling text"
-					if state == 1 {
-						text = "is kinda cool"
-					}
-
-					if images[state] == nil || images[state].Bounds() != screen.Bounds() {
-						images[state] = ebiten.NewImage(screen.Bounds().Dx(), screen.Bounds().Dy())
-					}
-
-					bounds := screen.Bounds()
-					x := bounds.Min.X + (bounds.Dx()-7*len(text))/2
-					y := bounds.Min.Y + bounds.Dy()/2 - 8
-
-					// Add a little bit of offset based on the transition direction
-					if frame.IsBackwards() {
-						y += frame.LerpInt(c.Now, -50, 0)
-					} else {
-						y += frame.LerpInt(c.Now, 50, 0)
-					}
-
-					// Draw the text at the proper location to the text image
-					images[state].Clear()
-					ebitenutil.DebugPrintAt(images[state], text, x, y)
-
-					// Draw the text image with a change in opacity for a fade effect
-					op := &ebiten.DrawImageOptions{}
-					op.Blend = ebiten.BlendLighter
-					op.ColorScale.ScaleAlpha(float32(frame.LerpFloat(c.Now, 0, 1)))
-					screen.DrawImage(images[state], op)
+		props.Child(scaff.SingleNode(scaff.SingleNodeCreate[*scaff.AcceptNoChild]{
+			ID:           "state_machine",
+			DefaultProps: &scaff.AcceptNoChild{},
+			Create: func(props *scaff.SingleChildProps[*scaff.AcceptNoChild]) {
+				props.Update(func(node *scaff.SingleChildNode[*scaff.AcceptNoChild], c *scaff.Context) error {
+					timeMachine.Update(c.Now(), c.Now().UnixMilli())
+					return nil
 				})
-			})
+
+				props.Draw(func(node *scaff.SingleChildNode[*scaff.AcceptNoChild], c *scaff.Context, screen *ebiten.Image) {
+					timeMachine.Draw(c.Now(), func(state int, frame scath.Timeframe) {
+						text := "Scrolling text"
+						if state == 1 {
+							text = "is kinda cool"
+						}
+
+						if images[state] == nil || images[state].Bounds() != screen.Bounds() {
+							images[state] = ebiten.NewImage(screen.Bounds().Dx(), screen.Bounds().Dy())
+						}
+
+						bounds := screen.Bounds()
+						x := bounds.Min.X + (bounds.Dx()-7*len(text))/2
+						y := bounds.Min.Y + bounds.Dy()/2 - 8
+
+						// Add a little bit of offset based on the transition direction
+						if frame.IsBackwards() {
+							y += frame.LerpInt(c.Now(), -50, 0)
+						} else {
+							y += frame.LerpInt(c.Now(), 50, 0)
+						}
+
+						// Draw the text at the proper location to the text image
+						images[state].Clear()
+						ebitenutil.DebugPrintAt(images[state], text, x, y)
+
+						// Draw the text image with a change in opacity for a fade effect
+						op := &ebiten.DrawImageOptions{}
+						op.Blend = ebiten.BlendLighter
+						op.ColorScale.ScaleAlpha(float32(frame.LerpFloat(c.Now(), 0, 1)))
+						screen.DrawImage(images[state], op)
+					})
+				})
+			},
 		}))
 	})
 

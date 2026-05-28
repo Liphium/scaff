@@ -23,13 +23,16 @@ func main() {
 	tree := scaff.NewSceneTree("scaffui-rainbow-hover", nil)
 
 	tree.Mount(func(t *scaff.Tracker, props *scaff.RootProps) {
-		props.Child(scaff.UseNode("rainbow", func(props *scaff.SingleChildProps[any]) {
-			props.Draw(func(node *scaff.SingleChildNode[any], c *scaff.Context, image *ebiten.Image) {
-				const cycleDuration = 10 * time.Second
+		props.Child(scaff.SingleNode(scaff.SingleNodeCreate[scaff.AcceptNoChild]{
+			ID: "rainbow",
+			Create: func(props *scaff.SingleChildProps[scaff.AcceptNoChild]) {
+				props.Draw(func(node *scaff.SingleChildNode[scaff.AcceptNoChild], c *scaff.Context, image *ebiten.Image) {
+					const cycleDuration = 10 * time.Second
 
-				cyclePosition := float64(c.Now.UnixNano()%int64(cycleDuration)) / float64(cycleDuration)
-				rainbow.Set(hsvToRGBA(cyclePosition, 1, 1))
-			})
+					cyclePosition := float64(c.Now().UnixNano()%int64(cycleDuration)) / float64(cycleDuration)
+					rainbow.Set(hsvToRGBA(cyclePosition, 1, 1))
+				})
+			},
 		}))
 
 		props.Child(scaffui.Viewport(func(t *scaff.Tracker, props *scaffui.ViewportProps) {

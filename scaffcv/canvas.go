@@ -36,14 +36,17 @@ func (sp CanvasProps) GetBuilders() []NodeBuilder {
 }
 
 func Canvas(create func(t *scaff.Tracker, props *CanvasProps)) scaff.NodeBuilder {
-	return scaff.UseNode("canvas", func(props *scaff.SingleChildProps[any]) {
+	return scaff.SingleNode(scaff.SingleNodeCreate[*scaff.AcceptNoChild]{
+		ID: "canvas",
+		DefaultProps: &scaff.AcceptNoChild{},
+		Create: func(props *scaff.SingleChildProps[*scaff.AcceptNoChild]) {
 		var camera *Camera
 		var cv CanvasProps
 		var root *SingleChildNode[int8]
 		var painter *paint.EbitenPainter
 		sizeUpdate := true
 
-		props.Load(func(node *scaff.SingleChildNode[any], parent scaff.Node) {
+		props.Load(func(node *scaff.SingleChildNode[*scaff.AcceptNoChild], parent scaff.Node) {
 
 			// Create a single child node that essentially just exists to refresh the builder passed in
 			root = &SingleChildNode[int8]{
@@ -55,7 +58,10 @@ func Canvas(create func(t *scaff.Tracker, props *CanvasProps)) scaff.NodeBuilder
 				},
 				singleProps: &SingleChildProps[int8]{},
 			}
-			root.builder = CreateMultiNode("root-stack", create, func(props *MultiChildProps[CanvasProps]) {
+			root.builder = MultiNode(MultiNodeCreate[CanvasProps]{
+				ID: "root-stack",
+				PropsCreator: create,
+				Create: func(props *MultiChildProps[CanvasProps]) {
 
 				props.PropsChanged(func(node *MultiChildNode[CanvasProps]) {
 					cv = node.Props()
@@ -68,13 +74,13 @@ func Canvas(create func(t *scaff.Tracker, props *CanvasProps)) scaff.NodeBuilder
 						camera.SmoothOptions = &cv.smoothOptions
 					}
 				})
-			})
+			}})
 			root.Load(nil)
 
 			cv = root.Children()[0].(*MultiChildNode[CanvasProps]).props
 		})
 
-		props.Update(func(node *scaff.SingleChildNode[any], c *scaff.Context) error {
+		props.Update(func(node *scaff.SingleChildNode[*scaff.AcceptNoChild], c *scaff.Context) error {
 			if root == nil {
 				return nil
 			}
@@ -83,7 +89,7 @@ func Canvas(create func(t *scaff.Tracker, props *CanvasProps)) scaff.NodeBuilder
 			return root.Update(c)
 		})
 
-		props.Draw(func(node *scaff.SingleChildNode[any], c *scaff.Context, image *ebiten.Image) {
+		props.Draw(func(node *scaff.SingleChildNode[*scaff.AcceptNoChild], c *scaff.Context, image *ebiten.Image) {
 			if root == nil {
 				return
 			}
@@ -113,7 +119,7 @@ func Canvas(create func(t *scaff.Tracker, props *CanvasProps)) scaff.NodeBuilder
 			image.DrawImage(painter.Screen(), &ebiten.DrawImageOptions{})
 		})
 
-		props.HandleEvent(func(node *scaff.SingleChildNode[any], c *scaff.Context, event scaff.Event) error {
+		props.HandleEvent(func(node *scaff.SingleChildNode[*scaff.AcceptNoChild], c *scaff.Context, event scaff.Event) error {
 			if root == nil {
 				return nil
 			}
@@ -126,5 +132,6 @@ func Canvas(create func(t *scaff.Tracker, props *CanvasProps)) scaff.NodeBuilder
 			// Forward events to the root
 			return root.HandleEvent(c, event)
 		})
+	},
 	})
 }

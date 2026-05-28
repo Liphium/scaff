@@ -5,20 +5,30 @@ import (
 	"github.com/Liphium/scaff/paint"
 )
 
-// CreateMultiNode lets you create a node with multiple children. Simply implement the ChildProps interface on the props you want to have for your node.
+// Struct for defining a new multi child node.
 //
-// id should be a unique id for the node, but also probably be readable as it shows up in error messages.
+// ID should be a unique id for the node, but also probably be readable as it shows up in error messages.
 //
-// propsCreator should be the function passed in by users of your node (as in it should probably be an argument of the function creating your node).
+// DefaultProps are the props as they are by default. Make sure to also specify any embedded struct pointers.
 //
-// create is the function actually specifying your node. You can overwrite all of the functions of the node interface there, with some exceptions that we implement for you.
-func CreateMultiNode[P scaff.ChildProps[NodeBuilder]](id string, propsCreator func(t *scaff.Tracker, props *P), create func(props *MultiChildProps[P])) NodeBuilder {
+// PropsCreator should be the function passed in by users of your node (as in it should probably be an argument of the function creating your node).
+//
+// Create is the function actually specifying your node. You can overwrite all of the functions of the node interface there, with some exceptions that we implement for you.
+type MultiNodeCreate[P scaff.ChildProps[NodeBuilder]] struct {
+	ID           string
+	DefaultProps P
+	PropsCreator func(t *scaff.Tracker, props *P)
+	Create       func(props *MultiChildProps[P])
+}
+
+// MultiNode lets you create a node with multiple children. Simply implement the ChildProps interface on the props you want to have for your node.
+func MultiNode[P scaff.ChildProps[NodeBuilder]](create MultiNodeCreate[P]) NodeBuilder {
 	node := &MultiChildNode[P]{
-		id:         id,
+		id:         create.ID,
 		multiProps: &MultiChildProps[P]{},
 	}
-	if create != nil {
-		create(node.multiProps)
+	if create.Create != nil {
+		create.Create(node.multiProps)
 	}
 
 	return func(context *BuildContext) Node {
@@ -26,9 +36,9 @@ func CreateMultiNode[P scaff.ChildProps[NodeBuilder]](id string, propsCreator fu
 		node.context = context
 
 		// Fill the props
-		if propsCreator != nil {
-			var props P
-			propsCreator(node.Tracker(), &props)
+		if create.PropsCreator != nil {
+			props := create.DefaultProps
+			create.PropsCreator(node.Tracker(), &props)
 			node.props = props
 
 			node.builders = props.GetBuilders()

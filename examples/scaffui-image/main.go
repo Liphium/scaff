@@ -30,19 +30,22 @@ func main() {
 	tree := scaff.NewSceneTree("scaffui-image-sample", assetManager)
 
 	tree.Mount(func(t *scaff.Tracker, props *scaff.RootProps) {
-		props.Child(scaff.UseNode("scaling", func(props *scaff.SingleChildProps[any]) {
-			props.Draw(func(node *scaff.SingleChildNode[any], c *scaff.Context, image *ebiten.Image) {
-				const cycleDuration = 5 * time.Second
+		props.Child(scaff.SingleNode(scaff.SingleNodeCreate[scaff.AcceptNoChild]{
+			ID: "scaling",
+			Create: func(props *scaff.SingleChildProps[scaff.AcceptNoChild]) {
+				props.Draw(func(node *scaff.SingleChildNode[scaff.AcceptNoChild], c *scaff.Context, image *ebiten.Image) {
+					const cycleDuration = 5 * time.Second
 
-				cyclePosition := float64(c.Now().UnixNano()%int64(cycleDuration)) / float64(cycleDuration)
-				cyclePosition *= 2
-				if cyclePosition > 1 {
-					cyclePosition = (2 - cyclePosition) / 2
-				} else {
-					cyclePosition /= 2
-				}
-				scaleFactor.Set(0.5 + cyclePosition*4)
-			})
+					cyclePosition := float64(c.Now().UnixNano()%int64(cycleDuration)) / float64(cycleDuration)
+					cyclePosition *= 2
+					if cyclePosition > 1 {
+						cyclePosition = (2 - cyclePosition) / 2
+					} else {
+						cyclePosition /= 2
+					}
+					scaleFactor.Set(0.5 + cyclePosition*4)
+				})
+			},
 		}))
 
 		props.Child(scaffui.Viewport(func(t *scaff.Tracker, props *scaffui.ViewportProps) {

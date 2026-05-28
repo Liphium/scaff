@@ -68,7 +68,7 @@ func (s *SingleTracker) Update(parent Node, c *scaff.Context, bc *scaff.BuildCon
 		return LayoutChanged(), nil
 	}
 
-	return NoUpdate(), nil
+	return result, nil
 }
 
 // Unload node mounted in tracker.

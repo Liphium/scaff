@@ -19,7 +19,10 @@ func main() {
 		props.Child(scaffcv.Canvas(func(t *scaff.Tracker, props *scaffcv.CanvasProps) {
 			props.CameraPosition(0, 0)
 
-			props.Child(cvnode.Text("Hello, world!", scath.Vec{X: 0, Y: 0}))
+			props.Child(cvnode.Text(func(t *scaff.Tracker, props *cvnode.TextProps) {
+				props.Text("Hello, world!")
+				props.Position(scath.Vec{X: 0, Y: 0})
+			}))
 		}))
 	})
 

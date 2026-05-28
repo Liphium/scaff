@@ -12,6 +12,9 @@ func (sp RootProps) GetBuilders() []NodeBuilder {
 	return sp.children
 }
 
-func root(create func(t *Tracker, props *RootProps)) NodeBuilder {
-	return CreateMultiNode("root", create, nil)
-}
+	func root(create func(t *Tracker, props *RootProps)) NodeBuilder {
+		return MultiNode(MultiNodeCreate[RootProps]{
+			ID:           "root",
+			PropsCreator: create,
+		})
+	}
