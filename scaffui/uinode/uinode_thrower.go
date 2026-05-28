@@ -18,7 +18,7 @@ func (tp *ThrowerProps) Message(message string) {
 }
 
 func Thrower(create func(t *scaff.Tracker, tp *ThrowerProps)) scaffui.NodeBuilder {
-	return scaffui.CreateSingleNode(scaffui.SingleNodeCreate[ThrowerProps]{
+	return scaffui.SingleNode(scaffui.SingleNodeCreate[ThrowerProps]{
 		ID: "thrower",
 		DefaultProps: ThrowerProps{
 			AcceptNoChild: &scaffui.AcceptNoChild{},

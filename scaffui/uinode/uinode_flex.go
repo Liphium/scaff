@@ -44,7 +44,7 @@ func (fp FlexProps) GetBuilders() []scaffui.NodeBuilder {
 }
 
 func Flex(create func(t *scaff.Tracker, props *FlexProps)) scaffui.NodeBuilder {
-	return scaffui.CreateMultiNode(scaffui.MultiNodeCreate[FlexProps]{
+	return scaffui.MultiNode(scaffui.MultiNodeCreate[FlexProps]{
 		ID:           "flex",
 		PropsCreator: create,
 		Create: func(props *scaffui.MultiChildProps[FlexProps]) {

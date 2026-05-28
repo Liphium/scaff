@@ -1,3 +1,4 @@
+// The paint package provides utilities for painting all kinds of things using Ebiten.
 package paint
 
 import (

@@ -28,7 +28,7 @@ func (pp *AlignProps) Horizontal(alignment HorizontalAlignment) {
 }
 
 func Align(create func(t *scaff.Tracker, props *AlignProps)) scaffui.NodeBuilder {
-	return scaffui.CreateSingleNode(scaffui.SingleNodeCreate[AlignProps]{
+	return scaffui.SingleNode(scaffui.SingleNodeCreate[AlignProps]{
 		ID: "align",
 		DefaultProps: AlignProps{
 			horizontalAligment: optional.None[HorizontalAlignment](),

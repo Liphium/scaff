@@ -45,7 +45,7 @@ func (o *InputProps) OnScroll(fn func(handled, inside bool, event scaff.ScrollEv
 
 // Create a new input node exposing a better interface to handle all kinds of input events coming down from scaffui.
 func Input(create func(t *scaff.Tracker, props *InputProps)) scaffui.NodeBuilder {
-	return scaffui.CreateSingleNode(scaffui.SingleNodeCreate[InputProps]{
+	return scaffui.SingleNode(scaffui.SingleNodeCreate[InputProps]{
 		ID: "input",
 		DefaultProps: InputProps{
 			AcceptChild: &scaffui.AcceptChild{},

@@ -2,6 +2,7 @@ package paint
 
 import (
 	"bytes"
+	"errors"
 	"image"
 	_ "image/gif"
 	_ "image/jpeg"
@@ -52,6 +53,9 @@ func (am *AssetManager) GetImage(path string) (*ebiten.Image, error) {
 		return img.(*ebiten.Image), nil
 	}
 
+	if am.fs == nil {
+		return nil, errors.New("no file system specified")
+	}
 	f, err := am.fs.Open(path)
 	if err != nil {
 		return nil, err
@@ -76,6 +80,9 @@ func (am *AssetManager) GetFont(path string) (*text.GoTextFaceSource, error) {
 		return font.(*text.GoTextFaceSource), nil
 	}
 
+	if am.fs == nil {
+		return defaultFontFace, nil
+	}
 	f, err := am.fs.Open(path)
 	if err != nil {
 		return defaultFontFace, nil

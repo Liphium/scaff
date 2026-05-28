@@ -36,7 +36,7 @@ func (i *ImageProps) Constraints(constraints scath.Constraints) {
 }
 
 func Image(create func(t *scaff.Tracker, props *ImageProps)) scaffui.NodeBuilder {
-	return scaffui.CreateSingleNode(scaffui.SingleNodeCreate[ImageProps]{
+	return scaffui.SingleNode(scaffui.SingleNodeCreate[ImageProps]{
 		ID: "image",
 		DefaultProps: ImageProps{
 			AcceptNoChild: &scaffui.AcceptNoChild{},

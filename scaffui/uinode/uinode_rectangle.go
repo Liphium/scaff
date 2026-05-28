@@ -37,7 +37,7 @@ func (rp *RectangleProps) BorderRadius(borderRadius int) {
 }
 
 func Rectangle(create func(t *scaff.Tracker, props *RectangleProps)) scaffui.NodeBuilder {
-	return scaffui.CreateSingleNode(scaffui.SingleNodeCreate[RectangleProps]{
+	return scaffui.SingleNode(scaffui.SingleNodeCreate[RectangleProps]{
 		ID: "rectangle",
 		DefaultProps: RectangleProps{
 			AcceptChild: &scaffui.AcceptChild{},

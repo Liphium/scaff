@@ -56,6 +56,10 @@ func (s *MultiChildProps[P]) Load(fn func(node *MultiChildNode[P], parent Node))
 	s.onLoad = fn
 }
 
+func (s *MultiChildProps[P]) PropsChanged(fn func(node *MultiChildNode[P])) {
+	s.onPropsChange = fn
+}
+
 func (s *MultiChildProps[P]) Unload(fn func(node *MultiChildNode[P])) {
 	s.onUnload = fn
 }

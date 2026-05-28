@@ -20,7 +20,7 @@ func (cp *ConstrainedProps) Constraints(constraints scath.Constraints) {
 }
 
 func Constrained(create func(t *scaff.Tracker, props *ConstrainedProps)) scaffui.NodeBuilder {
-	return scaffui.CreateSingleNode(scaffui.SingleNodeCreate[ConstrainedProps]{
+	return scaffui.SingleNode(scaffui.SingleNodeCreate[ConstrainedProps]{
 		ID: "constrained",
 		DefaultProps: ConstrainedProps{
 			constraints: optional.None[scath.Constraints](),

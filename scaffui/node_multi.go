@@ -24,14 +24,8 @@ type MultiNodeCreate[P scaff.ChildProps[NodeBuilder]] struct {
 	Create       func(props *MultiChildProps[P])
 }
 
-// CreateMultiNode lets you create a node with multiple children. Simply implement the ChildProps interface on the props you want to have for your node.
-//
-// id should be a unique id for the node, but also probably be readable as it shows up in error messages.
-//
-// propsCreator should be the function passed in by users of your node (as in it should probably be an argument of the function creating your node).
-//
-// create is the function actually specifying your node. You can overwrite all of the functions of the node interface there, with some exceptions that we implement for you.
-func CreateMultiNode[P scaff.ChildProps[NodeBuilder]](create MultiNodeCreate[P]) NodeBuilder {
+// MultiNode lets you create a node with multiple children. Simply implement the ChildProps interface on the props you want to have for your node.
+func MultiNode[P scaff.ChildProps[NodeBuilder]](create MultiNodeCreate[P]) NodeBuilder {
 	node := &MultiChildNode[P]{
 		id:         create.ID,
 		multiProps: &MultiChildProps[P]{},

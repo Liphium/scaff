@@ -22,7 +22,7 @@ func (pp *PaddingProps) Padding(padding scath.Padding) {
 }
 
 func Padding(create func(t *scaff.Tracker, props *PaddingProps)) scaffui.NodeBuilder {
-	return scaffui.CreateSingleNode(scaffui.SingleNodeCreate[PaddingProps]{
+	return scaffui.SingleNode(scaffui.SingleNodeCreate[PaddingProps]{
 		ID: "padding",
 		DefaultProps: PaddingProps{
 			AcceptChild: &scaffui.AcceptChild{},

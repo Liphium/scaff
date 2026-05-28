@@ -2,21 +2,16 @@ package scaffcv
 
 import (
 	"github.com/Liphium/scaff"
-	"github.com/Liphium/scaff/scath"
+	"github.com/Liphium/scaff/paint"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
 type CanvasProps struct {
-	size          scath.Vec
 	camX, camY    float64
 	smoothType    SmoothType
 	smoothOptions SmoothOptions
 
 	children []NodeBuilder
-}
-
-func (cp *CanvasProps) Size(size scath.Vec) {
-	cp.size = size
 }
 
 func (cp *CanvasProps) CameraPosition(camX, camY float64) {
@@ -45,7 +40,8 @@ func Canvas(create func(t *scaff.Tracker, props *CanvasProps)) scaff.NodeBuilder
 		var camera *Camera
 		var cv CanvasProps
 		var root *SingleChildNode[int8]
-		loaded := false
+		var painter *paint.EbitenPainter
+		sizeUpdate := true
 
 		props.Load(func(node *scaff.SingleChildNode[any], parent scaff.Node) {
 
@@ -59,34 +55,76 @@ func Canvas(create func(t *scaff.Tracker, props *CanvasProps)) scaff.NodeBuilder
 				},
 				singleProps: &SingleChildProps[int8]{},
 			}
-			root.builder = CreateMultiNode("root-stack", create, nil)
+			root.builder = CreateMultiNode("root-stack", create, func(props *MultiChildProps[CanvasProps]) {
+
+				props.PropsChanged(func(node *MultiChildNode[CanvasProps]) {
+					cv = node.Props()
+
+					// Camera only gets initialized after a while
+					if camera != nil {
+						// Update camera (size may be changed later)
+						camera.LookAt(cv.camX, cv.camY)
+						camera.SmoothType = cv.smoothType
+						camera.SmoothOptions = &cv.smoothOptions
+					}
+				})
+			})
 			root.Load(nil)
-			loaded = true
 
 			cv = root.Children()[0].(*MultiChildNode[CanvasProps]).props
-			camera = NewCamera(cv.camX, cv.camY, cv.size.X, cv.size.Y)
-			node.Tracker()
 		})
 
-		props.PropsChanged(func(node *scaff.SingleChildNode[any]) {
-			// Only do when it isn't the first load
-			if !loaded {
-				return
+		props.Update(func(node *scaff.SingleChildNode[any], c *scaff.Context) error {
+			if root == nil {
+				return nil
 			}
 
-			// Synchronize the tracker + props again
-			root.tracker = node.Tracker()
-			cv = root.Children()[0].(*MultiChildNode[CanvasProps]).props
-
-			// Update the camera properly based on the props
-			camera.SetSize(cv.size.X, cv.size.Y)
-			camera.SmoothOptions = &cv.smoothOptions
-			camera.SmoothType = cv.smoothType
-			camera.LookAt(cv.camX, cv.camY)
+			// Forward updates to the child nodes
+			return root.Update(c)
 		})
 
 		props.Draw(func(node *scaff.SingleChildNode[any], c *scaff.Context, image *ebiten.Image) {
+			if root == nil {
+				return
+			}
 
+			// This is run on the first frame as well to create the painter
+			if sizeUpdate {
+				screen := ebiten.NewImage(image.Bounds().Dx(), image.Bounds().Dy())
+				painter = paint.NewEbitenPainter(screen, true, node.Context().AssetManager())
+
+				// Create new camera (old one will only have invalid positions)
+				camera = NewCamera(cv.camX, cv.camY, c.Width(), c.Height())
+				camera.SmoothType = cv.smoothType
+				camera.SmoothOptions = &cv.smoothOptions
+			}
+
+			// Actually draw the root
+			painter.Clear()
+			painter.SetTransform(paint.Transform{
+				CamX:          camera.X,
+				CamY:          camera.Y,
+				CenterOffsetX: camera.CenterOffsetX,
+				CenterOffsetY: camera.CenterOffsetY,
+				Angle:         camera.Angle,
+				ZoomFactor:    camera.ZoomFactor,
+			})
+			root.Draw(c, painter)
+			image.DrawImage(painter.Screen(), &ebiten.DrawImageOptions{})
+		})
+
+		props.HandleEvent(func(node *scaff.SingleChildNode[any], c *scaff.Context, event scaff.Event) error {
+			if root == nil {
+				return nil
+			}
+
+			// For a size change, make sure we properly handle it
+			if event.EventID() == scaff.EventIdSizeChange {
+				sizeUpdate = true
+			}
+
+			// Forward events to the root
+			return root.HandleEvent(c, event)
 		})
 	})
 }

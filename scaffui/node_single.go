@@ -25,8 +25,8 @@ type SingleNodeCreate[P scaff.ChildProps[NodeBuilder]] struct {
 	Create       func(props *SingleChildProps[P])
 }
 
-// CreateSingleNode lets you create a node with a single child. Simply implement the ChildProps interface on the props you want to have for your node.
-func CreateSingleNode[P scaff.ChildProps[NodeBuilder]](create SingleNodeCreate[P]) NodeBuilder {
+// SingleNode lets you create a node with a single child. Simply implement the ChildProps interface on the props you want to have for your node.
+func SingleNode[P scaff.ChildProps[NodeBuilder]](create SingleNodeCreate[P]) NodeBuilder {
 	node := &SingleChildNode[P]{
 		id:          create.ID,
 		singleProps: &SingleChildProps[P]{},

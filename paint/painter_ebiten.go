@@ -164,9 +164,6 @@ func (er *EbitenPainter) drawImage(command Image) {
 func (er *EbitenPainter) drawText(command Text) {
 	font := defaultFontFace
 
-	if command.Font == "" {
-		log.Warn("no font specified, using default font")
-	}
 	if wanted, err := er.assets.GetFont(command.Font); err == nil {
 		font = wanted
 	} else {
@@ -188,6 +185,9 @@ func (er *EbitenPainter) drawText(command Text) {
 	op.GeoM.Rotate(er.transform.Angle)
 	// We do NOT scale the geom for text to prevent blurriness.
 	op.GeoM.Translate(math.Abs(er.transform.CenterOffsetX), math.Abs(er.transform.CenterOffsetY))
+
+	x, y := op.GeoM.Apply(0, 0)
+	log.Debug("text drawing shift", "x", x, "y", y)
 
 	op.ColorScale.ScaleWithColor(command.Color)
 

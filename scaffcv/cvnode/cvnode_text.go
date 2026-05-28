@@ -1,19 +1,26 @@
 package cvnode
 
 import (
+	"image/color"
+
 	"github.com/Liphium/scaff"
 	"github.com/Liphium/scaff/paint"
 	"github.com/Liphium/scaff/scaffcv"
 	"github.com/Liphium/scaff/scath"
+	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
 
 // Text creates a simple text node with a position and text.
-func Text(text string, pos scath.Vec) scaffcv.NodeBuilder {
+func Text(t string, pos scath.Vec) scaffcv.NodeBuilder {
 	return scaffcv.UseNode("text", func(props *scaffcv.SingleChildProps[any]) {
 		props.Draw(func(node *scaffcv.SingleChildNode[any], c *scaff.Context, painter paint.Painter) {
 			painter.Paint(paint.Text{
-				Text:     text,
-				Position: pos,
+				Text:           t,
+				FontSize:       20,
+				Position:       pos,
+				Color:          color.White,
+				PrimaryAlign:   text.AlignCenter,
+				SecondaryAlign: text.AlignCenter,
 			})
 		})
 	})

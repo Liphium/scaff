@@ -66,7 +66,7 @@ func (tp *TextProps) SecondaryAlign(align text.Align) {
 }
 
 func Text(create func(t *scaff.Tracker, props *TextProps)) scaffui.NodeBuilder {
-	return scaffui.CreateSingleNode(scaffui.SingleNodeCreate[TextProps]{
+	return scaffui.SingleNode(scaffui.SingleNodeCreate[TextProps]{
 		ID: "text",
 		DefaultProps: TextProps{
 			text:           "Scaff",
