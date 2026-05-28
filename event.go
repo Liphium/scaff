@@ -35,6 +35,16 @@ func EventIdRelease(button ebiten.MouseButton) EventId {
 	return EventId(fmt.Sprintf("scaff::release::%d", button))
 }
 
+// This event id has the key in it to make sure it can be handled separately from other events.
+func EventIdKeyPress(key ebiten.Key) EventId {
+	return EventId(fmt.Sprintf("scaff::key-press::%d", key))
+}
+
+// This event id has the key in it to make sure it can be handled separately from other events.
+func EventIdKeyRelease(key ebiten.Key) EventId {
+	return EventId(fmt.Sprintf("scaff::key-release::%d", key))
+}
+
 type MoveEvent struct {
 	X      int
 	Y      int
@@ -103,4 +113,22 @@ type SizeChangeEvent struct{}
 
 func (sce SizeChangeEvent) EventID() EventId {
 	return EventIdSizeChange
+}
+
+// Emitted when a user presses a key.
+type KeyPressEvent struct {
+	Key ebiten.Key
+}
+
+func (kp KeyPressEvent) EventID() EventId {
+	return EventIdKeyPress(kp.Key)
+}
+
+// Emitted when a user releases a key.
+type KeyReleaseEvent struct {
+	Key ebiten.Key
+}
+
+func (kr KeyReleaseEvent) EventID() EventId {
+	return EventIdKeyRelease(kr.Key)
 }

@@ -56,6 +56,20 @@ func (i *inputHandler) getInputEventsUpdate() []Event {
 		})
 	}
 
+	// Handle released keys before (as a key might be pressed and released within the same tick)
+	for _, key := range inpututil.AppendJustReleasedKeys([]ebiten.Key{}) {
+		events = append(events, KeyReleaseEvent{
+			Key: key,
+		})
+	}
+
+	// Handle pressed keys
+	for _, key := range inpututil.AppendJustPressedKeys([]ebiten.Key{}) {
+		events = append(events, KeyPressEvent{
+			Key: key,
+		})
+	}
+
 	return events
 }
 

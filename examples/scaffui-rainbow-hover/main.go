@@ -18,6 +18,7 @@ func main() {
 	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
 
 	hovered := scaff.NewSignal(false)
+	keyToggle := scaff.NewSignal(false)
 	rainbow := scaff.NewSignal(color.RGBA{255, 255, 255, 255})
 
 	tree := scaff.NewSceneTree("scaffui-rainbow-hover", nil)
@@ -31,6 +32,17 @@ func main() {
 
 					cyclePosition := float64(c.Now().UnixNano()%int64(cycleDuration)) / float64(cycleDuration)
 					rainbow.Set(hsvToRGBA(cyclePosition, 1, 1))
+				})
+
+				props.HandleEvent(func(node *scaff.SingleChildNode[scaff.AcceptNoChild], c *scaff.Context, event scaff.Event) error {
+
+					// Toggle when R is pressed
+					if ev, ok := event.(scaff.KeyPressEvent); ok {
+						if ev.Key == ebiten.KeyR {
+							keyToggle.Set(!keyToggle.Value())
+						}
+					}
+					return nil
 				})
 			},
 		}))
@@ -50,7 +62,7 @@ func main() {
 						props.Child(uinode.Rectangle(func(t *scaff.Tracker, props *uinode.RectangleProps) {
 							props.WantedConstraints(scath.Tight(100, 100))
 							props.BorderRadius(8)
-							if hovered.Track(t) {
+							if hovered.Track(t) || keyToggle.Track(t) {
 								props.FillColor(rainbow.Track(t))
 							} else {
 								props.FillColor(color.RGBA{255, 255, 255, 255})
