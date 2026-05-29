@@ -17,7 +17,7 @@ type Rectangle struct {
 	Position     scath.Vec   `json:"position"`
 	Size         scath.Vec   `json:"size"`
 	FillColor    color.Color `json:"fillColor"`
-	BorderRadius int         `json:"borderRadius"`
+	BorderRadius float64     `json:"borderRadius"`
 }
 
 func (Rectangle) ID() string {
@@ -28,8 +28,8 @@ type RectangleStroke struct {
 	Position     scath.Vec   `json:"position"`
 	Size         scath.Vec   `json:"size"`
 	Color        color.Color `json:"color"`
-	BorderRadius int         `json:"borderRadius"`
-	Thickness    int         `json:"thickness"`
+	BorderRadius float64     `json:"borderRadius"`
+	Thickness    float64     `json:"thickness"`
 }
 
 func (RectangleStroke) ID() string {

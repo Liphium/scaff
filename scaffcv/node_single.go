@@ -92,7 +92,7 @@ func (s *SingleChildProps[P]) HandleEvent(fn func(node *SingleChildNode[P], c *s
 	s.onHandleEvent = fn
 }
 
-func (s *SingleChildProps[P]) Draw(fn func(node *SingleChildNode[P], c *scaff.Context, paint paint.Painter)) {
+func (s *SingleChildProps[P]) Draw(fn func(node *SingleChildNode[P], c *scaff.Context, painter paint.Painter)) {
 	s.onDraw = fn
 }
 

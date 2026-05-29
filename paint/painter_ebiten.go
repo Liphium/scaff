@@ -204,7 +204,7 @@ func (er *EbitenPainter) drawText(command Text) {
 	}, op)
 }
 
-func roundedRectPath(x, y, width, height float64, borderRadius int) *vector.Path {
+func roundedRectPath(x, y, width, height float64, borderRadius float64) *vector.Path {
 	path := &vector.Path{}
 	if width <= 0 || height <= 0 {
 		return path

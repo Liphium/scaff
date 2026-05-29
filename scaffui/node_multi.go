@@ -100,7 +100,7 @@ func (m *MultiChildProps[P]) Update(fn func(node *MultiChildNode[P], c *scaff.Co
 	m.onUpdate = fn
 }
 
-func (m *MultiChildProps[P]) Draw(fn func(node *MultiChildNode[P], position scath.Vec, renderer paint.Painter)) {
+func (m *MultiChildProps[P]) Draw(fn func(node *MultiChildNode[P], position scath.Vec, painter paint.Painter)) {
 	m.onDraw = fn
 }
 

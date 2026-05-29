@@ -15,8 +15,8 @@ import (
 type RectangleProps struct {
 	wantedConstraints optional.O[scath.Constraints]
 	padding           optional.O[scath.Padding]
-	fillColor         optional.O[color.RGBA]
-	borderRadius      optional.O[int]
+	fillColor         optional.O[color.Color]
+	borderRadius      optional.O[float64]
 	*scaffui.AcceptChild
 }
 
@@ -28,11 +28,11 @@ func (rp *RectangleProps) Padding(padding scath.Padding) {
 	rp.padding.SetValue(padding)
 }
 
-func (rp *RectangleProps) FillColor(fillColor color.RGBA) {
+func (rp *RectangleProps) FillColor(fillColor color.Color) {
 	rp.fillColor.SetValue(fillColor)
 }
 
-func (rp *RectangleProps) BorderRadius(borderRadius int) {
+func (rp *RectangleProps) BorderRadius(borderRadius float64) {
 	rp.borderRadius.SetValue(borderRadius)
 }
 
