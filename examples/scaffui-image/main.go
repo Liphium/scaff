@@ -33,7 +33,7 @@ func main() {
 		props.Child(scaff.SingleNode(scaff.SingleNodeCreate[scaff.AcceptNoChild]{
 			ID: "scaling",
 			Create: func(props *scaff.SingleChildProps[scaff.AcceptNoChild]) {
-				props.Draw(func(node *scaff.SingleChildNode[scaff.AcceptNoChild], c *scaff.Context, image *ebiten.Image) {
+				props.OnDraw = func(node *scaff.SingleChildNode[scaff.AcceptNoChild], c *scaff.Context, image *ebiten.Image) {
 					const cycleDuration = 5 * time.Second
 
 					cyclePosition := float64(c.Now().UnixNano()%int64(cycleDuration)) / float64(cycleDuration)
@@ -44,68 +44,67 @@ func main() {
 						cyclePosition /= 2
 					}
 					scaleFactor.Set(0.5 + cyclePosition*4)
-				})
+				}
 			},
 		}))
 
 		props.Child(scaffui.Viewport(func(t *scaff.Tracker, props *scaffui.ViewportProps) {
 			props.Child(uinode.Stack(func(t *scaff.Tracker, props *uinode.StackProps) {
 				props.Child(uinode.Align(func(t *scaff.Tracker, props *uinode.AlignProps) {
-					props.Horizontal(uinode.HorizontalAlignmentCenter)
-					props.Vertical(uinode.VerticalAlignmentCenter)
+					props.HorizontalAligment.SetValue(uinode.HorizontalAlignmentCenter)
+					props.VerticalAlignment.SetValue(uinode.VerticalAlignmentCenter)
 
 					props.Child(uinode.Image(func(t *scaff.Tracker, props *uinode.ImageProps) {
-						props.Path("assets/icon.png")
+						props.Path.SetValue("assets/icon.png")
 						if scaling.Track(t) {
-							props.Constraints(scath.Tight(150*scaleFactor.Track(t), 150*scaleFactor.Track(t)))
+							props.Constraints.SetValue(scath.Tight(150*scaleFactor.Track(t), 150*scaleFactor.Track(t)))
 						} else {
-							props.Constraints(scath.Tight(100, 100))
+							props.Constraints.SetValue(scath.Tight(100, 100))
 						}
-						props.Filter(ebiten.FilterPixelated)
+						props.FilterMode.SetValue(ebiten.FilterPixelated)
 					}))
 				}))
 
 				props.Child(uinode.Align(func(t *scaff.Tracker, props *uinode.AlignProps) {
-					props.Horizontal(uinode.HorizontalAlignmentCenter)
-					props.Vertical(uinode.VerticalAlignmentTop)
+					props.HorizontalAligment.SetValue(uinode.HorizontalAlignmentCenter)
+					props.VerticalAlignment.SetValue(uinode.VerticalAlignmentTop)
 
 					props.Child(uinode.Text(func(t *scaff.Tracker, props *uinode.TextProps) {
-						props.Text("ScaffUI Image Sample")
-						props.FontSize(24)
-						props.Wrapping(true)
-						props.Color(color.White)
+						props.Text = "ScaffUI Image Sample"
+						props.FontSize = 24
+						props.Wrapping = true
+						props.Color = color.White
 					}))
 				}))
 
 				props.Child(uinode.Align(func(t *scaff.Tracker, props *uinode.AlignProps) {
-					props.Horizontal(uinode.HorizontalAlignmentCenter)
-					props.Vertical(uinode.VerticalAlignmentBottom)
+					props.HorizontalAligment.SetValue(uinode.HorizontalAlignmentCenter)
+					props.VerticalAlignment.SetValue(uinode.VerticalAlignmentBottom)
 
 					props.Child(uinode.Padding(func(t *scaff.Tracker, props *uinode.PaddingProps) {
-						props.Padding(scath.PadBottom(8))
+						props.Padding.SetValue(scath.PadBottom(8))
 
 						props.Child(uinode.Clickable(func(t *scaff.Tracker, props *uinode.ClickableProps) {
-							props.OnClick(func(button ebiten.MouseButton) bool {
+							props.OnClick.SetValue(func(button ebiten.MouseButton) bool {
 								scaling.Set(!scaling.Value())
 								return true
 							})
 
 							props.Child(uinode.Rectangle(func(t *scaff.Tracker, props *uinode.RectangleProps) {
-								scalingOn := scaling.Track(t)
-
-								props.FillColor(color.RGBA{30, 30, 30, 255})
-								props.BorderRadius(12)
-								props.Padding(scath.Pad(12))
-								props.StrokeThickness(4)
-								props.StrokeColor(color.RGBA{50, 50, 50, 255})
+								props.FillColor = color.RGBA{30, 30, 30, 255}
+								props.BorderRadius = 12
+								props.Padding = scath.Pad(12)
+								props.StrokeThickness = 4
+								props.StrokeColor = color.RGBA{50, 50, 50, 255}
 
 								props.Child(uinode.Text(func(t *scaff.Tracker, props *uinode.TextProps) {
-									props.FontSize(24)
+									props.FontSize = 24
+									props.Wrapping = true
 
-									if scalingOn {
-										props.Text("Scale animation: ON")
+									if scaling.Track(t) {
+										props.Text = "Scale animation: ON"
 									} else {
-										props.Text("Scale animation: OFF")
+										props.Text = "Scale animation: OFF"
 									}
 								}))
 							}))

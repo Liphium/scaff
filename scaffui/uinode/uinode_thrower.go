@@ -9,12 +9,8 @@ import (
 )
 
 type ThrowerProps struct {
-	msg string
+	Msg string
 	*scaffui.AcceptNoChild
-}
-
-func (tp *ThrowerProps) Message(message string) {
-	tp.msg = message
 }
 
 func Thrower(create func(t *scaff.Tracker, tp *ThrowerProps)) scaffui.NodeBuilder {
@@ -22,13 +18,13 @@ func Thrower(create func(t *scaff.Tracker, tp *ThrowerProps)) scaffui.NodeBuilde
 		ID: "thrower",
 		DefaultProps: ThrowerProps{
 			AcceptNoChild: &scaffui.AcceptNoChild{},
-			msg:           "Random error.",
+			Msg:           "Random error.",
 		},
 		PropsCreator: create,
 		Create: func(props *scaffui.SingleChildProps[ThrowerProps]) {
-			props.Layout(func(node *scaffui.SingleChildNode[ThrowerProps]) (scath.Vec, error) {
-				return scath.Vec{}, errors.New(node.Props().msg)
-			})
+			props.OnLayout = func(node *scaffui.SingleChildNode[ThrowerProps]) (scath.Vec, error) {
+				return scath.Vec{}, errors.New(node.Props().Msg)
+			}
 		},
 	})
 }

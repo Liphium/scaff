@@ -4,7 +4,6 @@ import (
 	"github.com/Liphium/scaff/paint"
 
 	"github.com/Liphium/scaff"
-	"github.com/Liphium/scaff/optional"
 	"github.com/Liphium/scaff/scaffui"
 	"github.com/Liphium/scaff/scath"
 )
@@ -13,34 +12,18 @@ import (
 type InputProps struct {
 
 	// When a mouse button is pressed.
-	onDown optional.O[func(handled, inside bool, event scaff.PressEvent) bool]
+	OnDown func(handled, inside bool, event scaff.PressEvent) bool
 
 	// When a mouse button is released.
-	onRelease optional.O[func(handled, inside bool, event scaff.ReleaseEvent) bool]
+	OnRelease func(handled, inside bool, event scaff.ReleaseEvent) bool
 
 	// When the mouse is moved.
-	onMove optional.O[func(handled, inside bool, event scaff.MoveEvent) bool]
+	OnMove func(handled, inside bool, event scaff.MoveEvent) bool
 
 	// When scrolling with the mouse or potentially differnet methods when no mouse is available.
-	onScroll optional.O[func(handled, inside bool, event scaff.ScrollEvent) bool]
+	OnScroll func(handled, inside bool, event scaff.ScrollEvent) bool
 
 	*scaffui.AcceptChild
-}
-
-func (o *InputProps) OnDown(fn func(handled, inside bool, event scaff.PressEvent) bool) {
-	o.onDown.SetValue(fn)
-}
-
-func (o *InputProps) OnRelease(fn func(handled, inside bool, event scaff.ReleaseEvent) bool) {
-	o.onRelease.SetValue(fn)
-}
-
-func (o *InputProps) OnMove(fn func(handled, inside bool, event scaff.MoveEvent) bool) {
-	o.onMove.SetValue(fn)
-}
-
-func (o *InputProps) OnScroll(fn func(handled, inside bool, event scaff.ScrollEvent) bool) {
-	o.onScroll.SetValue(fn)
 }
 
 // Create a new input node exposing a better interface to handle all kinds of input events coming down from scaffui.
@@ -54,7 +37,7 @@ func Input(create func(t *scaff.Tracker, props *InputProps)) scaffui.NodeBuilder
 		Create: func(props *scaffui.SingleChildProps[InputProps]) {
 			lastPosition := scath.Vec{X: 0, Y: 0}
 
-			props.HandleEvent(func(node *scaffui.SingleChildNode[InputProps], c *scaff.Context, event scaff.Event) error {
+			props.OnHandleEvent = func(node *scaffui.SingleChildNode[InputProps], c *scaff.Context, event scaff.Event) error {
 				handled := c.IsHandled(event.EventID())
 
 				// If it is a positional event, check if the event was done within the current bounds
@@ -67,38 +50,38 @@ func Input(create func(t *scaff.Tracker, props *InputProps)) scaffui.NodeBuilder
 
 				switch ev := event.(type) {
 				case scaff.PressEvent:
-					if fn, ok := node.Props().onDown.Value(); ok {
-						if fn(handled, isInside, ev) {
+					if node.Props().OnDown != nil {
+						if node.Props().OnDown(handled, isInside, ev) {
 							c.Handled(event.EventID())
 						}
 					}
 				case scaff.ReleaseEvent:
-					if fn, ok := node.Props().onRelease.Value(); ok {
-						if fn(handled, isInside, ev) {
+					if node.Props().OnRelease != nil {
+						if node.Props().OnRelease(handled, isInside, ev) {
 							c.Handled(event.EventID())
 						}
 					}
 				case scaff.MoveEvent:
-					if fn, ok := node.Props().onMove.Value(); ok {
-						if fn(handled, isInside, ev) {
+					if node.Props().OnMove != nil {
+						if node.Props().OnMove(handled, isInside, ev) {
 							c.Handled(event.EventID())
 						}
 					}
 				case scaff.ScrollEvent:
-					if fn, ok := node.Props().onScroll.Value(); ok {
-						if fn(handled, isInside, ev) {
+					if node.Props().OnScroll != nil {
+						if node.Props().OnScroll(handled, isInside, ev) {
 							c.Handled(event.EventID())
 						}
 					}
 				}
 
 				return nil
-			})
+			}
 
-			props.Draw(func(node *scaffui.SingleChildNode[InputProps], position scath.Vec, renderer paint.Painter) {
+			props.OnDraw = func(node *scaffui.SingleChildNode[InputProps], position scath.Vec, renderer paint.Painter) {
 				lastPosition = position
 				node.DrawChild(position, renderer)
-			})
+			}
 		},
 	})
 }

@@ -14,122 +14,91 @@ import (
 )
 
 type TextProps struct {
-	text           string
-	textDirection  text.Direction
-	wrapping       bool
-	font           string
-	fontSize       float64
-	lineSpacing    float64
-	color          color.Color
-	primaryAlign   text.Align
-	secondaryAlign text.Align
+	Text          string
+	TextDirection text.Direction
+	Wrapping      bool
+	Font          string
+	FontSize      float64
+
+	// LineSpacing is a percentage (default 0.25) multiplied with the Font size to calculate the spacing between lines. 0 would be no line spacing at all.
+	LineSpacing float64
+
+	Color color.Color
+
+	// PrimaryAlign sets the primary alignment direction depending on your Text direction. If you for example choose left to right as your Text direction (the default), this will be horizontal alignment.
+	PrimaryAlign text.Align
+
+	// SecondaryAlign sets the secondary alignment direction depending on your Text direction. If you for example choose left to right as your Text direction (the default), this will be vertical alignment.
+	SecondaryAlign text.Align
+
 	*scaffui.AcceptNoChild
-}
-
-func (tp *TextProps) Text(text string) {
-	tp.text = text
-}
-
-func (tp *TextProps) TextDirection(textDirection text.Direction) {
-	tp.textDirection = textDirection
-}
-
-func (tp *TextProps) Font(font string) {
-	tp.font = font
-}
-
-func (tp *TextProps) FontSize(size float64) {
-	tp.fontSize = size
-}
-
-// LineSpacing is a percentage (default 0.25) multiplied with the font size to calculate the spacing between lines. 0 would be no line spacing at all.
-func (tp *TextProps) LineSpacing(lineSpacing float64) {
-	tp.lineSpacing = lineSpacing
-}
-
-func (tp *TextProps) Wrapping(wrapping bool) {
-	tp.wrapping = wrapping
-}
-
-func (tp *TextProps) Color(color color.Color) {
-	tp.color = color
-}
-
-// PrimaryAlign sets the primary alignment direction depending on your text direction. If you for example choose left to right as your text direction (the default), this will be horizontal alignment.
-func (tp *TextProps) PrimaryAlign(align text.Align) {
-	tp.primaryAlign = align
-}
-
-// SecondaryAlign sets the secondary alignment direction depending on your text direction. If you for example choose left to right as your text direction (the default), this will be vertical alignment.
-func (tp *TextProps) SecondaryAlign(align text.Align) {
-	tp.secondaryAlign = align
 }
 
 func Text(create func(t *scaff.Tracker, props *TextProps)) scaffui.NodeBuilder {
 	return scaffui.SingleNode(scaffui.SingleNodeCreate[TextProps]{
-		ID: "text",
+		ID: "Text",
 		DefaultProps: TextProps{
-			text:           "Scaff",
-			textDirection:  text.DirectionLeftToRight,
-			wrapping:       false,
-			fontSize:       16,
-			color:          color.White,
-			lineSpacing:    0.25,
-			primaryAlign:   text.AlignStart,
-			secondaryAlign: text.AlignStart,
+			Text:           "Scaff",
+			TextDirection:  text.DirectionLeftToRight,
+			Wrapping:       false,
+			FontSize:       16,
+			Color:          color.White,
+			LineSpacing:    0.25,
+			PrimaryAlign:   text.AlignStart,
+			SecondaryAlign: text.AlignStart,
 			AcceptNoChild:  &scaffui.AcceptNoChild{},
 		},
 		PropsCreator: create,
 		Create: func(props *scaffui.SingleChildProps[TextProps]) {
 			finalText := ""
 
-			props.WantedConstraints(func(node *scaffui.SingleChildNode[TextProps], parent scath.Constraints) scath.Constraints {
-				font, err := node.Context().AssetManager().GetFont(node.Props().font)
+			props.OnWantedConstraints = func(node *scaffui.SingleChildNode[TextProps], parent scath.Constraints) scath.Constraints {
+				font, err := node.Context().AssetManager().GetFont(node.Props().Font)
 				if err != nil {
-					log.Warn("couldn't load font", "font", node.Props().font)
+					log.Warn("couldn't load font", "font", node.Props().Font)
 					return scath.Unconstrained()
 				}
 
 				// Reusable measure function for these props
-				lineSpacing := node.Props().fontSize * node.Props().lineSpacing
+				lineSpacing := node.Props().FontSize * node.Props().LineSpacing
 				measure := func(t string) (width, height float64) {
 					return text.Measure(t, &text.GoTextFace{
 						Source:    font,
-						Direction: node.Props().textDirection,
-						Size:      node.Props().fontSize,
+						Direction: node.Props().TextDirection,
+						Size:      node.Props().FontSize,
 					}, lineSpacing)
 				}
 
 				constraints := scath.Unconstrained()
-				if !node.Props().wrapping {
+				if !node.Props().Wrapping {
 
 					// For no wrapping, just measure the text and set tight constraints, as that's what's wanted
-					width, height := measure(node.Props().text)
+					width, height := measure(node.Props().Text)
 					constraints = scath.Tight(width, height)
 				} else {
 
 					// For no wrapping, we constrain to the longest word + length of one line
-					words := sliceIntoWords(node.Props().text)
+					words := sliceIntoWords(node.Props().Text)
 					w1, h1 := measure(strings.Join(words, "\n"))
-					w2, h2 := measure(node.Props().text)
+					w2, h2 := measure(node.Props().Text)
 					constraints = scath.NewConstraints(math.Min(w1, w2), math.Max(w1, w2), math.Min(h1, h2), math.Max(h1, h2))
 				}
 
 				return constraints
-			})
+			}
 
-			props.Layout(func(node *scaffui.SingleChildNode[TextProps]) (scath.Vec, error) {
-				font, err := node.Context().AssetManager().GetFont(node.Props().font)
+			props.OnLayout = func(node *scaffui.SingleChildNode[TextProps]) (scath.Vec, error) {
+				font, err := node.Context().AssetManager().GetFont(node.Props().Font)
 				if err != nil {
-					log.Warn("couldn't load font", "font", node.Props().font)
+					log.Warn("couldn't load Font", "Font", node.Props().Font)
 					return scath.Vec{}, nil
 				}
 
 				measure := func(t string) (width, height float64) {
 					return text.Measure(t, &text.GoTextFace{
 						Source:    font,
-						Direction: node.Props().textDirection,
-						Size:      node.Props().fontSize,
+						Direction: node.Props().TextDirection,
+						Size:      node.Props().FontSize,
 					}, 0)
 				}
 
@@ -137,7 +106,7 @@ func Text(create func(t *scaff.Tracker, props *TextProps)) scaffui.NodeBuilder {
 				maxX := constraints.RealMaxX()
 				maxY := constraints.RealMaxY()
 
-				runes := []rune(node.Props().text)
+				runes := []rune(node.Props().Text)
 				finalText = ""
 				line := ""
 				width, height := float64(0), float64(0)
@@ -146,9 +115,9 @@ func Text(create func(t *scaff.Tracker, props *TextProps)) scaffui.NodeBuilder {
 				lastSpace := 0
 
 				// Line spacing based on the text direction (for width + height)
-				lineSpacing := node.Props().fontSize * node.Props().lineSpacing
+				lineSpacing := node.Props().FontSize * node.Props().LineSpacing
 				lineSpacingWidth, lineSpacingHeight := lineSpacing, lineSpacing
-				vertical := node.Props().textDirection == text.DirectionTopToBottomAndLeftToRight || node.Props().textDirection == text.DirectionTopToBottomAndRightToLeft
+				vertical := node.Props().TextDirection == text.DirectionTopToBottomAndLeftToRight || node.Props().TextDirection == text.DirectionTopToBottomAndRightToLeft
 				if vertical {
 					lineSpacingHeight = 0
 				} else {
@@ -171,7 +140,7 @@ func Text(create func(t *scaff.Tracker, props *TextProps)) scaffui.NodeBuilder {
 					if tillSpace {
 						if lastSpace <= lineOffset {
 							// There is no space within the current line, cut the line till the next space (this is just to clip text, but is in fact a rendering error)
-							log.Warn("word is too long for size of text", "w", line)
+							log.Warn("word is too long for size of Text", "w", line)
 							line = line[0:i]
 							found := false
 							for j, rune := range runes[i:] {
@@ -224,9 +193,9 @@ func Text(create func(t *scaff.Tracker, props *TextProps)) scaffui.NodeBuilder {
 						break
 					}
 
-					// If max for a line reached (and the text should wrap), make sure to go back
+					// If max for a line reached (and the Text should wrap), make sure to go back
 					if lineWidth > maxX || lineHeight > maxY {
-						if node.Props().wrapping {
+						if node.Props().Wrapping {
 							i = commitLine(i, true)
 							continue
 						}
@@ -244,7 +213,7 @@ func Text(create func(t *scaff.Tracker, props *TextProps)) scaffui.NodeBuilder {
 
 				// Commit the line when not committed yet
 				if line != "" {
-					commitLine(len(node.Props().text)-1, false)
+					commitLine(len(node.Props().Text)-1, false)
 				}
 
 				// Subtract the line spacing again (was added to the last line as well, even though it shouldn't be)
@@ -252,26 +221,26 @@ func Text(create func(t *scaff.Tracker, props *TextProps)) scaffui.NodeBuilder {
 				height -= lineSpacingHeight
 
 				return scath.Vec{X: width, Y: height}, nil
-			})
+			}
 
-			props.Draw(func(node *scaffui.SingleChildNode[TextProps], position scath.Vec, painter paint.Painter) {
+			props.OnDraw = func(node *scaffui.SingleChildNode[TextProps], position scath.Vec, painter paint.Painter) {
 				painter.Paint(paint.Text{
-					Direction:      node.Props().textDirection,
-					Font:           node.Props().font,
+					Direction:      node.Props().TextDirection,
+					Font:           node.Props().Font,
 					Text:           finalText,
-					Color:          node.Props().color,
-					FontSize:       node.Props().fontSize,
-					LineSpacing:    node.Props().fontSize * node.Props().lineSpacing,
+					Color:          node.Props().Color,
+					FontSize:       node.Props().FontSize,
+					LineSpacing:    node.Props().FontSize * node.Props().LineSpacing,
 					Position:       position,
-					PrimaryAlign:   node.Props().primaryAlign,
-					SecondaryAlign: node.Props().secondaryAlign,
+					PrimaryAlign:   node.Props().PrimaryAlign,
+					SecondaryAlign: node.Props().SecondaryAlign,
 				})
-			})
+			}
 		},
 	})
 }
 
 // This is extracted here so we can improve it in the future, with support for lots of different languages, etc.
-func sliceIntoWords(text string) []string {
-	return strings.Fields(text)
+func sliceIntoWords(Text string) []string {
+	return strings.Fields(Text)
 }

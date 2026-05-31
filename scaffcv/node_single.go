@@ -55,8 +55,8 @@ func SingleNode[P scaff.ChildProps[NodeBuilder]](create SingleNodeCreate[P]) Nod
 		node.props = props
 
 		// Run the state change hook
-		if node.singleProps.onPropsChange != nil {
-			node.singleProps.onPropsChange(node)
+		if node.singleProps.OnPropsChanged != nil {
+			node.singleProps.OnPropsChanged(node)
 		}
 
 		return node
@@ -64,36 +64,12 @@ func SingleNode[P scaff.ChildProps[NodeBuilder]](create SingleNodeCreate[P]) Nod
 }
 
 type SingleChildProps[P any] struct {
-	onLoad        func(node *SingleChildNode[P], parent Node)
-	onPropsChange func(node *SingleChildNode[P])
-	onUnload      func(node *SingleChildNode[P])
-	onUpdate      func(node *SingleChildNode[P], c *scaff.Context) error
-	onHandleEvent func(node *SingleChildNode[P], c *scaff.Context, event scaff.Event) error
-	onDraw        func(node *SingleChildNode[P], c *scaff.Context, painter paint.Painter)
-}
-
-func (s *SingleChildProps[P]) Load(fn func(node *SingleChildNode[P], parent Node)) {
-	s.onLoad = fn
-}
-
-func (s *SingleChildProps[P]) PropsChanged(fn func(node *SingleChildNode[P])) {
-	s.onPropsChange = fn
-}
-
-func (s *SingleChildProps[P]) Unload(fn func(node *SingleChildNode[P])) {
-	s.onUnload = fn
-}
-
-func (s *SingleChildProps[P]) Update(fn func(node *SingleChildNode[P], c *scaff.Context) error) {
-	s.onUpdate = fn
-}
-
-func (s *SingleChildProps[P]) HandleEvent(fn func(node *SingleChildNode[P], c *scaff.Context, event scaff.Event) error) {
-	s.onHandleEvent = fn
-}
-
-func (s *SingleChildProps[P]) Draw(fn func(node *SingleChildNode[P], c *scaff.Context, painter paint.Painter)) {
-	s.onDraw = fn
+	OnLoad        func(node *SingleChildNode[P], parent Node)
+	OnPropsChanged func(node *SingleChildNode[P])
+	OnUnload      func(node *SingleChildNode[P])
+	OnUpdate      func(node *SingleChildNode[P], c *scaff.Context) error
+	OnHandleEvent func(node *SingleChildNode[P], c *scaff.Context, event scaff.Event) error
+	OnDraw        func(node *SingleChildNode[P], c *scaff.Context, painter paint.Painter)
 }
 
 var _ Node = &SingleChildNode[any]{}
@@ -134,16 +110,16 @@ func (s *SingleChildNode[P]) Load(parent Node) {
 		s.current.Load(s)
 	}
 
-	if s.singleProps.onLoad != nil {
-		s.singleProps.onLoad(s, parent)
+	if s.singleProps.OnLoad != nil {
+		s.singleProps.OnLoad(s, parent)
 	}
 }
 
 func (s *SingleChildNode[P]) HandleEvent(c *scaff.Context, event scaff.Event) scaff.TracedError {
 
 	// First handle event on this node
-	if s.singleProps.onHandleEvent != nil {
-		if err := s.singleProps.onHandleEvent(s, c, event); err != nil {
+	if s.singleProps.OnHandleEvent != nil {
+		if err := s.singleProps.OnHandleEvent(s, c, event); err != nil {
 			return scaff.NewTracedError(s, err)
 		}
 	}
@@ -159,8 +135,8 @@ func (s *SingleChildNode[P]) Tracker() *scaff.Tracker {
 func (s *SingleChildNode[P]) Update(c *scaff.Context) scaff.TracedError {
 
 	// First call the update handler on the props for this node
-	if s.singleProps.onUpdate != nil {
-		if err := s.singleProps.onUpdate(s, c); err != nil {
+	if s.singleProps.OnUpdate != nil {
+		if err := s.singleProps.OnUpdate(s, c); err != nil {
 			return scaff.NewTracedError(s, err)
 		}
 	}
@@ -186,8 +162,8 @@ func (s *SingleChildNode[P]) Update(c *scaff.Context) scaff.TracedError {
 }
 
 func (s *SingleChildNode[P]) Unload() {
-	if s.singleProps.onUnload != nil {
-		s.singleProps.onUnload(s)
+	if s.singleProps.OnUnload != nil {
+		s.singleProps.OnUnload(s)
 	}
 
 	// Unload the child properly
@@ -200,8 +176,8 @@ func (s *SingleChildNode[P]) Unload() {
 }
 
 func (s *SingleChildNode[P]) Draw(c *scaff.Context, painter paint.Painter) {
-	if s.singleProps.onDraw != nil {
-		s.singleProps.onDraw(s, c, painter)
+	if s.singleProps.OnDraw != nil {
+		s.singleProps.OnDraw(s, c, painter)
 	} else {
 
 		// Default implementation: just draw child

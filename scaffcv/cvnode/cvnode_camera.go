@@ -36,7 +36,7 @@ func CameraMovement(cameraPosition *scaff.Signal[scath.Vec], create func(t *scaf
 				ebiten.KeyA:         scath.Left,
 			}
 
-			props.Update(func(node *scaffcv.SingleChildNode[CameraMovementProps], c *scaff.Context) error {
+			props.OnUpdate = func(node *scaffcv.SingleChildNode[CameraMovementProps], c *scaff.Context) error {
 				active := []scath.Vec{}
 
 				// TODO: Convert to scaff input API with events and stuff
@@ -57,10 +57,9 @@ func CameraMovement(cameraPosition *scaff.Signal[scath.Vec], create func(t *scaf
 
 				// Actually move the camera
 				sum = sum.Scale(node.Props().Speed)
-				log.Debug("new thingy", "m", sum)
 				cameraPosition.Set(cameraPosition.Value().Add(sum))
 				return nil
-			})
+			}
 		},
 	})
 }

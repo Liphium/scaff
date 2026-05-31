@@ -8,13 +8,9 @@ import (
 )
 
 type ClickableProps struct {
-	onClick optional.O[func(button ebiten.MouseButton) bool]
+	OnClick optional.O[func(button ebiten.MouseButton) bool]
 	cursor  ebiten.CursorShapeType
 	*scaffui.AcceptChild
-}
-
-func (cp *ClickableProps) OnClick(fn func(button ebiten.MouseButton) bool) {
-	cp.onClick.SetValue(fn)
 }
 
 func Clickable(create func(t *scaff.Tracker, props *ClickableProps)) scaffui.NodeBuilder {
@@ -33,35 +29,35 @@ func Clickable(create func(t *scaff.Tracker, props *ClickableProps)) scaffui.Nod
 			input.Child(builder)
 		}
 
-		input.OnMove(func(handled, inside bool, event scaff.MoveEvent) bool {
+		input.OnMove = func(handled, inside bool, event scaff.MoveEvent) bool {
 			if inside {
 				ebiten.SetCursorShape(props.cursor)
 			} else {
 				ebiten.SetCursorShape(ebiten.CursorShapeDefault)
 			}
 			return false
-		})
+		}
 
-		input.OnDown(func(handled, inside bool, event scaff.PressEvent) bool {
+		input.OnDown = func(handled, inside bool, event scaff.PressEvent) bool {
 			if inside {
 				pressed[event.Button] = true
 			}
 			return inside
-		})
+		}
 
-		input.OnRelease(func(handled, inside bool, event scaff.ReleaseEvent) bool {
+		input.OnRelease = func(handled, inside bool, event scaff.ReleaseEvent) bool {
 			wasPressed := pressed[event.Button]
 			pressed[event.Button] = false
 
 			// If the event was not handled before and the button was pressed before + released inside of this element, a click has been detected
 			if wasPressed && inside && !handled {
-				if fn, ok := props.onClick.Value(); ok {
+				if fn, ok := props.OnClick.Value(); ok {
 					return fn(event.Button)
 				}
 				return true
 			}
 
 			return false
-		})
+		}
 	})
 }

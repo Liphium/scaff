@@ -27,14 +27,14 @@ func main() {
 		props.Child(scaff.SingleNode(scaff.SingleNodeCreate[scaff.AcceptNoChild]{
 			ID: "rainbow",
 			Create: func(props *scaff.SingleChildProps[scaff.AcceptNoChild]) {
-				props.Draw(func(node *scaff.SingleChildNode[scaff.AcceptNoChild], c *scaff.Context, image *ebiten.Image) {
+				props.OnDraw = func(node *scaff.SingleChildNode[scaff.AcceptNoChild], c *scaff.Context, image *ebiten.Image) {
 					const cycleDuration = 10 * time.Second
 
 					cyclePosition := float64(c.Now().UnixNano()%int64(cycleDuration)) / float64(cycleDuration)
 					rainbow.Set(hsvToRGBA(cyclePosition, 1, 1))
-				})
+				}
 
-				props.HandleEvent(func(node *scaff.SingleChildNode[scaff.AcceptNoChild], c *scaff.Context, event scaff.Event) error {
+				props.OnHandleEvent = func(node *scaff.SingleChildNode[scaff.AcceptNoChild], c *scaff.Context, event scaff.Event) error {
 
 					// Toggle when R is pressed
 					if ev, ok := event.(scaff.KeyPressEvent); ok {
@@ -43,29 +43,29 @@ func main() {
 						}
 					}
 					return nil
-				})
+				}
 			},
 		}))
 
 		props.Child(scaffui.Viewport(func(t *scaff.Tracker, props *scaffui.ViewportProps) {
 			props.Child(uinode.Align(func(t *scaff.Tracker, props *uinode.AlignProps) {
-				props.Horizontal(uinode.HorizontalAlignmentCenter)
-				props.Vertical(uinode.VerticalAlignmentCenter)
+				props.HorizontalAligment.SetValue(uinode.HorizontalAlignmentCenter)
+				props.VerticalAlignment.SetValue(uinode.VerticalAlignmentCenter)
 
 				props.Child(uinode.Flex(func(t *scaff.Tracker, props *uinode.FlexProps) {
 					props.Child(uinode.Input(func(t *scaff.Tracker, props *uinode.InputProps) {
-						props.OnMove(func(handled, inside bool, event scaff.MoveEvent) bool {
+						props.OnMove.SetValue(func(handled, inside bool, event scaff.MoveEvent) bool {
 							hovered.Set(inside)
 							return false
 						})
 
 						props.Child(uinode.Rectangle(func(t *scaff.Tracker, props *uinode.RectangleProps) {
-							props.WantedConstraints(scath.Tight(100, 100))
-							props.BorderRadius(8)
+							props.WantedConstraints = scath.Tight(100, 100)
+							props.BorderRadius = 8
 							if hovered.Track(t) || keyToggle.Track(t) {
-								props.FillColor(rainbow.Track(t))
+								props.FillColor = rainbow.Track(t)
 							} else {
-								props.FillColor(color.RGBA{255, 255, 255, 255})
+								props.FillColor = color.RGBA{255, 255, 255, 255}
 							}
 						}))
 					}))

@@ -29,7 +29,7 @@ func Viewport(create func(t *scaff.Tracker, props *ViewportProps)) scaff.NodeBui
 			var root *MountedNode
 			var renderer *paint.EbitenPainter
 
-			props.Load(func(node *scaff.SingleChildNode[ViewportProps], parent scaff.Node) {
+			props.OnLoad = func(node *scaff.SingleChildNode[ViewportProps], parent scaff.Node) {
 				child, ok := node.Props().child.Value()
 				if !ok {
 					return
@@ -37,15 +37,15 @@ func Viewport(create func(t *scaff.Tracker, props *ViewportProps)) scaff.NodeBui
 
 				root = NewMountedFromBuilder(child, node.Context())
 				root.Load(nil)
-			})
+			}
 
-			props.Unload(func(node *scaff.SingleChildNode[ViewportProps]) {
+			props.OnUnload = func(node *scaff.SingleChildNode[ViewportProps]) {
 				if root != nil {
 					root.Unload()
 				}
-			})
+			}
 
-			props.Draw(func(node *scaff.SingleChildNode[ViewportProps], c *scaff.Context, screen *ebiten.Image) {
+			props.OnDraw = func(node *scaff.SingleChildNode[ViewportProps], c *scaff.Context, screen *ebiten.Image) {
 				if root == nil {
 					return
 				}
@@ -76,9 +76,9 @@ func Viewport(create func(t *scaff.Tracker, props *ViewportProps)) scaff.NodeBui
 				}
 
 				screen.DrawImage(renderer.Screen(), &ebiten.DrawImageOptions{})
-			})
+			}
 
-			props.HandleEvent(func(node *scaff.SingleChildNode[ViewportProps], c *scaff.Context, event scaff.Event) error {
+			props.OnHandleEvent = func(node *scaff.SingleChildNode[ViewportProps], c *scaff.Context, event scaff.Event) error {
 
 				// When the size changes, delete the renderer (screen size changes and stuff and we can't use the old stuff anymore anyway)
 				if event.EventID() == scaff.EventIdSizeChange {
@@ -89,7 +89,7 @@ func Viewport(create func(t *scaff.Tracker, props *ViewportProps)) scaff.NodeBui
 					root.Current().HandleEvent(c, event)
 				}
 				return nil
-			})
+			}
 		},
 	})
 }

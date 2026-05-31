@@ -54,8 +54,8 @@ func SingleNode[P ChildProps[NodeBuilder]](create SingleNodeCreate[P]) NodeBuild
 		node.props = props
 
 		// Run the state change hook
-		if node.singleProps.onPropsChanged != nil {
-			node.singleProps.onPropsChanged(node)
+		if node.singleProps.OnPropsChanged != nil {
+			node.singleProps.OnPropsChanged(node)
 		}
 
 		return node
@@ -63,36 +63,12 @@ func SingleNode[P ChildProps[NodeBuilder]](create SingleNodeCreate[P]) NodeBuild
 }
 
 type SingleChildProps[P any] struct {
-	onLoad         func(node *SingleChildNode[P], parent Node)
-	onPropsChanged func(node *SingleChildNode[P])
-	onUnload       func(node *SingleChildNode[P])
-	onUpdate       func(node *SingleChildNode[P], c *Context) error
-	onHandleEvent  func(node *SingleChildNode[P], c *Context, event Event) error
-	onDraw         func(node *SingleChildNode[P], c *Context, image *ebiten.Image)
-}
-
-func (s *SingleChildProps[P]) Load(fn func(node *SingleChildNode[P], parent Node)) {
-	s.onLoad = fn
-}
-
-func (s *SingleChildProps[P]) PropsChanged(fn func(node *SingleChildNode[P])) {
-	s.onPropsChanged = fn
-}
-
-func (s *SingleChildProps[P]) Unload(fn func(node *SingleChildNode[P])) {
-	s.onUnload = fn
-}
-
-func (s *SingleChildProps[P]) Update(fn func(node *SingleChildNode[P], c *Context) error) {
-	s.onUpdate = fn
-}
-
-func (s *SingleChildProps[P]) HandleEvent(fn func(node *SingleChildNode[P], c *Context, event Event) error) {
-	s.onHandleEvent = fn
-}
-
-func (s *SingleChildProps[P]) Draw(fn func(node *SingleChildNode[P], c *Context, image *ebiten.Image)) {
-	s.onDraw = fn
+	OnLoad         func(node *SingleChildNode[P], parent Node)
+	OnPropsChanged func(node *SingleChildNode[P])
+	OnUnload       func(node *SingleChildNode[P])
+	OnUpdate       func(node *SingleChildNode[P], c *Context) error
+	OnHandleEvent  func(node *SingleChildNode[P], c *Context, event Event) error
+	OnDraw         func(node *SingleChildNode[P], c *Context, image *ebiten.Image)
 }
 
 var _ Node = &SingleChildNode[any]{}
@@ -133,16 +109,16 @@ func (s *SingleChildNode[P]) Load(parent Node) {
 		s.current.Load(s)
 	}
 
-	if s.singleProps.onLoad != nil {
-		s.singleProps.onLoad(s, parent)
+	if s.singleProps.OnLoad != nil {
+		s.singleProps.OnLoad(s, parent)
 	}
 }
 
 func (s *SingleChildNode[P]) HandleEvent(c *Context, event Event) TracedError {
 
 	// First handle event on this node
-	if s.singleProps.onHandleEvent != nil {
-		if err := s.singleProps.onHandleEvent(s, c, event); err != nil {
+	if s.singleProps.OnHandleEvent != nil {
+		if err := s.singleProps.OnHandleEvent(s, c, event); err != nil {
 			return NewTracedError(s, err)
 		}
 	}
@@ -158,8 +134,8 @@ func (s *SingleChildNode[P]) Tracker() *Tracker {
 func (s *SingleChildNode[P]) Update(c *Context) TracedError {
 
 	// First call the update handler on the props for this node
-	if s.singleProps.onUpdate != nil {
-		if err := s.singleProps.onUpdate(s, c); err != nil {
+	if s.singleProps.OnUpdate != nil {
+		if err := s.singleProps.OnUpdate(s, c); err != nil {
 			return NewTracedError(s, err)
 		}
 	}
@@ -185,8 +161,8 @@ func (s *SingleChildNode[P]) Update(c *Context) TracedError {
 }
 
 func (s *SingleChildNode[P]) Unload() {
-	if s.singleProps.onUnload != nil {
-		s.singleProps.onUnload(s)
+	if s.singleProps.OnUnload != nil {
+		s.singleProps.OnUnload(s)
 	}
 
 	// Unload the child properly
@@ -199,8 +175,8 @@ func (s *SingleChildNode[P]) Unload() {
 }
 
 func (s *SingleChildNode[P]) Draw(c *Context, image *ebiten.Image) {
-	if s.singleProps.onDraw != nil {
-		s.singleProps.onDraw(s, c, image)
+	if s.singleProps.OnDraw != nil {
+		s.singleProps.OnDraw(s, c, image)
 	} else {
 
 		// Default implementation: just draw child

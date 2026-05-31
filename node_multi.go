@@ -42,8 +42,8 @@ func MultiNode[P ChildProps[NodeBuilder]](create MultiNodeCreate[P]) NodeBuilder
 		node.props = props
 
 		// Call props change hook (in case registered)
-		if node.multiProps.onPropsChange != nil {
-			node.multiProps.onPropsChange(node)
+		if node.multiProps.OnPropsChanged != nil {
+			node.multiProps.OnPropsChanged(node)
 		}
 
 		return node
@@ -51,32 +51,12 @@ func MultiNode[P ChildProps[NodeBuilder]](create MultiNodeCreate[P]) NodeBuilder
 }
 
 type MultiChildProps[P any] struct {
-	onLoad        func(node *MultiChildNode[P], parent Node)
-	onUnload      func(node *MultiChildNode[P])
-	onPropsChange func(node *MultiChildNode[P])
-	onUpdate      func(node *MultiChildNode[P], c *Context) error
-	onHandleEvent func(node *MultiChildNode[P], c *Context, event Event) error
-	onDraw        func(node *MultiChildNode[P], c *Context, image *ebiten.Image)
-}
-
-func (s *MultiChildProps[P]) Load(fn func(node *MultiChildNode[P], parent Node)) {
-	s.onLoad = fn
-}
-
-func (s *MultiChildProps[P]) Unload(fn func(node *MultiChildNode[P])) {
-	s.onUnload = fn
-}
-
-func (s *MultiChildProps[P]) Update(fn func(node *MultiChildNode[P], c *Context) error) {
-	s.onUpdate = fn
-}
-
-func (s *MultiChildProps[P]) HandleEvent(fn func(node *MultiChildNode[P], c *Context, event Event) error) {
-	s.onHandleEvent = fn
-}
-
-func (s *MultiChildProps[P]) Draw(fn func(node *MultiChildNode[P], c *Context, image *ebiten.Image)) {
-	s.onDraw = fn
+	OnLoad        func(node *MultiChildNode[P], parent Node)
+	OnUnload      func(node *MultiChildNode[P])
+	OnPropsChanged func(node *MultiChildNode[P])
+	OnUpdate      func(node *MultiChildNode[P], c *Context) error
+	OnHandleEvent func(node *MultiChildNode[P], c *Context, event Event) error
+	OnDraw        func(node *MultiChildNode[P], c *Context, image *ebiten.Image)
 }
 
 // Just for making sure we implement the Node interface
@@ -115,16 +95,16 @@ func (s *MultiChildNode[P]) Load(parent Node) {
 		}
 	}
 
-	if s.multiProps.onLoad != nil {
-		s.multiProps.onLoad(s, parent)
+	if s.multiProps.OnLoad != nil {
+		s.multiProps.OnLoad(s, parent)
 	}
 }
 
 func (s *MultiChildNode[P]) HandleEvent(c *Context, event Event) TracedError {
 
 	// First handle event on this node
-	if s.multiProps.onHandleEvent != nil {
-		if err := s.multiProps.onHandleEvent(s, c, event); err != nil {
+	if s.multiProps.OnHandleEvent != nil {
+		if err := s.multiProps.OnHandleEvent(s, c, event); err != nil {
 			return NewTracedError(s, err)
 		}
 	}
@@ -140,8 +120,8 @@ func (s *MultiChildNode[P]) Tracker() *Tracker {
 func (s *MultiChildNode[P]) Update(c *Context) TracedError {
 
 	// First call the update handler on the props for this node
-	if s.multiProps.onUpdate != nil {
-		if err := s.multiProps.onUpdate(s, c); err != nil {
+	if s.multiProps.OnUpdate != nil {
+		if err := s.multiProps.OnUpdate(s, c); err != nil {
 			return NewTracedError(s, err)
 		}
 	}
@@ -166,8 +146,8 @@ func (s *MultiChildNode[P]) Update(c *Context) TracedError {
 }
 
 func (s *MultiChildNode[P]) Unload() {
-	if s.multiProps.onUnload != nil {
-		s.multiProps.onUnload(s)
+	if s.multiProps.OnUnload != nil {
+		s.multiProps.OnUnload(s)
 	}
 
 	// Unload the children properly
@@ -180,8 +160,8 @@ func (s *MultiChildNode[P]) Unload() {
 }
 
 func (s *MultiChildNode[P]) Draw(c *Context, image *ebiten.Image) {
-	if s.multiProps.onDraw != nil {
-		s.multiProps.onDraw(s, c, image)
+	if s.multiProps.OnDraw != nil {
+		s.multiProps.OnDraw(s, c, image)
 	} else {
 
 		// Default implementation: just draw children

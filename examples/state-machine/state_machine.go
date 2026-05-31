@@ -35,12 +35,12 @@ func main() {
 			ID:           "state_machine",
 			DefaultProps: &scaff.AcceptNoChild{},
 			Create: func(props *scaff.SingleChildProps[*scaff.AcceptNoChild]) {
-				props.Update(func(node *scaff.SingleChildNode[*scaff.AcceptNoChild], c *scaff.Context) error {
+				props.OnUpdate = func(node *scaff.SingleChildNode[*scaff.AcceptNoChild], c *scaff.Context) error {
 					timeMachine.Update(c.Now(), c.Now().UnixMilli())
 					return nil
-				})
+				}
 
-				props.Draw(func(node *scaff.SingleChildNode[*scaff.AcceptNoChild], c *scaff.Context, screen *ebiten.Image) {
+				props.OnDraw = func(node *scaff.SingleChildNode[*scaff.AcceptNoChild], c *scaff.Context, screen *ebiten.Image) {
 					timeMachine.Draw(c.Now(), func(state int, frame scath.Timeframe) {
 						text := "Scrolling text"
 						if state == 1 {
@@ -72,7 +72,7 @@ func main() {
 						op.ColorScale.ScaleAlpha(float32(frame.LerpFloat(c.Now(), 0, 1)))
 						screen.DrawImage(images[state], op)
 					})
-				})
+				}
 			},
 		}))
 	})

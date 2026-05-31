@@ -13,40 +13,36 @@ import (
 var _ scaff.ChildProps[scaffui.NodeBuilder] = PaddingProps{}
 
 type PaddingProps struct {
-	padding optional.O[scath.Padding]
+	Padding optional.O[scath.Padding]
 	*scaffui.AcceptChild
-}
-
-func (pp *PaddingProps) Padding(padding scath.Padding) {
-	pp.padding.SetValue(padding)
 }
 
 func Padding(create func(t *scaff.Tracker, props *PaddingProps)) scaffui.NodeBuilder {
 	return scaffui.SingleNode(scaffui.SingleNodeCreate[PaddingProps]{
-		ID: "padding",
+		ID: "Padding",
 		DefaultProps: PaddingProps{
 			AcceptChild: &scaffui.AcceptChild{},
 		},
 		PropsCreator: create,
 		Create: func(props *scaffui.SingleChildProps[PaddingProps]) {
-			// In Layout, make sure to give the child less constraints (subtracted by padding, handled by uispec)
-			props.Layout(func(node *scaffui.SingleChildNode[PaddingProps]) (scath.Vec, error) {
+			// In Layout, make sure to give the child less constraints (subtracted by Padding, handled by uispec)
+			props.OnLayout = func(node *scaffui.SingleChildNode[PaddingProps]) (scath.Vec, error) {
 				spec := uispec.SingleChildBoxSpec{
 					Parent:  node.Constraints(),
 					Wanted:  optional.None[scath.Constraints](),
-					Padding: node.Props().padding.Or(scath.Pad(0)),
+					Padding: node.Props().Padding.Or(scath.Pad(0)),
 				}
 
 				if child, ok := node.Child(); ok {
 					return spec.LayoutWithChild(child.Current())
 				}
 				return spec.LayoutWithoutChild()
-			})
+			}
 
 			// Draw child at padded position
-			props.Draw(func(node *scaffui.SingleChildNode[PaddingProps], position scath.Vec, renderer paint.Painter) {
-				node.DrawChild(position.Add(node.Props().padding.Or(scath.Pad(0)).ToVecTopLeft()), renderer)
-			})
+			props.OnDraw = func(node *scaffui.SingleChildNode[PaddingProps], position scath.Vec, renderer paint.Painter) {
+				node.DrawChild(position.Add(node.Props().Padding.Or(scath.Pad(0)).ToVecTopLeft()), renderer)
+			}
 		},
 	})
 }

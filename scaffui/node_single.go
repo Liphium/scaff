@@ -40,20 +40,20 @@ func SingleNode[P scaff.ChildProps[NodeBuilder]](create SingleNodeCreate[P]) Nod
 		node.context = context
 
 		// Fill the props (if desired)
+		props := create.DefaultProps
 		if create.PropsCreator != nil {
-			props := create.DefaultProps
 			create.PropsCreator(node.Tracker(), &props)
-			node.props = props
 
 			// Add child (if desired)
 			if builders := props.GetBuilders(); len(builders) == 1 {
 				node.tracker.SetNode(NewMountedFromBuilder(builders[0], context))
 			}
 		}
+		node.props = props
 
 		// Call props changed hook when defined
-		if node.singleProps.onPropsChanged != nil {
-			node.singleProps.onPropsChanged(node)
+		if node.singleProps.OnPropsChanged != nil {
+			node.singleProps.OnPropsChanged(node)
 		}
 
 		return node
@@ -61,46 +61,14 @@ func SingleNode[P scaff.ChildProps[NodeBuilder]](create SingleNodeCreate[P]) Nod
 }
 
 type SingleChildProps[P any] struct {
-	onLoad              func(node *SingleChildNode[P])
-	onPropsChanged      func(node *SingleChildNode[P])
-	onUnload            func(node *SingleChildNode[P])
-	onWantedConstraints func(node *SingleChildNode[P], parent scath.Constraints) scath.Constraints
-	onLayout            func(node *SingleChildNode[P]) (scath.Vec, error)
-	onHandleEvent       func(node *SingleChildNode[P], c *scaff.Context, event scaff.Event) error
-	onUpdate            func(node *SingleChildNode[P], c *scaff.Context) (bool, error)
-	onDraw              func(node *SingleChildNode[P], position scath.Vec, renderer paint.Painter)
-}
-
-func (s *SingleChildProps[P]) WantedConstraints(fn func(node *SingleChildNode[P], parent scath.Constraints) scath.Constraints) {
-	s.onWantedConstraints = fn
-}
-
-func (s *SingleChildProps[P]) Load(fn func(node *SingleChildNode[P])) {
-	s.onLoad = fn
-}
-
-func (s *SingleChildProps[P]) PropsChanged(fn func(node *SingleChildNode[P])) {
-	s.onPropsChanged = fn
-}
-
-func (s *SingleChildProps[P]) Unload(fn func(node *SingleChildNode[P])) {
-	s.onUnload = fn
-}
-
-func (s *SingleChildProps[P]) Layout(fn func(node *SingleChildNode[P]) (scath.Vec, error)) {
-	s.onLayout = fn
-}
-
-func (s *SingleChildProps[P]) HandleEvent(fn func(node *SingleChildNode[P], c *scaff.Context, event scaff.Event) error) {
-	s.onHandleEvent = fn
-}
-
-func (s *SingleChildProps[P]) Update(fn func(node *SingleChildNode[P], c *scaff.Context) (bool, error)) {
-	s.onUpdate = fn
-}
-
-func (s *SingleChildProps[P]) Draw(fn func(node *SingleChildNode[P], position scath.Vec, painter paint.Painter)) {
-	s.onDraw = fn
+	OnLoad              func(node *SingleChildNode[P])
+	OnPropsChanged      func(node *SingleChildNode[P])
+	OnUnload            func(node *SingleChildNode[P])
+	OnWantedConstraints func(node *SingleChildNode[P], parent scath.Constraints) scath.Constraints
+	OnLayout            func(node *SingleChildNode[P]) (scath.Vec, error)
+	OnHandleEvent       func(node *SingleChildNode[P], c *scaff.Context, event scaff.Event) error
+	OnUpdate            func(node *SingleChildNode[P], c *scaff.Context) (bool, error)
+	OnDraw              func(node *SingleChildNode[P], position scath.Vec, renderer paint.Painter)
 }
 
 var _ Node = &SingleChildNode[any]{}
@@ -130,8 +98,8 @@ func (s *SingleChildNode[P]) Context() *scaff.BuildContext {
 }
 
 func (s *SingleChildNode[P]) Load(parent Node) {
-	if s.singleProps.onLoad != nil {
-		s.singleProps.onLoad(s)
+	if s.singleProps.OnLoad != nil {
+		s.singleProps.OnLoad(s)
 	}
 
 	s.tracker.Load(parent)
@@ -150,11 +118,11 @@ func (s *SingleChildNode[P]) SetConstraints(c scath.Constraints) {
 }
 
 func (s *SingleChildNode[P]) WantedConstraints(parent scath.Constraints) scath.Constraints {
-	if s.singleProps.onWantedConstraints == nil {
+	if s.singleProps.OnWantedConstraints == nil {
 		return scath.Unconstrained()
 	}
 
-	return s.singleProps.onWantedConstraints(s, parent)
+	return s.singleProps.OnWantedConstraints(s, parent)
 }
 
 func (s *SingleChildNode[P]) Layout() (scath.Vec, error) {
@@ -169,8 +137,8 @@ func (s *SingleChildNode[P]) Layout() (scath.Vec, error) {
 }
 
 func (s *SingleChildNode[P]) layout() (scath.Vec, error) {
-	if s.singleProps.onLayout != nil {
-		size, err := s.singleProps.onLayout(s)
+	if s.singleProps.OnLayout != nil {
+		size, err := s.singleProps.OnLayout(s)
 		if err != nil {
 			return size, scaff.NewTracedError(s, err)
 		}
@@ -219,8 +187,8 @@ func (s *SingleChildNode[P]) finalSize(size scath.Vec) (scath.Vec, error) {
 }
 
 func (s *SingleChildNode[P]) HandleEvent(c *scaff.Context, event scaff.Event) scaff.TracedError {
-	if s.singleProps.onHandleEvent != nil {
-		if err := s.singleProps.onHandleEvent(s, c, event); err != nil {
+	if s.singleProps.OnHandleEvent != nil {
+		if err := s.singleProps.OnHandleEvent(s, c, event); err != nil {
 			return scaff.NewTracedError(s, err)
 		}
 	}
@@ -235,8 +203,8 @@ func (s *SingleChildNode[P]) Tracker() *scaff.Tracker {
 func (s *SingleChildNode[P]) Update(c *scaff.Context) (UpdateResult, scaff.TracedError) {
 	relayout := false
 	var err error
-	if s.singleProps.onUpdate != nil {
-		relayout, err = s.singleProps.onUpdate(s, c)
+	if s.singleProps.OnUpdate != nil {
+		relayout, err = s.singleProps.OnUpdate(s, c)
 		if err != nil {
 			return NoUpdate(), scaff.NewTracedError(s, err)
 		}
@@ -254,8 +222,8 @@ func (s *SingleChildNode[P]) Update(c *scaff.Context) (UpdateResult, scaff.Trace
 }
 
 func (s *SingleChildNode[P]) Unload() {
-	if s.singleProps.onUnload != nil {
-		s.singleProps.onUnload(s)
+	if s.singleProps.OnUnload != nil {
+		s.singleProps.OnUnload(s)
 	}
 
 	if s.tracker != nil {
@@ -265,8 +233,8 @@ func (s *SingleChildNode[P]) Unload() {
 }
 
 func (s *SingleChildNode[P]) Draw(position scath.Vec, renderer paint.Painter) {
-	if s.singleProps.onDraw != nil {
-		s.singleProps.onDraw(s, position, renderer)
+	if s.singleProps.OnDraw != nil {
+		s.singleProps.OnDraw(s, position, renderer)
 		return
 	}
 

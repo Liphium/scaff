@@ -11,57 +11,37 @@ import (
 )
 
 type TextProps struct {
-	text           string
-	position       scath.Vec
-	color          color.Color
-	primaryAlign   text.Align
-	secondaryAlign text.Align
+	Text           string
+	Position       scath.Vec
+	Color          color.Color
+	PrimaryAlign   text.Align
+	SecondaryAlign text.Align
 	scaffcv.AcceptNoChild
 }
 
-func (tp *TextProps) Text(text string) {
-	tp.text = text
-}
-
-func (tp *TextProps) Position(pos scath.Vec) {
-	tp.position = pos
-}
-
-func (tp *TextProps) Color(c color.Color) {
-	tp.color = c
-}
-
-func (tp *TextProps) PrimaryAlign(align text.Align) {
-	tp.primaryAlign = align
-}
-
-func (tp *TextProps) SecondaryAlign(align text.Align) {
-	tp.secondaryAlign = align
-}
-
-// Text creates a simple text node with a position and text.
+// Text creates a simple Text node with a Position and Text.
 func Text(create func(t *scaff.Tracker, props *TextProps)) scaffcv.NodeBuilder {
 	return scaffcv.SingleNode(scaffcv.SingleNodeCreate[TextProps]{
-		ID: "text",
+		ID: "Text",
 		DefaultProps: TextProps{
-			text:           "",
-			position:       scath.Vec{},
-			color:          color.White,
-			primaryAlign:   text.AlignCenter,
-			secondaryAlign: text.AlignCenter,
+			Text:           "",
+			Position:       scath.Vec{},
+			Color:          color.White,
+			PrimaryAlign:   text.AlignCenter,
+			SecondaryAlign: text.AlignCenter,
 		},
 		PropsCreator: create,
 		Create: func(props *scaffcv.SingleChildProps[TextProps]) {
-			props.Draw(func(node *scaffcv.SingleChildNode[TextProps], c *scaff.Context, painter paint.Painter) {
+			props.OnDraw = func(node *scaffcv.SingleChildNode[TextProps], c *scaff.Context, painter paint.Painter) {
 				painter.Paint(paint.Text{
-					Text:           node.Props().text,
+					Text:           node.Props().Text,
 					FontSize:       20,
-					Position:       node.Props().position,
-					Color:          node.Props().color,
-					PrimaryAlign:   node.Props().primaryAlign,
-					SecondaryAlign: node.Props().secondaryAlign,
+					Position:       node.Props().Position,
+					Color:          node.Props().Color,
+					PrimaryAlign:   node.Props().PrimaryAlign,
+					SecondaryAlign: node.Props().SecondaryAlign,
 				})
-			})
+			}
 		},
 	})
 }

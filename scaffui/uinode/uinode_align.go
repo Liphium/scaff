@@ -13,32 +13,24 @@ import (
 var _ scaff.ChildProps[scaffui.NodeBuilder] = AlignProps{}
 
 type AlignProps struct {
-	verticalAlignment  optional.O[VerticalAlignment]
-	horizontalAligment optional.O[HorizontalAlignment]
+	VerticalAlignment  optional.O[VerticalAlignment]
+	HorizontalAligment optional.O[HorizontalAlignment]
 
 	*scaffui.AcceptChild
-}
-
-func (pp *AlignProps) Vertical(alignment VerticalAlignment) {
-	pp.verticalAlignment.SetValue(alignment)
-}
-
-func (pp *AlignProps) Horizontal(alignment HorizontalAlignment) {
-	pp.horizontalAligment.SetValue(alignment)
 }
 
 func Align(create func(t *scaff.Tracker, props *AlignProps)) scaffui.NodeBuilder {
 	return scaffui.SingleNode(scaffui.SingleNodeCreate[AlignProps]{
 		ID: "align",
 		DefaultProps: AlignProps{
-			horizontalAligment: optional.None[HorizontalAlignment](),
-			verticalAlignment:  optional.None[VerticalAlignment](),
+			HorizontalAligment: optional.None[HorizontalAlignment](),
+			VerticalAlignment:  optional.None[VerticalAlignment](),
 			AcceptChild:        &scaffui.AcceptChild{},
 		},
 		PropsCreator: create,
-		Create: func(core *scaffui.SingleChildProps[AlignProps]) {
+		Create: func(props *scaffui.SingleChildProps[AlignProps]) {
 			// In Layout, we take the biggest we can get in any axis where alignment is given
-			core.Layout(func(node *scaffui.SingleChildNode[AlignProps]) (scath.Vec, error) {
+			props.OnLayout = func(node *scaffui.SingleChildNode[AlignProps]) (scath.Vec, error) {
 
 				// Pass down constraints from parent to child and let it pick size
 				// We just edit this size from now on, since we otherwise want to keep the height / width of our child anyway in case alignment is not set
@@ -47,7 +39,7 @@ func Align(create func(t *scaff.Tracker, props *AlignProps)) scaffui.NodeBuilder
 					return size, err
 				}
 
-				if node.Props().horizontalAligment.HasValue() {
+				if node.Props().HorizontalAligment.HasValue() {
 					if node.Constraints().MaxX == scath.Infinite {
 						return size, errors.New("infinite width for horizontal alignment")
 					}
@@ -55,7 +47,7 @@ func Align(create func(t *scaff.Tracker, props *AlignProps)) scaffui.NodeBuilder
 					size.X = node.Constraints().MaxX
 				}
 
-				if node.Props().verticalAlignment.HasValue() {
+				if node.Props().VerticalAlignment.HasValue() {
 					if node.Constraints().MaxY == scath.Infinite {
 						return size, errors.New("infinite height for vertical alignment")
 					}
@@ -64,16 +56,16 @@ func Align(create func(t *scaff.Tracker, props *AlignProps)) scaffui.NodeBuilder
 				}
 
 				return size, nil
-			})
+			}
 
 			// Draw child at proper position for alignment
-			core.Draw(func(node *scaffui.SingleChildNode[AlignProps], position scath.Vec, renderer paint.Painter) {
+			props.OnDraw = func(node *scaffui.SingleChildNode[AlignProps], position scath.Vec, renderer paint.Painter) {
 				offset := scath.Vec{}
 
 				if child, ok := node.Child(); ok {
 					childSize := child.Current().Size()
 
-					if value, ok := node.Props().horizontalAligment.Value(); ok {
+					if value, ok := node.Props().HorizontalAligment.Value(); ok {
 						switch value {
 						case HorizontalAlignmentLeft:
 							offset.X = 0
@@ -84,7 +76,7 @@ func Align(create func(t *scaff.Tracker, props *AlignProps)) scaffui.NodeBuilder
 						}
 					}
 
-					if value, ok := node.Props().verticalAlignment.Value(); ok {
+					if value, ok := node.Props().VerticalAlignment.Value(); ok {
 						switch value {
 						case VerticalAlignmentTop:
 							offset.Y = 0
@@ -97,7 +89,7 @@ func Align(create func(t *scaff.Tracker, props *AlignProps)) scaffui.NodeBuilder
 				}
 
 				node.DrawChild(position.Add(offset), renderer)
-			})
+			}
 		},
 	})
 }

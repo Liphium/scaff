@@ -14,27 +14,15 @@ import (
 )
 
 type ImageProps struct {
-	constraints optional.O[scath.Constraints]
-	path        optional.O[string]
-	filterMode  optional.O[ebiten.Filter]
+	Constraints optional.O[scath.Constraints]
+	Path        optional.O[string]
+	FilterMode  optional.O[ebiten.Filter]
 	*scaffui.AcceptNoChild
 }
 
-// The path to the image (renderer-specific but probably to the file in your assets file system)
-func (i *ImageProps) Path(path string) {
-	i.path.SetValue(path)
-}
-
+// The Path to the image (renderer-specific but probably to the file in your assets file system)
 // Set the filter mode used for the image
-func (i *ImageProps) Filter(filter ebiten.Filter) {
-	i.filterMode.SetValue(filter)
-}
-
-// Set the constraints for the image
-func (i *ImageProps) Constraints(constraints scath.Constraints) {
-	i.constraints.SetValue(constraints)
-}
-
+// Set the Constraints for the image
 func Image(create func(t *scaff.Tracker, props *ImageProps)) scaffui.NodeBuilder {
 	return scaffui.SingleNode(scaffui.SingleNodeCreate[ImageProps]{
 		ID: "image",
@@ -43,29 +31,29 @@ func Image(create func(t *scaff.Tracker, props *ImageProps)) scaffui.NodeBuilder
 		},
 		PropsCreator: create,
 		Create: func(props *scaffui.SingleChildProps[ImageProps]) {
-			props.WantedConstraints(func(node *scaffui.SingleChildNode[ImageProps], parent scath.Constraints) scath.Constraints {
-				return node.Props().constraints.Or(scath.Unconstrained())
-			})
+			props.OnWantedConstraints = func(node *scaffui.SingleChildNode[ImageProps], parent scath.Constraints) scath.Constraints {
+				return node.Props().Constraints.Or(scath.Unconstrained())
+			}
 
-			props.Layout(func(node *scaffui.SingleChildNode[ImageProps]) (scath.Vec, error) {
+			props.OnLayout = func(node *scaffui.SingleChildNode[ImageProps]) (scath.Vec, error) {
 				spec := uispec.SingleChildBoxSpec{
 					Parent:  node.Constraints(),
-					Wanted:  node.Props().constraints,
+					Wanted:  node.Props().Constraints,
 					Padding: scath.Pad(0),
 				}
 
 				return spec.LayoutWithoutChild()
-			})
+			}
 
-			props.Draw(func(node *scaffui.SingleChildNode[ImageProps], position scath.Vec, painter paint.Painter) {
-				if path, ok := node.Props().path.Value(); ok {
+			props.OnDraw = func(node *scaffui.SingleChildNode[ImageProps], position scath.Vec, painter paint.Painter) {
+				if Path, ok := node.Props().Path.Value(); ok {
 
 					// Draw the actual image
 					painter.Paint(paint.Image{
-						Path:       path,
+						Path:       Path,
 						Position:   position,
 						Size:       node.Size(),
-						FilterMode: node.Props().filterMode.Or(ebiten.FilterLinear),
+						FilterMode: node.Props().FilterMode.Or(ebiten.FilterLinear),
 					})
 				} else {
 
@@ -76,7 +64,7 @@ func Image(create func(t *scaff.Tracker, props *ImageProps)) scaffui.NodeBuilder
 						FillColor: color.RGBA{255, 0, 0, 255},
 					})
 				}
-			})
+			}
 		},
 	})
 }

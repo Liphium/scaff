@@ -45,8 +45,8 @@ func MultiNode[P scaff.ChildProps[NodeBuilder]](create MultiNodeCreate[P]) NodeB
 		node.props = props
 
 		// Call props change hook (in case registered)
-		if node.multiProps.onPropsChange != nil {
-			node.multiProps.onPropsChange(node)
+		if node.multiProps.OnPropsChanged != nil {
+			node.multiProps.OnPropsChanged(node)
 		}
 
 		return node
@@ -54,36 +54,12 @@ func MultiNode[P scaff.ChildProps[NodeBuilder]](create MultiNodeCreate[P]) NodeB
 }
 
 type MultiChildProps[P any] struct {
-	onLoad        func(node *MultiChildNode[P], parent Node)
-	onPropsChange func(node *MultiChildNode[P])
-	onUnload      func(node *MultiChildNode[P])
-	onUpdate      func(node *MultiChildNode[P], c *scaff.Context) error
-	onHandleEvent func(node *MultiChildNode[P], c *scaff.Context, event scaff.Event) error
-	onDraw        func(node *MultiChildNode[P], c *scaff.Context, image paint.Painter)
-}
-
-func (s *MultiChildProps[P]) Load(fn func(node *MultiChildNode[P], parent Node)) {
-	s.onLoad = fn
-}
-
-func (s *MultiChildProps[P]) PropsChanged(fn func(node *MultiChildNode[P])) {
-	s.onPropsChange = fn
-}
-
-func (s *MultiChildProps[P]) Unload(fn func(node *MultiChildNode[P])) {
-	s.onUnload = fn
-}
-
-func (s *MultiChildProps[P]) Update(fn func(node *MultiChildNode[P], c *scaff.Context) error) {
-	s.onUpdate = fn
-}
-
-func (s *MultiChildProps[P]) HandleEvent(fn func(node *MultiChildNode[P], c *scaff.Context, event scaff.Event) error) {
-	s.onHandleEvent = fn
-}
-
-func (s *MultiChildProps[P]) Draw(fn func(node *MultiChildNode[P], c *scaff.Context, painter paint.Painter)) {
-	s.onDraw = fn
+	OnLoad        func(node *MultiChildNode[P], parent Node)
+	OnPropsChanged func(node *MultiChildNode[P])
+	OnUnload      func(node *MultiChildNode[P])
+	OnUpdate      func(node *MultiChildNode[P], c *scaff.Context) error
+	OnHandleEvent func(node *MultiChildNode[P], c *scaff.Context, event scaff.Event) error
+	OnDraw        func(node *MultiChildNode[P], c *scaff.Context, image paint.Painter)
 }
 
 // Just for making sure we implement the Node interface
@@ -122,16 +98,16 @@ func (s *MultiChildNode[P]) Load(parent Node) {
 		}
 	}
 
-	if s.multiProps.onLoad != nil {
-		s.multiProps.onLoad(s, parent)
+	if s.multiProps.OnLoad != nil {
+		s.multiProps.OnLoad(s, parent)
 	}
 }
 
 func (s *MultiChildNode[P]) HandleEvent(c *scaff.Context, event scaff.Event) scaff.TracedError {
 
 	// First handle event on this node
-	if s.multiProps.onHandleEvent != nil {
-		if err := s.multiProps.onHandleEvent(s, c, event); err != nil {
+	if s.multiProps.OnHandleEvent != nil {
+		if err := s.multiProps.OnHandleEvent(s, c, event); err != nil {
 			return scaff.NewTracedError(s, err)
 		}
 	}
@@ -147,8 +123,8 @@ func (s *MultiChildNode[P]) Tracker() *scaff.Tracker {
 func (s *MultiChildNode[P]) Update(c *scaff.Context) scaff.TracedError {
 
 	// First call the update handler on the props for this node
-	if s.multiProps.onUpdate != nil {
-		if err := s.multiProps.onUpdate(s, c); err != nil {
+	if s.multiProps.OnUpdate != nil {
+		if err := s.multiProps.OnUpdate(s, c); err != nil {
 			return scaff.NewTracedError(s, err)
 		}
 	}
@@ -173,8 +149,8 @@ func (s *MultiChildNode[P]) Update(c *scaff.Context) scaff.TracedError {
 }
 
 func (s *MultiChildNode[P]) Unload() {
-	if s.multiProps.onUnload != nil {
-		s.multiProps.onUnload(s)
+	if s.multiProps.OnUnload != nil {
+		s.multiProps.OnUnload(s)
 	}
 
 	// Unload the children properly
@@ -187,8 +163,8 @@ func (s *MultiChildNode[P]) Unload() {
 }
 
 func (s *MultiChildNode[P]) Draw(c *scaff.Context, painter paint.Painter) {
-	if s.multiProps.onDraw != nil {
-		s.multiProps.onDraw(s, c, painter)
+	if s.multiProps.OnDraw != nil {
+		s.multiProps.OnDraw(s, c, painter)
 	} else {
 
 		// Default implementation: just draw children

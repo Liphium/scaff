@@ -14,7 +14,7 @@ var _ scaff.ChildProps[scaffui.NodeBuilder] = FlexProps{}
 type FlexProps struct {
 	children      []scaffui.NodeBuilder
 	stretchFactor map[int]optional.O[int]
-	direction     optional.O[LayoutDirection]
+	Direction     optional.O[LayoutDirection]
 }
 
 func (fp *FlexProps) Child(builder scaffui.NodeBuilder) {
@@ -35,10 +35,6 @@ func (fp *FlexProps) Expanded(factor int, builder scaffui.NodeBuilder) {
 	fp.children = append(fp.children, builder)
 }
 
-func (fp *FlexProps) Direction(direction LayoutDirection) {
-	fp.direction.SetValue(direction)
-}
-
 func (fp FlexProps) GetBuilders() []scaffui.NodeBuilder {
 	return fp.children
 }
@@ -48,22 +44,22 @@ func Flex(create func(t *scaff.Tracker, props *FlexProps)) scaffui.NodeBuilder {
 		ID:           "flex",
 		PropsCreator: create,
 		Create: func(props *scaffui.MultiChildProps[FlexProps]) {
-			props.Layout(func(node *scaffui.MultiChildNode[FlexProps]) (scath.Vec, error) {
+			props.OnLayout = func(node *scaffui.MultiChildNode[FlexProps]) (scath.Vec, error) {
 				return flexLayout(node)
-			})
+			}
 
-			props.Draw(func(node *scaffui.MultiChildNode[FlexProps], position scath.Vec, renderer paint.Painter) {
-				flexDraw(node, position, renderer)
-			})
+			props.OnDraw = func(node *scaffui.MultiChildNode[FlexProps], position scath.Vec, painter paint.Painter) {
+				flexDraw(node, position, painter)
+			}
 		},
 	})
 }
 
 func flexDirection(node *scaffui.MultiChildNode[FlexProps]) LayoutDirection {
-	return node.Props().direction.Or(LayoutTopToBottom)
+	return node.Props().Direction.Or(LayoutTopToBottom)
 }
 
-func flexDraw(node *scaffui.MultiChildNode[FlexProps], position scath.Vec, renderer paint.Painter) {
+func flexDraw(node *scaffui.MultiChildNode[FlexProps], position scath.Vec, painter paint.Painter) {
 	children := node.Children()
 
 	switch flexDirection(node) {
@@ -72,13 +68,13 @@ func flexDraw(node *scaffui.MultiChildNode[FlexProps], position scath.Vec, rende
 		for _, child := range children {
 			childSize := child.Current().Size()
 			xOffset -= float64(childSize.X)
-			child.Current().Draw(scath.Vec{X: position.X + xOffset, Y: position.Y}, renderer)
+			child.Current().Draw(scath.Vec{X: position.X + xOffset, Y: position.Y}, painter)
 		}
 
 	case LayoutTopToBottom:
 		yOffset := 0.0
 		for _, child := range children {
-			child.Current().Draw(scath.Vec{X: position.X, Y: position.Y + yOffset}, renderer)
+			child.Current().Draw(scath.Vec{X: position.X, Y: position.Y + yOffset}, painter)
 			yOffset += float64(child.Current().Size().Y)
 		}
 
@@ -87,18 +83,18 @@ func flexDraw(node *scaffui.MultiChildNode[FlexProps], position scath.Vec, rende
 		for _, child := range children {
 			childSize := child.Current().Size()
 			yOffset -= float64(childSize.Y)
-			child.Current().Draw(scath.Vec{X: position.X, Y: position.Y + yOffset}, renderer)
+			child.Current().Draw(scath.Vec{X: position.X, Y: position.Y + yOffset}, painter)
 		}
 
 	case LayoutLeftToRight:
 		xOffset := 0.0
 		for _, child := range children {
-			child.Current().Draw(scath.Vec{X: position.X + xOffset, Y: position.Y}, renderer)
+			child.Current().Draw(scath.Vec{X: position.X + xOffset, Y: position.Y}, painter)
 			xOffset += float64(child.Current().Size().X)
 		}
 
 	default:
-		log.Warn("invalid layout direction on flex layout node")
+		log.Warn("invalid layout Direction on flex layout node")
 	}
 }
 
@@ -195,7 +191,7 @@ func flexLayoutLinear(node *scaffui.MultiChildNode[FlexProps], horizontal bool) 
 	return clampLinearSize(totalSize, horizontal, mainMin, mainMax, crossMin, crossMax), nil
 }
 
-// Maps constraints to main/cross axis values based on direction.
+// Maps constraints to main/cross axis values based on Direction.
 func axisConstraints(c scath.Constraints, horizontal bool) (mainMin, mainMax, crossMin, crossMax float64) {
 	if horizontal {
 		return c.MinX, c.MaxX, c.MinY, c.MaxY

@@ -39,10 +39,9 @@ func MultiNode[P scaff.ChildProps[NodeBuilder]](create MultiNodeCreate[P]) NodeB
 		node.context = context
 
 		// Create the props (if desired)
+		props := create.DefaultProps
 		if create.PropsCreator != nil {
-			props := create.DefaultProps
 			create.PropsCreator(node.Tracker(), &props)
-			node.props = props
 
 			// Add children (if desired)
 			if builders := props.GetBuilders(); len(builders) > 0 {
@@ -51,10 +50,11 @@ func MultiNode[P scaff.ChildProps[NodeBuilder]](create MultiNodeCreate[P]) NodeB
 				}
 			}
 		}
+		node.props = props
 
 		// Call props changed hook when defined
-		if node.multiProps.onPropsChanged != nil {
-			node.multiProps.onPropsChanged(node)
+		if node.multiProps.OnPropsChanged != nil {
+			node.multiProps.OnPropsChanged(node)
 		}
 
 		return node
@@ -62,46 +62,14 @@ func MultiNode[P scaff.ChildProps[NodeBuilder]](create MultiNodeCreate[P]) NodeB
 }
 
 type MultiChildProps[P any] struct {
-	onLoad              func(node *MultiChildNode[P])
-	onPropsChanged      func(node *MultiChildNode[P])
-	onUnload            func(node *MultiChildNode[P])
-	onWantedConstraints func(node *MultiChildNode[P], parent scath.Constraints) scath.Constraints
-	onLayout            func(node *MultiChildNode[P]) (scath.Vec, error)
-	onHandleEvent       func(node *MultiChildNode[P], c *scaff.Context, event scaff.Event) error
-	onUpdate            func(node *MultiChildNode[P], c *scaff.Context) (bool, error)
-	onDraw              func(node *MultiChildNode[P], position scath.Vec, renderer paint.Painter)
-}
-
-func (m *MultiChildProps[P]) WantedConstraints(fn func(node *MultiChildNode[P], parent scath.Constraints) scath.Constraints) {
-	m.onWantedConstraints = fn
-}
-
-func (m *MultiChildProps[P]) Load(fn func(node *MultiChildNode[P])) {
-	m.onLoad = fn
-}
-
-func (s *MultiChildProps[P]) PropsChanged(fn func(node *MultiChildNode[P])) {
-	s.onPropsChanged = fn
-}
-
-func (m *MultiChildProps[P]) Unload(fn func(node *MultiChildNode[P])) {
-	m.onUnload = fn
-}
-
-func (m *MultiChildProps[P]) Layout(fn func(node *MultiChildNode[P]) (scath.Vec, error)) {
-	m.onLayout = fn
-}
-
-func (m *MultiChildProps[P]) HandleEvent(fn func(node *MultiChildNode[P], c *scaff.Context, event scaff.Event) error) {
-	m.onHandleEvent = fn
-}
-
-func (m *MultiChildProps[P]) Update(fn func(node *MultiChildNode[P], c *scaff.Context) (bool, error)) {
-	m.onUpdate = fn
-}
-
-func (m *MultiChildProps[P]) Draw(fn func(node *MultiChildNode[P], position scath.Vec, painter paint.Painter)) {
-	m.onDraw = fn
+	OnLoad              func(node *MultiChildNode[P])
+	OnPropsChanged      func(node *MultiChildNode[P])
+	OnUnload            func(node *MultiChildNode[P])
+	OnWantedConstraints func(node *MultiChildNode[P], parent scath.Constraints) scath.Constraints
+	OnLayout            func(node *MultiChildNode[P]) (scath.Vec, error)
+	OnHandleEvent       func(node *MultiChildNode[P], c *scaff.Context, event scaff.Event) error
+	OnUpdate            func(node *MultiChildNode[P], c *scaff.Context) (bool, error)
+	OnDraw              func(node *MultiChildNode[P], position scath.Vec, renderer paint.Painter)
 }
 
 var _ Node = &MultiChildNode[any]{}
@@ -131,8 +99,8 @@ func (s *MultiChildNode[P]) Context() *scaff.BuildContext {
 }
 
 func (m *MultiChildNode[P]) Load(parent Node) {
-	if m.multiProps.onLoad != nil {
-		m.multiProps.onLoad(m)
+	if m.multiProps.OnLoad != nil {
+		m.multiProps.OnLoad(m)
 	}
 
 	m.tracker.Load(parent)
@@ -151,16 +119,16 @@ func (m *MultiChildNode[P]) SetConstraints(c scath.Constraints) {
 }
 
 func (m *MultiChildNode[P]) WantedConstraints(parent scath.Constraints) scath.Constraints {
-	if m.multiProps.onWantedConstraints == nil {
+	if m.multiProps.OnWantedConstraints == nil {
 		return scath.Unconstrained()
 	}
 
-	return m.multiProps.onWantedConstraints(m, parent)
+	return m.multiProps.OnWantedConstraints(m, parent)
 }
 
 func (m *MultiChildNode[P]) Layout() (scath.Vec, error) {
-	if m.multiProps.onLayout != nil {
-		size, err := m.multiProps.onLayout(m)
+	if m.multiProps.OnLayout != nil {
+		size, err := m.multiProps.OnLayout(m)
 		if err != nil {
 			return scath.Vec{}, scaff.NewTracedError(m, err)
 		}
@@ -185,8 +153,8 @@ func (m *MultiChildNode[P]) Layout() (scath.Vec, error) {
 }
 
 func (m *MultiChildNode[P]) HandleEvent(c *scaff.Context, event scaff.Event) scaff.TracedError {
-	if m.multiProps.onHandleEvent != nil {
-		if err := m.multiProps.onHandleEvent(m, c, event); err != nil {
+	if m.multiProps.OnHandleEvent != nil {
+		if err := m.multiProps.OnHandleEvent(m, c, event); err != nil {
 			return scaff.NewTracedError(m, err)
 		}
 	}
@@ -205,8 +173,8 @@ func (m *MultiChildNode[P]) Tracker() *scaff.Tracker {
 }
 
 func (m *MultiChildNode[P]) Update(c *scaff.Context) (UpdateResult, scaff.TracedError) {
-	if m.multiProps.onUpdate != nil {
-		changed, err := m.multiProps.onUpdate(m, c)
+	if m.multiProps.OnUpdate != nil {
+		changed, err := m.multiProps.OnUpdate(m, c)
 		if err != nil {
 			return NoUpdate(), scaff.NewTracedError(m, err)
 		}
@@ -228,8 +196,8 @@ func (m *MultiChildNode[P]) Update(c *scaff.Context) (UpdateResult, scaff.Traced
 }
 
 func (m *MultiChildNode[P]) Unload() {
-	if m.multiProps.onUnload != nil {
-		m.multiProps.onUnload(m)
+	if m.multiProps.OnUnload != nil {
+		m.multiProps.OnUnload(m)
 	}
 
 	if m.tracker != nil {
@@ -239,8 +207,8 @@ func (m *MultiChildNode[P]) Unload() {
 }
 
 func (m *MultiChildNode[P]) Draw(position scath.Vec, renderer paint.Painter) {
-	if m.multiProps.onDraw != nil {
-		m.multiProps.onDraw(m, position, renderer)
+	if m.multiProps.OnDraw != nil {
+		m.multiProps.OnDraw(m, position, renderer)
 		return
 	}
 
