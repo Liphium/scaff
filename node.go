@@ -5,6 +5,8 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
+// TODO: Only rebuild props of nodes when their tracker is dirty: Check in the node builder, if not own thing dirty, just return old thingy (nothing changed anyway).
+
 // All the context for nodes being created within ScaffUI
 type BuildContext struct {
 	assetManager *paint.AssetManager

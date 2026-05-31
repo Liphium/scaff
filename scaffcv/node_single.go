@@ -38,10 +38,9 @@ func SingleNode[P scaff.ChildProps[NodeBuilder]](create SingleNodeCreate[P]) Nod
 		node.context = context
 
 		// Fill the props
+		props := create.DefaultProps
 		if create.PropsCreator != nil {
-			props := create.DefaultProps
 			create.PropsCreator(node.Tracker(), &props)
-			node.props = props
 
 			// Build the children, in case there are any
 			if builders := props.GetBuilders(); builders != nil {
@@ -53,6 +52,7 @@ func SingleNode[P scaff.ChildProps[NodeBuilder]](create SingleNodeCreate[P]) Nod
 				}
 			}
 		}
+		node.props = props
 
 		// Run the state change hook
 		if node.singleProps.onPropsChange != nil {

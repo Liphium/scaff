@@ -37,10 +37,9 @@ func SingleNode[P ChildProps[NodeBuilder]](create SingleNodeCreate[P]) NodeBuild
 		node.context = context
 
 		// Fill the props
+		props := create.DefaultProps
 		if create.PropsCreator != nil {
-			props := create.DefaultProps
 			create.PropsCreator(node.Tracker(), &props)
-			node.props = props
 
 			// Build the children, in case there are any
 			if builders := props.GetBuilders(); builders != nil {
@@ -52,6 +51,7 @@ func SingleNode[P ChildProps[NodeBuilder]](create SingleNodeCreate[P]) NodeBuild
 				}
 			}
 		}
+		node.props = props
 
 		// Run the state change hook
 		if node.singleProps.onPropsChanged != nil {

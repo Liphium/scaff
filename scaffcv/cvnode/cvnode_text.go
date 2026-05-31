@@ -16,7 +16,7 @@ type TextProps struct {
 	color          color.Color
 	primaryAlign   text.Align
 	secondaryAlign text.Align
-	*scaffcv.AcceptNoChild
+	scaffcv.AcceptNoChild
 }
 
 func (tp *TextProps) Text(text string) {
@@ -49,7 +49,6 @@ func Text(create func(t *scaff.Tracker, props *TextProps)) scaffcv.NodeBuilder {
 			color:          color.White,
 			primaryAlign:   text.AlignCenter,
 			secondaryAlign: text.AlignCenter,
-			AcceptNoChild:  &scaffcv.AcceptNoChild{},
 		},
 		PropsCreator: create,
 		Create: func(props *scaffcv.SingleChildProps[TextProps]) {
@@ -66,4 +65,3 @@ func Text(create func(t *scaff.Tracker, props *TextProps)) scaffcv.NodeBuilder {
 		},
 	})
 }
-

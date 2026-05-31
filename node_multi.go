@@ -33,13 +33,13 @@ func MultiNode[P ChildProps[NodeBuilder]](create MultiNodeCreate[P]) NodeBuilder
 		node.context = context
 
 		// Fill the props
+		props := create.DefaultProps
 		if create.PropsCreator != nil {
-			props := create.DefaultProps
 			create.PropsCreator(node.Tracker(), &props)
-			node.props = props
 
 			node.builders = props.GetBuilders()
 		}
+		node.props = props
 
 		// Call props change hook (in case registered)
 		if node.multiProps.onPropsChange != nil {
