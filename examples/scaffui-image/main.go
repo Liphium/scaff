@@ -81,19 +81,34 @@ func main() {
 					props.Horizontal(uinode.HorizontalAlignmentCenter)
 					props.Vertical(uinode.VerticalAlignmentBottom)
 
-					props.Child(uinode.Clickable(func(t *scaff.Tracker, props *uinode.ClickableProps) {
-						props.OnClick(func(button ebiten.MouseButton) bool {
-							scaling.Set(!scaling.Value())
-							return true
-						})
+					props.Child(uinode.Padding(func(t *scaff.Tracker, props *uinode.PaddingProps) {
+						props.Padding(scath.PadBottom(8))
 
-						props.Child(uinode.Rectangle(func(t *scaff.Tracker, props *uinode.RectangleProps) {
-							props.WantedConstraints(scath.Tight(100, 20))
-							if scaling.Track(t) {
-								props.FillColor(color.RGBA{0, 255, 0, 255})
-							} else {
-								props.FillColor(color.RGBA{255, 255, 255, 255})
-							}
+						props.Child(uinode.Clickable(func(t *scaff.Tracker, props *uinode.ClickableProps) {
+							props.OnClick(func(button ebiten.MouseButton) bool {
+								scaling.Set(!scaling.Value())
+								return true
+							})
+
+							props.Child(uinode.Rectangle(func(t *scaff.Tracker, props *uinode.RectangleProps) {
+								scalingOn := scaling.Track(t)
+
+								props.FillColor(color.RGBA{30, 30, 30, 255})
+								props.BorderRadius(12)
+								props.Padding(scath.Pad(12))
+								props.StrokeThickness(4)
+								props.StrokeColor(color.RGBA{50, 50, 50, 255})
+
+								props.Child(uinode.Text(func(t *scaff.Tracker, props *uinode.TextProps) {
+									props.FontSize(24)
+
+									if scalingOn {
+										props.Text("Scale animation: ON")
+									} else {
+										props.Text("Scale animation: OFF")
+									}
+								}))
+							}))
 						}))
 					}))
 				}))

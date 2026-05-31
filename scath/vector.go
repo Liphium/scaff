@@ -52,6 +52,11 @@ func (v Vec) Add(a Vec) Vec {
 	return Vec{v.X + a.X, v.Y + a.Y}
 }
 
+// Add returns this + c
+func (v Vec) AddC(c float64) Vec {
+	return Vec{v.X + c, v.Y + c}
+}
+
 // Sub returns this - a
 func (v Vec) Sub(a Vec) Vec {
 	return Vec{v.X - a.X, v.Y - a.Y}

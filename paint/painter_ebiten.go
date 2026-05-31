@@ -103,7 +103,7 @@ func (er *EbitenPainter) drawRectangleStroke(command RectangleStroke) {
 		thickness = 1
 	}
 
-	path := roundedRectPath(command.Position.X, command.Position.Y, command.Size.X, command.Size.Y, command.BorderRadius)
+	path := roundedRectPath(command.Position.X+command.Thickness/2, command.Position.Y+command.Thickness/2, command.Size.X-command.Thickness, command.Size.Y-command.Thickness, command.BorderRadius)
 
 	// Apply transform to path
 	if er.transform.ZoomFactor != 1 || er.transform.Angle != 0 || er.transform.CamX != 0 || er.transform.CamY != 0 || er.transform.CenterOffsetX != 0 || er.transform.CenterOffsetY != 0 {
@@ -185,9 +185,6 @@ func (er *EbitenPainter) drawText(command Text) {
 	op.GeoM.Rotate(er.transform.Angle)
 	// We do NOT scale the geom for text to prevent blurriness.
 	op.GeoM.Translate(math.Abs(er.transform.CenterOffsetX), math.Abs(er.transform.CenterOffsetY))
-
-	x, y := op.GeoM.Apply(0, 0)
-	log.Debug("text drawing shift", "x", x, "y", y)
 
 	op.ColorScale.ScaleWithColor(command.Color)
 

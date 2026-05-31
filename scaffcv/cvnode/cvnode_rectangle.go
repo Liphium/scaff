@@ -36,6 +36,10 @@ func (r *RectangleProps) StrokeColor(color color.Color) {
 	r.strokeColor = color
 }
 
+func (r *RectangleProps) StrokeThickness(thickness float64) {
+	r.strokeThickness = thickness
+}
+
 func Rectangle(create func(t *scaff.Tracker, props *RectangleProps)) scaffcv.NodeBuilder {
 	return scaffcv.SingleNode(scaffcv.SingleNodeCreate[RectangleProps]{
 		ID: "rectangle",
@@ -52,11 +56,8 @@ func Rectangle(create func(t *scaff.Tracker, props *RectangleProps)) scaffcv.Nod
 		Create: func(props *scaffcv.SingleChildProps[RectangleProps]) {
 			props.Draw(func(node *scaffcv.SingleChildNode[RectangleProps], c *scaff.Context, painter paint.Painter) {
 				painter.Paint(paint.Rectangle{
-					Position: node.Props().position,
-					Size: node.Props().size.Add(scath.Vec{
-						X: -node.Props().strokeThickness * 2.0,
-						Y: -node.Props().strokeThickness * 2.0,
-					}),
+					Position:     node.Props().position,
+					Size:         node.Props().size,
 					FillColor:    node.Props().fillColor,
 					BorderRadius: node.Props().borderRadius,
 				})
