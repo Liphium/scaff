@@ -10,6 +10,7 @@ func NewSceneTree(id string, assetManager *paint.AssetManager) *SceneTree {
 	return &SceneTree{
 		id:           id,
 		assetManager: assetManager,
+		updateQueue:  NewUpdateQueue(),
 	}
 }
 
@@ -18,6 +19,7 @@ var _ Scene = &SceneTree{}
 
 type SceneTree struct {
 	id              string                          // ID of the scene (MUST BE SET)
+	updateQueue     *UpdateQueue                    // Update queue for the scene
 	assetManager    *paint.AssetManager             // Asset manager for the scene
 	transitionProps func(bool) TransitionProperties // Set the transition properties for this scene
 	sceneRoot       Node                            // Node at the root of the scene tree
@@ -26,17 +28,17 @@ type SceneTree struct {
 // Mount a node as the root of the scene tree.
 func (st *SceneTree) Mount(create func(t *Tracker, props *RootProps)) *SceneTree {
 	context := &BuildContext{
-		updateQueue:  NewUpdateQueue(),
+		updateQueue:  st.updateQueue,
 		assetManager: st.assetManager,
 	}
 
 	// Create a single child node that essentially just exists to refresh the builder passed in
 	node := &SingleChildNode[AcceptNoChild]{
 		id:          "root",
-		tracker:     NewTracker(context),
 		context:     context,
 		singleProps: &SingleChildProps[AcceptNoChild]{},
 	}
+	node.tracker = NewTracker(context, node.PropsChanged)
 	node.builder = root(create) // Node will automatically be built on load
 
 	// Mount the node inside of a node that can refresh
@@ -86,6 +88,9 @@ func (st *SceneTree) Update(c *Context) error {
 	if st.sceneRoot == nil {
 		return nil
 	}
+
+	// Update all the state using the update queue
+	st.updateQueue.Update()
 
 	// Let the actual scene root update itself
 	return st.sceneRoot.Update(c)

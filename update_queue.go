@@ -37,16 +37,22 @@ func (u *UpdateQueue) Update() {
 	u.callbacks = make(map[*Tracker]map[int]func())
 	u.mu.Unlock()
 
-	for _, trackerCallbacks := range callbacks {
+	for tracker, trackerCallbacks := range callbacks {
 		// If -1 is present, it means everything should be updated for this tracker.
 		// We prioritize it and skip other individual effects for this tracker.
 		if cb, ok := trackerCallbacks[-1]; ok {
 			cb()
+			if tracker.onChange != nil {
+				tracker.onChange()
+			}
 			continue
 		}
 
 		for _, cb := range trackerCallbacks {
 			cb()
+		}
+		if tracker.onChange != nil {
+			tracker.onChange()
 		}
 	}
 }

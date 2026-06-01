@@ -19,9 +19,10 @@ type effect struct {
 
 // TODO: We need a method for actually, after the props are created, running all the effects cause otherwise those parts of the props won't be set, an ideal thing to do additionally would be to when the effects are ran, track which signals were added in each effect and then create a mapping between signal -> effect index, that way we could only re-run the effects that matter, for others we just re-run all effects obv.
 type Tracker struct {
-	mu      sync.Mutex
-	runMu   sync.Mutex
-	context *BuildContext
+	mu       sync.Mutex
+	runMu    sync.Mutex
+	context  *BuildContext
+	onChange func()
 
 	removal       map[any]func()
 	effectsToCall map[any][]int
@@ -36,12 +37,13 @@ func (t *Tracker) Tracker() *Tracker {
 	return t
 }
 
-func NewTracker(context *BuildContext) *Tracker {
+func NewTracker(context *BuildContext, onChange func()) *Tracker {
 	return &Tracker{
 		context:       context,
 		removal:       make(map[any]func()),
 		effectsToCall: make(map[any][]int),
 		currentEffect: -1,
+		onChange:      onChange,
 	}
 }
 
@@ -158,12 +160,12 @@ func (t *Tracker) runEffectLocked(i int) {
 }
 
 // Update calls all the effects on the tracker to synchronize everything
-func (t *Tracker) Update() {
+func (t *Tracker) update() {
 	t.mu.Lock()
 	count := len(t.effects)
 	t.mu.Unlock()
 
-	for i := 0; i < count; i++ {
+	for i := range count {
 		t.runEffect(i)
 	}
 }
@@ -203,7 +205,7 @@ func TrackValue[T any](tracker *Tracker, signal *Signal[T]) T {
 			if tracker.context != nil && tracker.context.updateQueue != nil {
 				if effects, ok := tracker.effectsToCall[signal]; ok {
 					if slices.Contains(effects, -1) {
-						tracker.context.updateQueue.Push(tracker, -1, tracker.Update)
+						tracker.context.updateQueue.Push(tracker, -1, tracker.update)
 					} else {
 						for _, effectID := range effects {
 							tracker.context.updateQueue.Push(tracker, effectID, func() {
@@ -213,7 +215,7 @@ func TrackValue[T any](tracker *Tracker, signal *Signal[T]) T {
 					}
 				} else {
 					// Fallback to update everything
-					tracker.context.updateQueue.Push(tracker, -1, tracker.Update)
+					tracker.context.updateQueue.Push(tracker, -1, tracker.update)
 				}
 			}
 		})

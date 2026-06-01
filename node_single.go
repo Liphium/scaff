@@ -143,11 +143,13 @@ func (s *SingleChildNode[P]) Update(c *Context) TracedError {
 		return nil
 	}
 
-	// If dirty, update the tracker and set it back to unchanged
-	if s.current.Tracker().SetUnchanged() {
-		s.current.Tracker().Update()
-		s.current.PropsChanged()
-	}
+	/*
+		// If dirty, update the tracker and set it back to unchanged
+		if s.current.Tracker().SetUnchanged() {
+			s.current.Tracker().Update()
+			s.current.PropsChanged()
+		}
+	*/
 
 	// Forward the update to the child
 	if err := s.current.Update(c); err != nil {

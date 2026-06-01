@@ -29,28 +29,21 @@ func MultiNode[P ChildProps[NodeBuilder]](create MultiNodeCreate[P]) NodeBuilder
 	}
 
 	return func(context *BuildContext) Node {
-		node.tracker = NewTracker(context)
+		node.tracker = NewTracker(context, node.PropsChanged)
 		node.context = context
 
 		// Fill the props
 		props := create.DefaultProps
 		if create.PropsCreator != nil {
 			create.PropsCreator(node.Tracker(), &props)
-
-			node.builders = props.GetBuilders()
 		}
 		node.props = props
-
-		// Call props change hook (in case registered)
-		if node.multiProps.OnPropsChanged != nil {
-			node.multiProps.OnPropsChanged(node)
-		}
 
 		return node
 	}
 }
 
-type MultiChildProps[P any] struct {
+type MultiChildProps[P ChildProps[NodeBuilder]] struct {
 	OnLoad         func(node *MultiChildNode[P], parent Node)
 	OnUnload       func(node *MultiChildNode[P])
 	OnPropsChanged func(node *MultiChildNode[P])
@@ -60,12 +53,11 @@ type MultiChildProps[P any] struct {
 }
 
 // Just for making sure we implement the Node interface
-var _ Node = &MultiChildNode[any]{}
+var _ Node = &MultiChildNode[*AcceptChildren]{}
 
-type MultiChildNode[P any] struct {
+type MultiChildNode[P ChildProps[NodeBuilder]] struct {
 	parent   Node
 	children []Node
-	builders []NodeBuilder
 
 	tracker *Tracker
 	context *BuildContext
@@ -87,9 +79,10 @@ func (s *MultiChildNode[P]) Load(parent Node) {
 	s.parent = parent
 
 	// Actually load the children and build them
-	if s.builders != nil {
-		s.children = make([]Node, len(s.builders))
-		for i, builder := range s.builders {
+	builders := s.props.GetBuilders()
+	if builders != nil {
+		s.children = make([]Node, len(builders))
+		for i, builder := range builders {
 			s.children[i] = builder(s.context)
 			s.children[i].Load(s)
 		}
@@ -101,7 +94,22 @@ func (s *MultiChildNode[P]) Load(parent Node) {
 }
 
 func (s *MultiChildNode[P]) PropsChanged() {
+	changed := s.props.GetChanged()
+	if changed == nil {
+		return
+	}
 
+	builders := s.props.GetBuilders()
+	for _, i := range changed {
+		if len(s.children) <= int(i) {
+			log.Error("index out of bounds for props update", "i", i, "children", len(s.children))
+			continue
+		}
+
+		s.children[i].Unload()
+		s.children[i] = builders[i](s.context)
+		s.children[i].Load(s)
+	}
 }
 
 func (s *MultiChildNode[P]) HandleEvent(c *Context, event Event) TracedError {
@@ -134,15 +142,6 @@ func (s *MultiChildNode[P]) Update(c *Context) TracedError {
 	for _, child := range s.children {
 		if err := child.Update(c); err != nil {
 			return err
-		}
-	}
-
-	// If any of the children are dirty, rebuild them
-	for i, child := range s.children {
-		if child.Tracker().Changed() {
-			child.Unload()
-			s.children[i] = s.builders[i](s.context)
-			s.children[i].Load(s)
 		}
 	}
 
