@@ -38,6 +38,9 @@ type Node interface {
 	// Should return your own children
 	Children() []Node
 
+	// Called when the props have been updated (by the parent from a dirty tracker)
+	PropsChanged()
+
 	// Called on every physics tick (like 60 times a second, depending on what ebitens tick rate is)
 	Update(c *Context) TracedError
 
@@ -50,5 +53,12 @@ type Node interface {
 
 // An interface for props of a node that has children. This helps nodes like single child not rebuild as often.
 type ChildProps[B any] interface {
+	// GetBuilders gets all the builders for the children of this node
 	GetBuilders() []B
+
+	// GetChanged gets all the changed indices since the last time ClearChanged was called.
+	GetChanged() []uint
+
+	// ClearChanged clears all the changed indices
+	ClearChanged()
 }

@@ -20,7 +20,9 @@ func main() {
 
 	tree.Mount(func(t *scaff.Tracker, props *scaff.RootProps) {
 		props.Child(scaffcv.Canvas(func(t *scaff.Tracker, props *scaffcv.CanvasProps) {
-			props.Position = cameraPosition.Track(t)
+			t.Effect(func() {
+				props.Position = cameraPosition.Track(t)
+			})
 
 			props.Child(cvnode.CameraMovement(cameraPosition, nil))
 

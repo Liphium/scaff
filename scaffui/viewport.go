@@ -10,20 +10,20 @@ import (
 
 type ViewportProps struct {
 	child optional.O[NodeBuilder]
+	*scaff.AcceptNoChild
 }
 
 func (vp *ViewportProps) Child(builder NodeBuilder) {
 	vp.child.SetValue(builder)
 }
 
-func (vp ViewportProps) GetBuilders() []scaff.NodeBuilder {
-	return nil
-}
-
 // Viewport creates a viewport node that can be used to essentially mount a
 func Viewport(create func(t *scaff.Tracker, props *ViewportProps)) scaff.NodeBuilder {
 	return scaff.SingleNode(scaff.SingleNodeCreate[ViewportProps]{
-		ID:           "viewport",
+		ID: "viewport",
+		DefaultProps: ViewportProps{
+			AcceptNoChild: &scaff.AcceptNoChild{},
+		},
 		PropsCreator: create,
 		Create: func(props *scaff.SingleChildProps[ViewportProps]) {
 			var root *MountedNode

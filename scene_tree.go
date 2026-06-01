@@ -27,13 +27,13 @@ type SceneTree struct {
 func (st *SceneTree) Mount(create func(t *Tracker, props *RootProps)) *SceneTree {
 
 	// Create a single child node that essentially just exists to refresh the builder passed in
-	node := &SingleChildNode[int8]{
+	node := &SingleChildNode[AcceptNoChild]{
 		id:      "root",
 		tracker: NewTracker(),
 		context: &BuildContext{
 			assetManager: st.assetManager,
 		},
-		singleProps: &SingleChildProps[int8]{},
+		singleProps: &SingleChildProps[AcceptNoChild]{},
 	}
 	node.builder = root(create) // Node will automatically be built on load
 

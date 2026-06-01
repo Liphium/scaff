@@ -53,16 +53,11 @@ func SingleNode[P ChildProps[NodeBuilder]](create SingleNodeCreate[P]) NodeBuild
 		}
 		node.props = props
 
-		// Run the state change hook
-		if node.singleProps.OnPropsChanged != nil {
-			node.singleProps.OnPropsChanged(node)
-		}
-
 		return node
 	}
 }
 
-type SingleChildProps[P any] struct {
+type SingleChildProps[P ChildProps[NodeBuilder]] struct {
 	OnLoad         func(node *SingleChildNode[P], parent Node)
 	OnPropsChanged func(node *SingleChildNode[P])
 	OnUnload       func(node *SingleChildNode[P])
@@ -71,9 +66,9 @@ type SingleChildProps[P any] struct {
 	OnDraw         func(node *SingleChildNode[P], c *Context, image *ebiten.Image)
 }
 
-var _ Node = &SingleChildNode[any]{}
+var _ Node = &SingleChildNode[AcceptNoChild]{}
 
-type SingleChildNode[P any] struct {
+type SingleChildNode[P ChildProps[NodeBuilder]] struct {
 	parent  Node
 	current Node
 	builder NodeBuilder
@@ -114,6 +109,9 @@ func (s *SingleChildNode[P]) Load(parent Node) {
 	}
 }
 
+func (s *SingleChildNode[P]) PropsChanged() {
+}
+
 func (s *SingleChildNode[P]) HandleEvent(c *Context, event Event) TracedError {
 
 	// First handle event on this node
@@ -145,16 +143,15 @@ func (s *SingleChildNode[P]) Update(c *Context) TracedError {
 		return nil
 	}
 
+	// If dirty, update the tracker and set it back to unchanged
+	if s.current.Tracker().SetUnchanged() {
+		s.current.Tracker().Update()
+		s.current.PropsChanged()
+	}
+
 	// Forward the update to the child
 	if err := s.current.Update(c); err != nil {
 		return err
-	}
-
-	// If dirty, rebuild
-	if s.current.Tracker().Changed() {
-		s.current.Unload()
-		s.current = s.builder(s.context)
-		s.current.Load(s)
 	}
 
 	return nil

@@ -54,12 +54,12 @@ func MultiNode[P scaff.ChildProps[NodeBuilder]](create MultiNodeCreate[P]) NodeB
 }
 
 type MultiChildProps[P any] struct {
-	OnLoad        func(node *MultiChildNode[P], parent Node)
+	OnLoad         func(node *MultiChildNode[P], parent Node)
 	OnPropsChanged func(node *MultiChildNode[P])
-	OnUnload      func(node *MultiChildNode[P])
-	OnUpdate      func(node *MultiChildNode[P], c *scaff.Context) error
-	OnHandleEvent func(node *MultiChildNode[P], c *scaff.Context, event scaff.Event) error
-	OnDraw        func(node *MultiChildNode[P], c *scaff.Context, image paint.Painter)
+	OnUnload       func(node *MultiChildNode[P])
+	OnUpdate       func(node *MultiChildNode[P], c *scaff.Context) error
+	OnHandleEvent  func(node *MultiChildNode[P], c *scaff.Context, event scaff.Event) error
+	OnDraw         func(node *MultiChildNode[P], c *scaff.Context, image paint.Painter)
 }
 
 // Just for making sure we implement the Node interface

@@ -51,12 +51,12 @@ func MultiNode[P ChildProps[NodeBuilder]](create MultiNodeCreate[P]) NodeBuilder
 }
 
 type MultiChildProps[P any] struct {
-	OnLoad        func(node *MultiChildNode[P], parent Node)
-	OnUnload      func(node *MultiChildNode[P])
+	OnLoad         func(node *MultiChildNode[P], parent Node)
+	OnUnload       func(node *MultiChildNode[P])
 	OnPropsChanged func(node *MultiChildNode[P])
-	OnUpdate      func(node *MultiChildNode[P], c *Context) error
-	OnHandleEvent func(node *MultiChildNode[P], c *Context, event Event) error
-	OnDraw        func(node *MultiChildNode[P], c *Context, image *ebiten.Image)
+	OnUpdate       func(node *MultiChildNode[P], c *Context) error
+	OnHandleEvent  func(node *MultiChildNode[P], c *Context, event Event) error
+	OnDraw         func(node *MultiChildNode[P], c *Context, image *ebiten.Image)
 }
 
 // Just for making sure we implement the Node interface
@@ -98,6 +98,10 @@ func (s *MultiChildNode[P]) Load(parent Node) {
 	if s.multiProps.OnLoad != nil {
 		s.multiProps.OnLoad(s, parent)
 	}
+}
+
+func (s *MultiChildNode[P]) PropsChanged() {
+
 }
 
 func (s *MultiChildNode[P]) HandleEvent(c *Context, event Event) TracedError {
