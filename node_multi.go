@@ -29,7 +29,7 @@ func MultiNode[P ChildProps[NodeBuilder]](create MultiNodeCreate[P]) NodeBuilder
 	}
 
 	return func(context *BuildContext) Node {
-		node.tracker = NewTracker()
+		node.tracker = NewTracker(context)
 		node.context = context
 
 		// Fill the props

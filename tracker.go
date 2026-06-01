@@ -1,8 +1,8 @@
 package scaff
 
 import (
+	"slices"
 	"sync"
-	"sync/atomic"
 )
 
 type Tracking interface {
@@ -12,12 +12,23 @@ type Tracking interface {
 
 var _ Tracking = &Tracker{}
 
+type effect struct {
+	handler      func()
+	dependencies []any
+}
+
 // TODO: We need a method for actually, after the props are created, running all the effects cause otherwise those parts of the props won't be set, an ideal thing to do additionally would be to when the effects are ran, track which signals were added in each effect and then create a mapping between signal -> effect index, that way we could only re-run the effects that matter, for others we just re-run all effects obv.
 type Tracker struct {
-	mu      *sync.Mutex
-	changed atomic.Bool
-	removal map[any]func()
-	effects []func()
+	mu      sync.Mutex
+	runMu   sync.Mutex
+	context *BuildContext
+
+	removal       map[any]func()
+	effectsToCall map[any][]int
+
+	currentEffect      int // -1 for no effect, index for other effect
+	effects            []effect
+	effectDependencies []any
 }
 
 // Implement Tracking interface
@@ -25,55 +36,135 @@ func (t *Tracker) Tracker() *Tracker {
 	return t
 }
 
-func NewTracker() *Tracker {
+func NewTracker(context *BuildContext) *Tracker {
 	return &Tracker{
-		mu:      &sync.Mutex{},
-		changed: atomic.Bool{},
-		removal: make(map[any]func()),
+		context:       context,
+		removal:       make(map[any]func()),
+		effectsToCall: make(map[any][]int),
+		currentEffect: -1,
 	}
-}
-
-// Changed reports whether any tracked signal emitted after the initial immediate push.
-func (t *Tracker) Changed() bool {
-	return t.changed.Load()
-}
-
-// SetChanged marks the tracker as changed (returns if anything changed)
-func (t *Tracker) SetChanged() bool {
-	return t.changed.CompareAndSwap(false, true)
-}
-
-// SetUnchanged marks the tracker as unchanged (returns if anything changed)
-func (t *Tracker) SetUnchanged() bool {
-	return t.changed.CompareAndSwap(true, false)
 }
 
 // Clear removes all tracked signals and is safe to call multiple times.
 func (t *Tracker) Clear() {
 	t.mu.Lock()
+	defer t.mu.Unlock()
+
 	for _, remove := range t.removal {
 		remove()
 	}
 	t.removal = make(map[any]func())
-	t.mu.Unlock()
 }
 
-// Effect adds a new handler being called when the thing changes, use this to actually react to changes of signals
+// Effect adds a new handler being called when the thing changes, use this to actually react to changes of signals (runs first immediately after being called).
+//
+// RECURSIVE EFFECTS ARE NOT ALLOWED.
 func (t *Tracker) Effect(handler func()) {
 	t.mu.Lock()
-	t.effects = append(t.effects, handler)
+	nested := t.currentEffect != -1
 	t.mu.Unlock()
+
+	if nested {
+		panic("recursive effects are not allowed")
+	}
+
+	t.runMu.Lock()
+	defer t.runMu.Unlock()
+
+	t.mu.Lock()
+	i := len(t.effects)
+	t.effects = append(t.effects, effect{
+		handler: handler,
+	})
+	t.mu.Unlock()
+
+	t.runEffectLocked(i)
+}
+
+func (t *Tracker) runEffect(i int) {
+	t.runMu.Lock()
+	defer t.runMu.Unlock()
+	t.runEffectLocked(i)
+}
+
+func (t *Tracker) runEffectLocked(i int) {
+	t.mu.Lock()
+	effect := &t.effects[i]
+
+	t.currentEffect = int(i)
+	t.effectDependencies = nil // Clear dependencies to start fresh for this effect
+	t.mu.Unlock()
+
+	effect.handler()
+
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
+	// Set all the new dependencies
+	oldDependencies := effect.dependencies
+	effect.dependencies = t.effectDependencies
+	t.effectDependencies = nil
+
+	// Remove all old dependencies that aren't there anymore from the effectsToCall list
+	for _, dep := range oldDependencies {
+		if t.effectsToCall[dep] != nil && !slices.ContainsFunc(effect.dependencies, func(dep2 any) bool {
+			return dep == dep2
+		}) {
+			toCall := t.effectsToCall[dep]
+			toCall = slices.DeleteFunc(toCall, func(effect int) bool {
+				return effect == i
+			})
+
+			if len(toCall) == 0 {
+				// When nothing is left, remove
+				if rem, ok := t.removal[dep]; ok {
+					rem()
+				}
+				delete(t.effectsToCall, dep)
+				delete(t.removal, dep)
+			} else {
+				// Otherwise simply insert again since we're just not a dependency anymore, but other effects still are
+				t.effectsToCall[dep] = toCall
+			}
+		}
+	}
+
+	// Add all new ones (that aren't already added), to the effectsToCall list
+	for _, dep := range effect.dependencies {
+		if !slices.ContainsFunc(oldDependencies, func(dep2 any) bool {
+			return dep == dep2
+		}) {
+			toCall := t.effectsToCall[dep]
+			if slices.Contains(toCall, -1) {
+				continue
+			}
+
+			if toCall == nil {
+				toCall = append(toCall, i)
+			} else {
+				// Add if not contained already
+				if !slices.ContainsFunc(toCall, func(effect int) bool {
+					return effect == i
+				}) {
+					toCall = append(toCall, i)
+				}
+			}
+
+			t.effectsToCall[dep] = toCall
+		}
+	}
+
+	t.currentEffect = -1
 }
 
 // Update calls all the effects on the tracker to synchronize everything
 func (t *Tracker) Update() {
 	t.mu.Lock()
-	effectsCopy := make([]func(), len(t.effects))
-	copy(effectsCopy, t.effects)
+	count := len(t.effects)
 	t.mu.Unlock()
 
-	for _, effect := range t.effects {
-		effect()
+	for i := 0; i < count; i++ {
+		t.runEffect(i)
 	}
 }
 
@@ -85,6 +176,13 @@ func TrackValue[T any](tracker *Tracker, signal *Signal[T]) T {
 	}
 
 	tracker.mu.Lock()
+	if tracker.currentEffect != -1 {
+		tracker.effectDependencies = append(tracker.effectDependencies, signal)
+	} else {
+		// When we are outside of an effect, we want to ensure that if this signal changes, we update everything.
+		tracker.effectsToCall[signal] = []int{-1}
+	}
+
 	if tracker.removal == nil {
 		tracker.removal = make(map[any]func())
 	}
@@ -98,7 +196,26 @@ func TrackValue[T any](tracker *Tracker, signal *Signal[T]) T {
 				initial = false
 				return
 			}
-			tracker.SetChanged()
+
+			tracker.mu.Lock()
+			defer tracker.mu.Unlock()
+
+			if tracker.context != nil && tracker.context.updateQueue != nil {
+				if effects, ok := tracker.effectsToCall[signal]; ok {
+					if slices.Contains(effects, -1) {
+						tracker.context.updateQueue.Push(tracker, -1, tracker.Update)
+					} else {
+						for _, effectID := range effects {
+							tracker.context.updateQueue.Push(tracker, effectID, func() {
+								tracker.runEffect(effectID)
+							})
+						}
+					}
+				} else {
+					// Fallback to update everything
+					tracker.context.updateQueue.Push(tracker, -1, tracker.Update)
+				}
+			}
 		})
 
 		tracker.mu.Lock()

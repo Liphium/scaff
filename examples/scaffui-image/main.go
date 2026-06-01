@@ -30,7 +30,7 @@ func main() {
 	tree := scaff.NewSceneTree("scaffui-image-sample", assetManager)
 
 	tree.Mount(func(t *scaff.Tracker, props *scaff.RootProps) {
-		props.Child(scaff.SingleNode(scaff.SingleNodeCreate[scaff.AcceptNoChild]{
+		props.Child(0, scaff.SingleNode(scaff.SingleNodeCreate[scaff.AcceptNoChild]{
 			ID: "scaling",
 			Create: func(props *scaff.SingleChildProps[scaff.AcceptNoChild]) {
 				props.OnDraw = func(node *scaff.SingleChildNode[scaff.AcceptNoChild], c *scaff.Context, image *ebiten.Image) {
@@ -48,9 +48,9 @@ func main() {
 			},
 		}))
 
-		props.Child(scaffui.Viewport(func(t *scaff.Tracker, props *scaffui.ViewportProps) {
+		props.Child(1, scaffui.Viewport(func(t *scaff.Tracker, props *scaffui.ViewportProps) {
 			props.Child(uinode.Stack(func(t *scaff.Tracker, props *uinode.StackProps) {
-				props.Child(uinode.Align(func(t *scaff.Tracker, props *uinode.AlignProps) {
+				props.Child(0, uinode.Align(func(t *scaff.Tracker, props *uinode.AlignProps) {
 					props.HorizontalAligment.SetValue(uinode.HorizontalAlignmentCenter)
 					props.VerticalAlignment.SetValue(uinode.VerticalAlignmentCenter)
 
@@ -65,7 +65,7 @@ func main() {
 					}))
 				}))
 
-				props.Child(uinode.Align(func(t *scaff.Tracker, props *uinode.AlignProps) {
+				props.Child(1, uinode.Align(func(t *scaff.Tracker, props *uinode.AlignProps) {
 					props.HorizontalAligment.SetValue(uinode.HorizontalAlignmentCenter)
 					props.VerticalAlignment.SetValue(uinode.VerticalAlignmentTop)
 
@@ -77,7 +77,7 @@ func main() {
 					}))
 				}))
 
-				props.Child(uinode.Align(func(t *scaff.Tracker, props *uinode.AlignProps) {
+				props.Child(2, uinode.Align(func(t *scaff.Tracker, props *uinode.AlignProps) {
 					props.HorizontalAligment.SetValue(uinode.HorizontalAlignmentCenter)
 					props.VerticalAlignment.SetValue(uinode.VerticalAlignmentBottom)
 

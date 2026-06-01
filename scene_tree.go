@@ -25,14 +25,16 @@ type SceneTree struct {
 
 // Mount a node as the root of the scene tree.
 func (st *SceneTree) Mount(create func(t *Tracker, props *RootProps)) *SceneTree {
+	context := &BuildContext{
+		updateQueue:  NewUpdateQueue(),
+		assetManager: st.assetManager,
+	}
 
 	// Create a single child node that essentially just exists to refresh the builder passed in
 	node := &SingleChildNode[AcceptNoChild]{
-		id:      "root",
-		tracker: NewTracker(),
-		context: &BuildContext{
-			assetManager: st.assetManager,
-		},
+		id:          "root",
+		tracker:     NewTracker(context),
+		context:     context,
 		singleProps: &SingleChildProps[AcceptNoChild]{},
 	}
 	node.builder = root(create) // Node will automatically be built on load

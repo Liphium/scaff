@@ -10,6 +10,11 @@ import (
 // All the context for nodes being created within ScaffUI
 type BuildContext struct {
 	assetManager *paint.AssetManager
+	updateQueue  *UpdateQueue
+}
+
+func (bc BuildContext) UpdateQueue() *UpdateQueue {
+	return bc.updateQueue
 }
 
 func (bc BuildContext) AssetManager() *paint.AssetManager {

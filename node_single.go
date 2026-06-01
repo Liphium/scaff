@@ -33,7 +33,7 @@ func SingleNode[P ChildProps[NodeBuilder]](create SingleNodeCreate[P]) NodeBuild
 	}
 
 	return func(context *BuildContext) Node {
-		node.tracker = NewTracker()
+		node.tracker = NewTracker(context)
 		node.context = context
 
 		// Fill the props
