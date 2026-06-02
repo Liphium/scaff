@@ -2,7 +2,7 @@ package scaff
 
 import "github.com/hajimehoshi/ebiten/v2"
 
-// Struct for defining a new multi child node.
+// Struct for defining a new standard node.
 //
 // ID should be a unique id for the node, but also probably be readable as it shows up in error messages.
 //
@@ -11,21 +11,21 @@ import "github.com/hajimehoshi/ebiten/v2"
 // PropsCreator should be the function passed in by users of your node (as in it should probably be an argument of the function creating your node).
 //
 // Create is the function actually specifying your node. You can overwrite all of the functions of the node interface there, with some exceptions that we implement for you.
-type MultiNodeCreate[P ChildProps[NodeBuilder]] struct {
+type StandardCreate[P ChildProps[NodeBuilder]] struct {
 	ID           string
 	DefaultProps P
 	PropsCreator func(t *Tracker, props *P)
-	Create       func(props *MultiChildProps[P])
+	Create       func(props *StandardMethods[P])
 }
 
-// MultiNode lets you create a node with multiple children. Simply implement the ChildProps interface on the props you want to have for your node.
-func MultiNode[P ChildProps[NodeBuilder]](create MultiNodeCreate[P]) NodeBuilder {
-	node := &MultiChildNode[P]{
-		id:         create.ID,
-		multiProps: &MultiChildProps[P]{},
+// Standard lets you create a node with multiple children. Simply implement the ChildProps interface on the props you want to have for your node.
+func Standard[P ChildProps[NodeBuilder]](create StandardCreate[P]) NodeBuilder {
+	node := &StandardNode[P]{
+		id:      create.ID,
+		methods: &StandardMethods[P]{},
 	}
 	if create.Create != nil {
-		create.Create(node.multiProps)
+		create.Create(node.methods)
 	}
 
 	return func(context *BuildContext) Node {
@@ -43,57 +43,50 @@ func MultiNode[P ChildProps[NodeBuilder]](create MultiNodeCreate[P]) NodeBuilder
 	}
 }
 
-type MultiChildProps[P ChildProps[NodeBuilder]] struct {
-	OnLoad         func(node *MultiChildNode[P], parent Node)
-	OnUnload       func(node *MultiChildNode[P])
-	OnPropsChanged func(node *MultiChildNode[P])
-	OnUpdate       func(node *MultiChildNode[P], c *Context) error
-	OnHandleEvent  func(node *MultiChildNode[P], c *Context, event Event) error
-	OnDraw         func(node *MultiChildNode[P], c *Context, image *ebiten.Image)
+type StandardMethods[P ChildProps[NodeBuilder]] struct {
+	OnLoad         func(node *StandardNode[P], parent Node)
+	OnUnload       func(node *StandardNode[P])
+	OnPropsChanged func(node *StandardNode[P])
+	OnUpdate       func(node *StandardNode[P], c *Context) error
+	OnHandleEvent  func(node *StandardNode[P], c *Context, event Event) error
+	OnDraw         func(node *StandardNode[P], c *Context, image *ebiten.Image)
 }
 
 // Just for making sure we implement the Node interface
-var _ Node = &MultiChildNode[*AcceptChildren]{}
+var _ Node = &StandardNode[*AcceptChildren]{}
 
-type MultiChildNode[P ChildProps[NodeBuilder]] struct {
+type StandardNode[P ChildProps[NodeBuilder]] struct {
 	parent   Node
 	children []Node
 
 	tracker *Tracker
 	context *BuildContext
 
-	id         string
-	props      P
-	multiProps *MultiChildProps[P]
+	id      string
+	props   P
+	methods *StandardMethods[P]
 }
 
-func (s *MultiChildNode[P]) ID() string {
+func (s *StandardNode[P]) ID() string {
 	return s.id
 }
 
-func (s *MultiChildNode[P]) Props() P {
+func (s *StandardNode[P]) Props() P {
 	return s.props
 }
 
-func (s *MultiChildNode[P]) Load(parent Node) {
+func (s *StandardNode[P]) Load(parent Node) {
+
+	// Set parent + build the children
 	s.parent = parent
+	s.PropsChanged()
 
-	// Actually load the children and build them
-	builders := s.props.GetBuilders()
-	if builders != nil {
-		s.children = make([]Node, len(builders))
-		for i, builder := range builders {
-			s.children[i] = builder(s.context)
-			s.children[i].Load(s)
-		}
-	}
-
-	if s.multiProps.OnLoad != nil {
-		s.multiProps.OnLoad(s, parent)
+	if s.methods.OnLoad != nil {
+		s.methods.OnLoad(s, parent)
 	}
 }
 
-func (s *MultiChildNode[P]) PropsChanged() {
+func (s *StandardNode[P]) PropsChanged() {
 	changed := s.props.GetChanged()
 	if changed == nil {
 		return
@@ -112,11 +105,11 @@ func (s *MultiChildNode[P]) PropsChanged() {
 	}
 }
 
-func (s *MultiChildNode[P]) HandleEvent(c *Context, event Event) TracedError {
+func (s *StandardNode[P]) HandleEvent(c *Context, event Event) TracedError {
 
 	// First handle event on this node
-	if s.multiProps.OnHandleEvent != nil {
-		if err := s.multiProps.OnHandleEvent(s, c, event); err != nil {
+	if s.methods.OnHandleEvent != nil {
+		if err := s.methods.OnHandleEvent(s, c, event); err != nil {
 			return NewTracedError(s, err)
 		}
 	}
@@ -125,15 +118,15 @@ func (s *MultiChildNode[P]) HandleEvent(c *Context, event Event) TracedError {
 	return s.HandleEventChild(c, event)
 }
 
-func (s *MultiChildNode[P]) Tracker() *Tracker {
+func (s *StandardNode[P]) Tracker() *Tracker {
 	return s.tracker
 }
 
-func (s *MultiChildNode[P]) Update(c *Context) TracedError {
+func (s *StandardNode[P]) Update(c *Context) TracedError {
 
 	// First call the update handler on the props for this node
-	if s.multiProps.OnUpdate != nil {
-		if err := s.multiProps.OnUpdate(s, c); err != nil {
+	if s.methods.OnUpdate != nil {
+		if err := s.methods.OnUpdate(s, c); err != nil {
 			return NewTracedError(s, err)
 		}
 	}
@@ -148,9 +141,9 @@ func (s *MultiChildNode[P]) Update(c *Context) TracedError {
 	return nil
 }
 
-func (s *MultiChildNode[P]) Unload() {
-	if s.multiProps.OnUnload != nil {
-		s.multiProps.OnUnload(s)
+func (s *StandardNode[P]) Unload() {
+	if s.methods.OnUnload != nil {
+		s.methods.OnUnload(s)
 	}
 
 	// Unload the children properly
@@ -162,9 +155,9 @@ func (s *MultiChildNode[P]) Unload() {
 	s.tracker = nil // Cut tracker off from tree for GC
 }
 
-func (s *MultiChildNode[P]) Draw(c *Context, image *ebiten.Image) {
-	if s.multiProps.OnDraw != nil {
-		s.multiProps.OnDraw(s, c, image)
+func (s *StandardNode[P]) Draw(c *Context, image *ebiten.Image) {
+	if s.methods.OnDraw != nil {
+		s.methods.OnDraw(s, c, image)
 	} else {
 
 		// Default implementation: just draw children
@@ -172,15 +165,15 @@ func (s *MultiChildNode[P]) Draw(c *Context, image *ebiten.Image) {
 	}
 }
 
-func (s *MultiChildNode[P]) Parent() Node {
+func (s *StandardNode[P]) Parent() Node {
 	return s.parent
 }
 
-func (s *MultiChildNode[P]) Children() []Node {
+func (s *StandardNode[P]) Children() []Node {
 	return s.children
 }
 
-func (s *MultiChildNode[P]) HandleEventChild(c *Context, event Event) TracedError {
+func (s *StandardNode[P]) HandleEventChild(c *Context, event Event) TracedError {
 	// Event should always be passed to the children as well so it doesn't get missed (even if already handled)
 	for _, child := range s.children {
 		if err := child.HandleEvent(c, event); err != nil {
@@ -192,7 +185,7 @@ func (s *MultiChildNode[P]) HandleEventChild(c *Context, event Event) TracedErro
 }
 
 // Draw the children of the node
-func (s *MultiChildNode[P]) DrawChild(c *Context, image *ebiten.Image) {
+func (s *StandardNode[P]) DrawChild(c *Context, image *ebiten.Image) {
 	for _, child := range s.children {
 		child.Draw(c, image)
 	}

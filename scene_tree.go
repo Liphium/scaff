@@ -32,17 +32,8 @@ func (st *SceneTree) Mount(create func(t *Tracker, props *RootProps)) *SceneTree
 		assetManager: st.assetManager,
 	}
 
-	// Create a single child node that essentially just exists to refresh the builder passed in
-	node := &SingleChildNode[AcceptNoChild]{
-		id:          "root",
-		context:     context,
-		singleProps: &SingleChildProps[AcceptNoChild]{},
-	}
-	node.tracker = NewTracker(context, node.PropsChanged)
-	node.builder = root(create) // Node will automatically be built on load
-
-	// Mount the node inside of a node that can refresh
-	st.sceneRoot = node
+	// Mount the scene root by creating it
+	st.sceneRoot = root(create)(context)
 	return st
 }
 

@@ -40,26 +40,26 @@ func (fp FlexProps) GetBuilders() []scaffui.NodeBuilder {
 }
 
 func Flex(create func(t *scaff.Tracker, props *FlexProps)) scaffui.NodeBuilder {
-	return scaffui.MultiNode(scaffui.MultiNodeCreate[FlexProps]{
+	return scaffui.Standard(scaffui.StandardCreate[FlexProps]{
 		ID:           "flex",
 		PropsCreator: create,
-		Create: func(props *scaffui.MultiChildProps[FlexProps]) {
-			props.OnLayout = func(node *scaffui.MultiChildNode[FlexProps]) (scath.Vec, error) {
+		Create: func(props *scaffui.StandardMethods[FlexProps]) {
+			props.OnLayout = func(node *scaffui.StandardNode[FlexProps]) (scath.Vec, error) {
 				return flexLayout(node)
 			}
 
-			props.OnDraw = func(node *scaffui.MultiChildNode[FlexProps], position scath.Vec, painter paint.Painter) {
+			props.OnDraw = func(node *scaffui.StandardNode[FlexProps], position scath.Vec, painter paint.Painter) {
 				flexDraw(node, position, painter)
 			}
 		},
 	})
 }
 
-func flexDirection(node *scaffui.MultiChildNode[FlexProps]) LayoutDirection {
+func flexDirection(node *scaffui.StandardNode[FlexProps]) LayoutDirection {
 	return node.Props().Direction.Or(LayoutTopToBottom)
 }
 
-func flexDraw(node *scaffui.MultiChildNode[FlexProps], position scath.Vec, painter paint.Painter) {
+func flexDraw(node *scaffui.StandardNode[FlexProps], position scath.Vec, painter paint.Painter) {
 	children := node.Children()
 
 	switch flexDirection(node) {
@@ -98,7 +98,7 @@ func flexDraw(node *scaffui.MultiChildNode[FlexProps], position scath.Vec, paint
 	}
 }
 
-func flexLayout(node *scaffui.MultiChildNode[FlexProps]) (scath.Vec, error) {
+func flexLayout(node *scaffui.StandardNode[FlexProps]) (scath.Vec, error) {
 	switch flexDirection(node) {
 	case LayoutBottomToTop:
 		fallthrough // Same as top to bottom cause no positions considered yet
@@ -114,7 +114,7 @@ func flexLayout(node *scaffui.MultiChildNode[FlexProps]) (scath.Vec, error) {
 }
 
 // Shared linear layout logic for horizontal and vertical directions.
-func flexLayoutLinear(node *scaffui.MultiChildNode[FlexProps], horizontal bool) (scath.Vec, error) {
+func flexLayoutLinear(node *scaffui.StandardNode[FlexProps], horizontal bool) (scath.Vec, error) {
 	mainMin, mainMax, crossMin, crossMax := axisConstraints(node.Constraints(), horizontal)
 	children := node.Children()
 	totalSize := scath.Vec{}

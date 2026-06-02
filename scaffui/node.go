@@ -7,6 +7,8 @@ import (
 	"github.com/Liphium/scaff/scath"
 )
 
+type NodeBuilder func(*scaff.BuildContext) Node
+
 type UpdateResult struct {
 	SizeChanged     bool // The size of the current node changed due to updates, re-layouting is needed
 	AnythingChanged bool // If any of the children changed, but no more re-layouting is needed
@@ -47,8 +49,17 @@ type Node interface {
 	scaff.Identifiable
 	scaff.Loadable[Node]
 
+	// Get the parent node of the current Node
+	Parent() Node
+
+	// Get all children nodes of the current Node
+	Children() []Node
+
 	// Should return the current size of the node
 	Size() scath.Vec
+
+	// Should return the constraints wanted by this Node
+	WantedConstraints(parent scath.Constraints) scath.Constraints
 
 	// Should return the current constraints (that were last set)
 	Constraints() scath.Constraints
@@ -59,26 +70,15 @@ type Node interface {
 	// Should layout the node and return the size within the (previously set) constraints
 	Layout() (scath.Vec, error)
 
-	// Called on every tick, use to handle state updates, etc.
-	Update(c *scaff.Context) (UpdateResult, scaff.TracedError)
+	// Called when the props have changed
+	PropsChanged()
+
+	// Called to see if a draw is needed based on changed props, etc.
+	Update() (UpdateResult, scaff.TracedError)
 
 	// Draw the thing onto the screen at a specified position (next step is getting this to work)
-	Draw(position scath.Vec, renderer paint.Painter)
+	Draw(position scath.Vec, painter paint.Painter)
 
 	// Handle events from scaff (you do not have to handle any, but should always push them along to children at least)
 	HandleEvent(c *scaff.Context, event scaff.Event) scaff.TracedError
-}
-
-type WantsConstraints interface {
-	// Should return the constraints wanted by this Node
-	WantedConstraints(parent scath.Constraints) scath.Constraints
-}
-
-// Get the constraints (default is unconstrained)
-func WantedConstraints(node Node, parent scath.Constraints) scath.Constraints {
-	wanted := scath.Unconstrained()
-	if constrained, ok := node.(WantsConstraints); ok {
-		wanted = constrained.WantedConstraints(parent)
-	}
-	return wanted
 }

@@ -5,7 +5,7 @@ type RootProps struct {
 }
 
 func root(create func(t *Tracker, props *RootProps)) NodeBuilder {
-	return MultiNode(MultiNodeCreate[RootProps]{
+	return Standard(StandardCreate[RootProps]{
 		ID: "root",
 		DefaultProps: RootProps{
 			AcceptChildren: &AcceptChildren{},
