@@ -31,12 +31,14 @@ func Standard[P scaff.ChildProps[NodeBuilder]](create StandardCreate[P]) NodeBui
 		create.Create(node.methods)
 	}
 
+	props := create.DefaultProps
 	return func(context *BuildContext) Node {
-		node.tracker = scaff.NewTracker(context.BuildContext, node.PropsChanged)
+		node.tracker = scaff.NewTracker(context.BuildContext, func() {
+			node.PropsChanged(props)
+		})
 		node.context = context
 
 		// Fill the props
-		props := create.DefaultProps
 		if create.PropsCreator != nil {
 			create.PropsCreator(node.Tracker(), &props)
 		}
@@ -86,15 +88,15 @@ func (s *StandardNode[P]) Load(parent Node) {
 
 	// Set parent + load children by calling PropsChanged
 	s.parent = parent
-	s.PropsChanged()
+	s.PropsChanged(s.props)
 }
 
-func (s *StandardNode[P]) PropsChanged() {
+func (s *StandardNode[P]) PropsChanged(new P) {
 
 	// If some children changed, build new ones
-	changed := s.props.GetChanged()
+	changed := new.GetChanged()
 	if changed != nil {
-		builders := s.props.GetBuilders()
+		builders := new.GetBuilders()
 		if s.children == nil {
 			s.children = make([]Node, len(builders))
 		}
@@ -111,13 +113,15 @@ func (s *StandardNode[P]) PropsChanged() {
 			s.children[i] = builders[i](s.context)
 			s.children[i].Load(s)
 		}
-		s.props.ClearChanged()
+		new.ClearChanged()
 	}
 
 	// Call props changed on the actual methods
 	if s.methods.OnPropsChanged != nil {
 		s.methods.OnPropsChanged(s)
 	}
+
+	s.props = new
 }
 
 func (s *StandardNode[P]) HandleEvent(c *scaff.Context, event scaff.Event) scaff.TracedError {
