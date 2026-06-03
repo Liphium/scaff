@@ -35,7 +35,7 @@ type TextProps struct {
 }
 
 func Text(create func(t *scaff.Tracker, props *TextProps)) scaffui.NodeBuilder {
-	return scaffui.SingleNode(scaffui.SingleNodeCreate[TextProps]{
+	return scaffui.Standard(scaffui.StandardCreate[TextProps]{
 		ID: "Text",
 		DefaultProps: TextProps{
 			Text:           "Scaff",
@@ -49,10 +49,10 @@ func Text(create func(t *scaff.Tracker, props *TextProps)) scaffui.NodeBuilder {
 			AcceptNoChild:  &scaffui.AcceptNoChild{},
 		},
 		PropsCreator: create,
-		Create: func(props *scaffui.SingleChildProps[TextProps]) {
+		Create: func(props *scaffui.StandardMethods[TextProps]) {
 			finalText := ""
 
-			props.OnWantedConstraints = func(node *scaffui.SingleChildNode[TextProps], parent scath.Constraints) scath.Constraints {
+			props.OnWantedConstraints = func(node *scaffui.StandardNode[TextProps], parent scath.Constraints) scath.Constraints {
 				font, err := node.Context().AssetManager().GetFont(node.Props().Font)
 				if err != nil {
 					log.Warn("couldn't load font", "font", node.Props().Font)
@@ -87,7 +87,7 @@ func Text(create func(t *scaff.Tracker, props *TextProps)) scaffui.NodeBuilder {
 				return constraints
 			}
 
-			props.OnLayout = func(node *scaffui.SingleChildNode[TextProps]) (scath.Vec, error) {
+			props.OnLayout = func(node *scaffui.StandardNode[TextProps]) (scath.Vec, error) {
 				font, err := node.Context().AssetManager().GetFont(node.Props().Font)
 				if err != nil {
 					log.Warn("couldn't load Font", "Font", node.Props().Font)
@@ -223,7 +223,7 @@ func Text(create func(t *scaff.Tracker, props *TextProps)) scaffui.NodeBuilder {
 				return scath.Vec{X: width, Y: height}, nil
 			}
 
-			props.OnDraw = func(node *scaffui.SingleChildNode[TextProps], position scath.Vec, painter paint.Painter) {
+			props.OnDraw = func(node *scaffui.StandardNode[TextProps], position scath.Vec, painter paint.Painter) {
 				painter.Paint(paint.Text{
 					Direction:      node.Props().TextDirection,
 					Font:           node.Props().Font,

@@ -24,7 +24,7 @@ type RectangleProps struct {
 }
 
 func Rectangle(create func(t *scaff.Tracker, props *RectangleProps)) scaffui.NodeBuilder {
-	return scaffui.SingleNode(scaffui.SingleNodeCreate[RectangleProps]{
+	return scaffui.Standard(scaffui.StandardCreate[RectangleProps]{
 		ID: "rectangle",
 		DefaultProps: RectangleProps{
 			WantedConstraints: scath.Unconstrained(),
@@ -36,12 +36,12 @@ func Rectangle(create func(t *scaff.Tracker, props *RectangleProps)) scaffui.Nod
 			AcceptChild:       &scaffui.AcceptChild{},
 		},
 		PropsCreator: create,
-		Create: func(props *scaffui.SingleChildProps[RectangleProps]) {
-			props.OnWantedConstraints = func(node *scaffui.SingleChildNode[RectangleProps], _ scath.Constraints) scath.Constraints {
+		Create: func(props *scaffui.StandardMethods[RectangleProps]) {
+			props.OnWantedConstraints = func(node *scaffui.StandardNode[RectangleProps], _ scath.Constraints) scath.Constraints {
 				return node.Props().WantedConstraints
 			}
 
-			props.OnLayout = func(node *scaffui.SingleChildNode[RectangleProps]) (scath.Vec, error) {
+			props.OnLayout = func(node *scaffui.StandardNode[RectangleProps]) (scath.Vec, error) {
 				props := node.Props()
 				spec := uispec.SingleChildBoxSpec{
 					Parent:  node.Constraints(),
@@ -49,15 +49,14 @@ func Rectangle(create func(t *scaff.Tracker, props *RectangleProps)) scaffui.Nod
 					Padding: props.Padding,
 				}
 
-				child, ok := node.Child()
-				if ok {
-					return spec.LayoutWithChild(child.Current())
+				if child, ok := node.Child(); ok {
+					return spec.LayoutWithChild(child)
 				}
 
 				return spec.LayoutWithoutChild()
 			}
 
-			props.OnDraw = func(node *scaffui.SingleChildNode[RectangleProps], position scath.Vec, painter paint.Painter) {
+			props.OnDraw = func(node *scaffui.StandardNode[RectangleProps], position scath.Vec, painter paint.Painter) {
 				props := node.Props()
 				painter.Paint(paint.Rectangle{
 					Position:     position.AddC(props.StrokeThickness),
@@ -75,7 +74,9 @@ func Rectangle(create func(t *scaff.Tracker, props *RectangleProps)) scaffui.Nod
 					})
 				}
 
-				node.DrawChild(position.Add(props.Padding.ToVecTopLeft()), painter)
+				if child, ok := node.Child(); ok {
+					child.Draw(position.Add(props.Padding.ToVecTopLeft()), painter)
+				}
 			}
 		},
 	})

@@ -12,31 +12,27 @@ import (
 var _ scaff.ChildProps[scaffui.NodeBuilder] = FlexProps{}
 
 type FlexProps struct {
-	children      []scaffui.NodeBuilder
-	stretchFactor map[int]optional.O[int]
+	stretchFactor map[uint]optional.O[int]
 	Direction     optional.O[LayoutDirection]
+	*scaffui.AcceptChildren
 }
 
-func (fp *FlexProps) Child(builder scaffui.NodeBuilder) {
+func (fp *FlexProps) Child(i uint, builder scaffui.NodeBuilder) {
 	if fp.stretchFactor == nil {
-		fp.stretchFactor = map[int]optional.O[int]{}
+		fp.stretchFactor = map[uint]optional.O[int]{}
 	}
 
-	fp.stretchFactor[len(fp.children)] = optional.None[int]()
-	fp.children = append(fp.children, builder)
+	fp.AcceptChildren.Child(i, builder)
+	fp.stretchFactor[i] = optional.None[int]()
 }
 
-func (fp *FlexProps) Expanded(factor int, builder scaffui.NodeBuilder) {
+func (fp *FlexProps) Expanded(i uint, factor int, builder scaffui.NodeBuilder) {
 	if fp.stretchFactor == nil {
-		fp.stretchFactor = map[int]optional.O[int]{}
+		fp.stretchFactor = map[uint]optional.O[int]{}
 	}
 
-	fp.stretchFactor[len(fp.children)] = optional.With(factor)
-	fp.children = append(fp.children, builder)
-}
-
-func (fp FlexProps) GetBuilders() []scaffui.NodeBuilder {
-	return fp.children
+	fp.AcceptChildren.Child(i, builder)
+	fp.stretchFactor[i] = optional.With(factor)
 }
 
 func Flex(create func(t *scaff.Tracker, props *FlexProps)) scaffui.NodeBuilder {
@@ -66,31 +62,31 @@ func flexDraw(node *scaffui.StandardNode[FlexProps], position scath.Vec, painter
 	case LayoutRightToLeft:
 		xOffset := float64(node.Size().X)
 		for _, child := range children {
-			childSize := child.Current().Size()
+			childSize := child.Size()
 			xOffset -= float64(childSize.X)
-			child.Current().Draw(scath.Vec{X: position.X + xOffset, Y: position.Y}, painter)
+			child.Draw(scath.Vec{X: position.X + xOffset, Y: position.Y}, painter)
 		}
 
 	case LayoutTopToBottom:
 		yOffset := 0.0
 		for _, child := range children {
-			child.Current().Draw(scath.Vec{X: position.X, Y: position.Y + yOffset}, painter)
-			yOffset += float64(child.Current().Size().Y)
+			child.Draw(scath.Vec{X: position.X, Y: position.Y + yOffset}, painter)
+			yOffset += float64(child.Size().Y)
 		}
 
 	case LayoutBottomToTop:
 		yOffset := float64(node.Size().Y)
 		for _, child := range children {
-			childSize := child.Current().Size()
+			childSize := child.Size()
 			yOffset -= float64(childSize.Y)
-			child.Current().Draw(scath.Vec{X: position.X, Y: position.Y + yOffset}, painter)
+			child.Draw(scath.Vec{X: position.X, Y: position.Y + yOffset}, painter)
 		}
 
 	case LayoutLeftToRight:
 		xOffset := 0.0
 		for _, child := range children {
-			child.Current().Draw(scath.Vec{X: position.X + xOffset, Y: position.Y}, painter)
-			xOffset += float64(child.Current().Size().X)
+			child.Draw(scath.Vec{X: position.X + xOffset, Y: position.Y}, painter)
+			xOffset += float64(child.Size().X)
 		}
 
 	default:
@@ -125,8 +121,8 @@ func flexLayoutLinear(node *scaffui.StandardNode[FlexProps], horizontal bool) (s
 
 	if mainMax == scath.Infinite {
 		for _, child := range children {
-			child.Current().SetConstraints(newChildConstraints(horizontal, 0, scath.Infinite, crossMin, crossMax))
-			size, err := child.Current().Layout()
+			child.SetConstraints(newChildConstraints(horizontal, 0, scath.Infinite, crossMin, crossMax))
+			size, err := child.Layout()
 			if err != nil {
 				return scath.Vec{}, err
 			}
@@ -142,14 +138,14 @@ func flexLayoutLinear(node *scaffui.StandardNode[FlexProps], horizontal bool) (s
 
 	// Lay out non-stretchable children
 	for i, child := range node.Children() {
-		factor, ok := node.Props().stretchFactor[i]
+		factor, ok := node.Props().stretchFactor[uint(i)]
 		if ok && factor.HasValue() {
 			continue
 		}
 
 		// Lay out the child
-		child.Current().SetConstraints(newChildConstraints(horizontal, 0, share, crossMin, crossMax))
-		size, err := child.Current().Layout()
+		child.SetConstraints(newChildConstraints(horizontal, 0, share, crossMin, crossMax))
+		size, err := child.Layout()
 		if err != nil {
 			return scath.Vec{}, err
 		}
@@ -165,7 +161,7 @@ func flexLayoutLinear(node *scaffui.StandardNode[FlexProps], horizontal bool) (s
 	// Add all the factors together
 	factorSum := 0
 	for i := range children {
-		factor, ok := node.Props().stretchFactor[i]
+		factor, ok := node.Props().stretchFactor[uint(i)]
 		if !ok || !factor.HasValue() {
 			continue
 		}
@@ -175,13 +171,13 @@ func flexLayoutLinear(node *scaffui.StandardNode[FlexProps], horizontal bool) (s
 
 	// Lay out stretchable children
 	for i, child := range children {
-		factor, ok := node.Props().stretchFactor[i]
+		factor, ok := node.Props().stretchFactor[uint(i)]
 		if !ok || !factor.HasValue() {
 			continue
 		}
 
-		child.Current().SetConstraints(newChildConstraints(horizontal, 0, (remainder/float64(factorSum))*float64(factor.Or(1)), crossMin, crossMax))
-		size, err := child.Current().Layout()
+		child.SetConstraints(newChildConstraints(horizontal, 0, (remainder/float64(factorSum))*float64(factor.Or(1)), crossMin, crossMax))
+		size, err := child.Layout()
 		if err != nil {
 			return scath.Vec{}, err
 		}

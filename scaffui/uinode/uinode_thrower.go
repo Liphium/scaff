@@ -14,15 +14,15 @@ type ThrowerProps struct {
 }
 
 func Thrower(create func(t *scaff.Tracker, tp *ThrowerProps)) scaffui.NodeBuilder {
-	return scaffui.SingleNode(scaffui.SingleNodeCreate[ThrowerProps]{
+	return scaffui.Standard(scaffui.StandardCreate[ThrowerProps]{
 		ID: "thrower",
 		DefaultProps: ThrowerProps{
 			AcceptNoChild: &scaffui.AcceptNoChild{},
 			Msg:           "Random error.",
 		},
 		PropsCreator: create,
-		Create: func(props *scaffui.SingleChildProps[ThrowerProps]) {
-			props.OnLayout = func(node *scaffui.SingleChildNode[ThrowerProps]) (scath.Vec, error) {
+		Create: func(props *scaffui.StandardMethods[ThrowerProps]) {
+			props.OnLayout = func(node *scaffui.StandardNode[ThrowerProps]) (scath.Vec, error) {
 				return scath.Vec{}, errors.New(node.Props().Msg)
 			}
 		},

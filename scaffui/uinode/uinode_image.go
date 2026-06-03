@@ -24,18 +24,18 @@ type ImageProps struct {
 // Set the filter mode used for the image
 // Set the Constraints for the image
 func Image(create func(t *scaff.Tracker, props *ImageProps)) scaffui.NodeBuilder {
-	return scaffui.SingleNode(scaffui.SingleNodeCreate[ImageProps]{
+	return scaffui.Standard(scaffui.StandardCreate[ImageProps]{
 		ID: "image",
 		DefaultProps: ImageProps{
 			AcceptNoChild: &scaffui.AcceptNoChild{},
 		},
 		PropsCreator: create,
-		Create: func(props *scaffui.SingleChildProps[ImageProps]) {
-			props.OnWantedConstraints = func(node *scaffui.SingleChildNode[ImageProps], parent scath.Constraints) scath.Constraints {
+		Create: func(props *scaffui.StandardMethods[ImageProps]) {
+			props.OnWantedConstraints = func(node *scaffui.StandardNode[ImageProps], parent scath.Constraints) scath.Constraints {
 				return node.Props().Constraints.Or(scath.Unconstrained())
 			}
 
-			props.OnLayout = func(node *scaffui.SingleChildNode[ImageProps]) (scath.Vec, error) {
+			props.OnLayout = func(node *scaffui.StandardNode[ImageProps]) (scath.Vec, error) {
 				spec := uispec.SingleChildBoxSpec{
 					Parent:  node.Constraints(),
 					Wanted:  node.Props().Constraints,
@@ -45,7 +45,7 @@ func Image(create func(t *scaff.Tracker, props *ImageProps)) scaffui.NodeBuilder
 				return spec.LayoutWithoutChild()
 			}
 
-			props.OnDraw = func(node *scaffui.SingleChildNode[ImageProps], position scath.Vec, painter paint.Painter) {
+			props.OnDraw = func(node *scaffui.StandardNode[ImageProps], position scath.Vec, painter paint.Painter) {
 				if Path, ok := node.Props().Path.Value(); ok {
 
 					// Draw the actual image

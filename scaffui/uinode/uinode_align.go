@@ -20,7 +20,7 @@ type AlignProps struct {
 }
 
 func Align(create func(t *scaff.Tracker, props *AlignProps)) scaffui.NodeBuilder {
-	return scaffui.SingleNode(scaffui.SingleNodeCreate[AlignProps]{
+	return scaffui.Standard(scaffui.StandardCreate[AlignProps]{
 		ID: "align",
 		DefaultProps: AlignProps{
 			HorizontalAligment: optional.None[HorizontalAlignment](),
@@ -28,13 +28,13 @@ func Align(create func(t *scaff.Tracker, props *AlignProps)) scaffui.NodeBuilder
 			AcceptChild:        &scaffui.AcceptChild{},
 		},
 		PropsCreator: create,
-		Create: func(props *scaffui.SingleChildProps[AlignProps]) {
+		Create: func(props *scaffui.StandardMethods[AlignProps]) {
 			// In Layout, we take the biggest we can get in any axis where alignment is given
-			props.OnLayout = func(node *scaffui.SingleChildNode[AlignProps]) (scath.Vec, error) {
+			props.OnLayout = func(node *scaffui.StandardNode[AlignProps]) (scath.Vec, error) {
 
 				// Pass down constraints from parent to child and let it pick size
 				// We just edit this size from now on, since we otherwise want to keep the height / width of our child anyway in case alignment is not set
-				size, err := node.LayoutChild(node.Constraints())
+				size, err := node.LayoutChildren()
 				if err != nil {
 					return size, err
 				}
@@ -59,11 +59,11 @@ func Align(create func(t *scaff.Tracker, props *AlignProps)) scaffui.NodeBuilder
 			}
 
 			// Draw child at proper position for alignment
-			props.OnDraw = func(node *scaffui.SingleChildNode[AlignProps], position scath.Vec, renderer paint.Painter) {
+			props.OnDraw = func(node *scaffui.StandardNode[AlignProps], position scath.Vec, renderer paint.Painter) {
 				offset := scath.Vec{}
 
 				if child, ok := node.Child(); ok {
-					childSize := child.Current().Size()
+					childSize := child.Size()
 
 					if value, ok := node.Props().HorizontalAligment.Value(); ok {
 						switch value {
@@ -86,9 +86,9 @@ func Align(create func(t *scaff.Tracker, props *AlignProps)) scaffui.NodeBuilder
 							offset.Y = float64(node.Size().Y - childSize.Y)
 						}
 					}
-				}
 
-				node.DrawChild(position.Add(offset), renderer)
+					child.Draw(position.Add(offset), renderer)
+				}
 			}
 		},
 	})

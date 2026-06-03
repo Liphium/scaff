@@ -20,14 +20,9 @@ func Clickable(create func(t *scaff.Tracker, props *ClickableProps)) scaffui.Nod
 	return Input(func(t *scaff.Tracker, input *InputProps) {
 		props := &ClickableProps{
 			cursor:      ebiten.CursorShapePointer,
-			AcceptChild: &scaffui.AcceptChild{},
+			AcceptChild: input.AcceptChild,
 		}
 		create(t, props)
-
-		// Pass the child to the input node
-		if builder, ok := props.GetChild().Value(); ok {
-			input.Child(builder)
-		}
 
 		input.OnMove = func(handled, inside bool, event scaff.MoveEvent) bool {
 			if inside {

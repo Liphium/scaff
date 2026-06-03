@@ -28,16 +28,16 @@ type InputProps struct {
 
 // Create a new input node exposing a better interface to handle all kinds of input events coming down from scaffui.
 func Input(create func(t *scaff.Tracker, props *InputProps)) scaffui.NodeBuilder {
-	return scaffui.SingleNode(scaffui.SingleNodeCreate[InputProps]{
+	return scaffui.Standard(scaffui.StandardCreate[InputProps]{
 		ID: "input",
 		DefaultProps: InputProps{
 			AcceptChild: &scaffui.AcceptChild{},
 		},
 		PropsCreator: create,
-		Create: func(props *scaffui.SingleChildProps[InputProps]) {
+		Create: func(props *scaffui.StandardMethods[InputProps]) {
 			lastPosition := scath.Vec{X: 0, Y: 0}
 
-			props.OnHandleEvent = func(node *scaffui.SingleChildNode[InputProps], c *scaff.Context, event scaff.Event) error {
+			props.OnHandleEvent = func(node *scaffui.StandardNode[InputProps], c *scaff.Context, event scaff.Event) error {
 				handled := c.IsHandled(event.EventID())
 
 				// If it is a positional event, check if the event was done within the current bounds
@@ -78,9 +78,11 @@ func Input(create func(t *scaff.Tracker, props *InputProps)) scaffui.NodeBuilder
 				return nil
 			}
 
-			props.OnDraw = func(node *scaffui.SingleChildNode[InputProps], position scath.Vec, renderer paint.Painter) {
+			props.OnDraw = func(node *scaffui.StandardNode[InputProps], position scath.Vec, renderer paint.Painter) {
 				lastPosition = position
-				node.DrawChild(position, renderer)
+				if child, ok := node.Child(); ok {
+					child.Draw(position, renderer)
+				}
 			}
 		},
 	})

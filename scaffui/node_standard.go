@@ -90,6 +90,14 @@ func (s *StandardNode[P]) Children() []Node {
 	return s.children
 }
 
+// Get the first child, this is just a helper function for nodes that have one child.
+func (s *StandardNode[P]) Child() (Node, bool) {
+	if len(s.children) > 0 {
+		return s.children[0], true
+	}
+	return nil, false
+}
+
 func (s *StandardNode[P]) Props() P {
 	return s.props
 }
@@ -163,6 +171,12 @@ func (s *StandardNode[P]) Layout() (scath.Vec, error) {
 		s.size = finalSize
 		return finalSize, err
 	}
+
+	return s.LayoutChildren()
+}
+
+// Default implementation of layout
+func (s *StandardNode[P]) LayoutChildren() (scath.Vec, error) {
 
 	// Use minimum size or biggest size of children
 	size := scath.Vec{X: s.constraints.MinX, Y: s.constraints.MinY}

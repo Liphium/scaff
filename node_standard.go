@@ -75,6 +75,10 @@ func (s *StandardNode[P]) Props() P {
 	return s.props
 }
 
+func (s *StandardNode[P]) Context() *BuildContext {
+	return s.context
+}
+
 func (s *StandardNode[P]) Load(parent Node) {
 
 	// Set parent + build the children
@@ -102,6 +106,7 @@ func (s *StandardNode[P]) PropsChanged() {
 		s.children[i].Unload()
 		s.children[i] = builders[i](s.context)
 		s.children[i].Load(s)
+		s.props.ClearChanged()
 	}
 }
 

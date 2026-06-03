@@ -21,6 +21,13 @@ func (bc BuildContext) AssetManager() *paint.AssetManager {
 	return bc.assetManager
 }
 
+func (bc BuildContext) CopyWithNewUpdateQueue() *BuildContext {
+	return &BuildContext{
+		updateQueue:  NewUpdateQueue(),
+		assetManager: bc.assetManager,
+	}
+}
+
 type NodeBuilder func(*BuildContext) Node
 
 type Loadable[T any] interface {
