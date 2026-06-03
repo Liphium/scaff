@@ -3,7 +3,6 @@ package main
 import (
 	"embed"
 	"image/color"
-	"log"
 	"time"
 
 	"github.com/Liphium/scaff"
@@ -11,6 +10,7 @@ import (
 	"github.com/Liphium/scaff/scaffui"
 	"github.com/Liphium/scaff/scaffui/uinode"
 	"github.com/Liphium/scaff/scath"
+	sutil "github.com/Liphium/scaff/util"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -18,6 +18,8 @@ import (
 //
 //go:embed assets/*
 var assetsFS embed.FS
+
+var log = sutil.NewLogger("app")
 
 func main() {
 	ebiten.SetWindowSize(900, 600)
@@ -30,10 +32,10 @@ func main() {
 	tree := scaff.NewSceneTree("scaffui-image-sample", assetManager)
 
 	tree.Mount(func(t *scaff.Tracker, props *scaff.RootProps) {
-		props.Child(0, scaff.SingleNode(scaff.SingleNodeCreate[scaff.AcceptNoChild]{
+		props.Child(0, scaff.Standard(scaff.StandardCreate[scaff.AcceptNoChild]{
 			ID: "scaling",
-			Create: func(props *scaff.SingleChildProps[scaff.AcceptNoChild]) {
-				props.OnDraw = func(node *scaff.SingleChildNode[scaff.AcceptNoChild], c *scaff.Context, image *ebiten.Image) {
+			Create: func(props *scaff.StandardMethods[scaff.AcceptNoChild]) {
+				props.OnDraw = func(node *scaff.StandardNode[scaff.AcceptNoChild], c *scaff.Context, image *ebiten.Image) {
 					const cycleDuration = 5 * time.Second
 
 					cyclePosition := float64(c.Now().UnixNano()%int64(cycleDuration)) / float64(cycleDuration)
@@ -56,12 +58,15 @@ func main() {
 
 					props.Child(uinode.Image(func(t *scaff.Tracker, props *uinode.ImageProps) {
 						props.Path.SetValue("assets/icon.png")
-						if scaling.Track(t) {
-							props.Constraints.SetValue(scath.Tight(150*scaleFactor.Track(t), 150*scaleFactor.Track(t)))
-						} else {
-							props.Constraints.SetValue(scath.Tight(100, 100))
-						}
 						props.FilterMode.SetValue(ebiten.FilterPixelated)
+
+						t.Effect(func() {
+							if scaling.Track(t) {
+								props.Constraints.SetValue(scath.Tight(150*scaleFactor.Track(t), 150*scaleFactor.Track(t)))
+							} else {
+								props.Constraints.SetValue(scath.Tight(100, 100))
+							}
+						})
 					}))
 				}))
 
@@ -101,11 +106,13 @@ func main() {
 									props.FontSize = 24
 									props.Wrapping = true
 
-									if scaling.Track(t) {
-										props.Text = "Scale animation: ON"
-									} else {
-										props.Text = "Scale animation: OFF"
-									}
+									t.Effect(func() {
+										if scaling.Track(t) {
+											props.Text = "Scale animation: ON"
+										} else {
+											props.Text = "Scale animation: OFF"
+										}
+									})
 								}))
 							}))
 						}))
@@ -118,6 +125,6 @@ func main() {
 	g := scaff.NewGame()
 	g.Goto(tree)
 	if err := ebiten.RunGame(g); err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 }

@@ -36,12 +36,14 @@ func Standard[P scaff.ChildProps[NodeBuilder]](create StandardCreate[P]) NodeBui
 		create.Create(node.methods)
 	}
 
+	props := create.DefaultProps
 	return func(context *scaff.BuildContext) Node {
-		node.tracker = scaff.NewTracker(context, node.PropsChanged)
+		node.tracker = scaff.NewTracker(context, func() {
+			node.PropsChanged(props)
+		})
 		node.context = context
 
 		// Create the props (if desired)
-		props := create.DefaultProps
 		if create.PropsCreator != nil {
 			create.PropsCreator(node.Tracker(), &props)
 		}
@@ -107,40 +109,47 @@ func (s *StandardNode[P]) Context() *scaff.BuildContext {
 }
 
 func (s *StandardNode[P]) Load(parent Node) {
-
-	// Set parent + build the children
-	s.parent = parent
-	s.PropsChanged()
-
 	if s.methods.OnLoad != nil {
 		s.methods.OnLoad(s)
 	}
+
+	// Set parent + build the children
+	s.parent = parent
+	s.PropsChanged(s.props)
 }
 
-func (s *StandardNode[P]) PropsChanged() {
+func (s *StandardNode[P]) PropsChanged(new P) {
 	s.dirty = true
 
-	changed := s.props.GetChanged()
-	if changed == nil {
-		return
-	}
-
-	builders := s.props.GetBuilders()
-	for _, i := range changed {
-		if len(s.children) <= int(i) {
-			log.Error("index out of bounds for props update", "i", i, "children", len(s.children))
-			continue
+	// If some children changed, build new ones
+	changed := new.GetChanged()
+	if changed != nil {
+		builders := new.GetBuilders()
+		if s.children == nil {
+			s.children = make([]Node, len(builders))
 		}
 
-		s.children[i].Unload()
-		s.children[i] = builders[i](s.context)
-		s.children[i].Load(s)
+		for _, i := range changed {
+			if len(builders) < int(i) {
+				log.Error("index out of bounds for props update", "i", i, "children", len(builders))
+				continue
+			}
+
+			if s.children[i] != nil {
+				s.children[i].Unload()
+			}
+			s.children[i] = builders[i](s.context)
+			s.children[i].Load(s)
+		}
+		new.ClearChanged()
 	}
 
 	// Call props changed on the actual methods
 	if s.methods.OnPropsChanged != nil {
 		s.methods.OnPropsChanged(s)
 	}
+
+	s.props = new
 }
 
 func (s *StandardNode[P]) Size() scath.Vec {

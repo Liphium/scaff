@@ -82,7 +82,14 @@ type AcceptChildrenTemplate[B any] struct {
 // There are internal reasons for this to be a method. Trackers just need to work with this properly.
 func (ac *AcceptChildrenTemplate[B]) Child(i uint, builder B) {
 	ac.changed = append(ac.changed, i)
-	ac.children = append(ac.children, builder)
+
+	if len(ac.children) < int(i) {
+		log.Error("index bigger than children size, make sure to add children in a row", "i", i, "children", len(ac.children))
+	} else if len(ac.children) == int(i) {
+		ac.children = append(ac.children, builder)
+	} else {
+		ac.children[i] = builder
+	}
 }
 
 func (ac AcceptChildrenTemplate[B]) GetBuilders() []B {

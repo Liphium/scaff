@@ -25,6 +25,7 @@ func Viewport(create func(t *scaff.Tracker, props *ViewportProps)) scaff.NodeBui
 	return scaff.Standard(scaff.StandardCreate[ViewportProps]{
 		ID: "viewport",
 		DefaultProps: ViewportProps{
+			child:         &AcceptChild{},
 			AcceptNoChild: &scaff.AcceptNoChild{},
 		},
 		PropsCreator: create,
@@ -68,6 +69,9 @@ func Viewport(create func(t *scaff.Tracker, props *ViewportProps)) scaff.NodeBui
 					}
 					firstRender = true
 				}
+
+				// Execute update queue
+				context.UpdateQueue().Update()
 
 				// Update all of the stuff
 				result, err := root.Update()

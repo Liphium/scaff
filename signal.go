@@ -59,6 +59,8 @@ func (s *Signal[T]) AddListener(listener func(T)) func() {
 		return func() {}
 	}
 
+	log.Debug("signal subscribe")
+
 	s.mu.Lock()
 	if s.listeners == nil {
 		s.listeners = make(map[uint64]func(T))
@@ -73,6 +75,7 @@ func (s *Signal[T]) AddListener(listener func(T)) func() {
 
 	return func() {
 		s.removeListener(id)
+		log.Debug("signal unsubscribe")
 	}
 }
 

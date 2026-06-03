@@ -12,63 +12,47 @@ type CanvasProps struct {
 	SmoothType    SmoothType
 	SmoothOptions SmoothOptions
 
-	children []NodeBuilder
+	child *AcceptChild
+	*scaff.AcceptNoChild
 }
 
-func (sp *CanvasProps) Child(builder NodeBuilder) {
-	sp.children = append(sp.children, builder)
-}
-
-func (sp CanvasProps) GetBuilders() []NodeBuilder {
-	return sp.children
+func (vp CanvasProps) Child(builder NodeBuilder) {
+	vp.child.Child(builder)
 }
 
 func Canvas(create func(t *scaff.Tracker, props *CanvasProps)) scaff.NodeBuilder {
-	return scaff.Standard(scaff.StandardCreate[*scaff.AcceptNoChild]{
-		ID:           "canvas",
-		DefaultProps: &scaff.AcceptNoChild{},
-		Create: func(props *scaff.StandardMethods[*scaff.AcceptNoChild]) {
+	return scaff.Standard(scaff.StandardCreate[CanvasProps]{
+		ID: "canvas",
+		DefaultProps: CanvasProps{
+			child:         &AcceptChild{},
+			AcceptNoChild: &scaff.AcceptNoChild{},
+		},
+		PropsCreator: create,
+		Create: func(props *scaff.StandardMethods[CanvasProps]) {
+			var context *BuildContext
 			var camera *Camera
 			var cv CanvasProps
 			var root Node
 			var painter *paint.EbitenPainter
 			sizeUpdate := true
 
-			props.OnLoad = func(node *scaff.SingleChildNode[*scaff.AcceptNoChild], parent scaff.Node) {
-
-				// Create a single child node that essentially just exists to refresh the builder passed in
-				root = &SingleChildNode[int8]{
-					id:      "root",
-					tracker: node.Tracker(),
-					context: &BuildContext{
-						cam:          camera,
-						BuildContext: node.Context(),
-					},
-					singleProps: &SingleChildProps[int8]{},
+			props.OnLoad = func(node *scaff.StandardNode[CanvasProps], parent scaff.Node) {
+				context = &BuildContext{
+					cam:          camera,
+					BuildContext: node.Context(),
 				}
-				root.builder = MultiNode(MultiNodeCreate[CanvasProps]{
-					ID:           "root-stack",
-					PropsCreator: create,
-					Create: func(props *StandardMethods[CanvasProps]) {
-
-						props.OnPropsChanged = func(node *StandardNode[CanvasProps]) {
-							cv = node.Props()
-
-							// Camera only gets initialized after a while
-							if camera != nil {
-								// Update camera (size may be changed later)
-								camera.LookAt(cv.Position.X, cv.Position.Y)
-								camera.SmoothType = cv.SmoothType
-								camera.SmoothOptions = &cv.SmoothOptions
-							}
-						}
-					}})
-				root.Load(nil)
-
-				cv = root.Children()[0].(*MultiChildNode[CanvasProps]).props
 			}
 
-			props.OnUpdate = func(node *scaff.SingleChildNode[*scaff.AcceptNoChild], c *scaff.Context) error {
+			props.OnPropsChanged = func(node *scaff.StandardNode[CanvasProps]) {
+				changed := node.Props().child.GetChanged()
+				if len(changed) > 0 {
+					root = node.Props().child.GetBuilders()[0](context)
+					root.Load(nil)
+					node.Props().child.ClearChanged()
+				}
+			}
+
+			props.OnUpdate = func(node *scaff.StandardNode[CanvasProps], c *scaff.Context) error {
 				if root == nil {
 					return nil
 				}
@@ -77,7 +61,7 @@ func Canvas(create func(t *scaff.Tracker, props *CanvasProps)) scaff.NodeBuilder
 				return root.Update(c)
 			}
 
-			props.OnDraw = func(node *scaff.SingleChildNode[*scaff.AcceptNoChild], c *scaff.Context, image *ebiten.Image) {
+			props.OnDraw = func(node *scaff.StandardNode[CanvasProps], c *scaff.Context, image *ebiten.Image) {
 				if root == nil {
 					return
 				}
@@ -107,7 +91,7 @@ func Canvas(create func(t *scaff.Tracker, props *CanvasProps)) scaff.NodeBuilder
 				image.DrawImage(painter.Screen(), &ebiten.DrawImageOptions{})
 			}
 
-			props.OnHandleEvent = func(node *scaff.SingleChildNode[*scaff.AcceptNoChild], c *scaff.Context, event scaff.Event) error {
+			props.OnHandleEvent = func(node *scaff.StandardNode[CanvasProps], c *scaff.Context, event scaff.Event) error {
 				if root == nil {
 					return nil
 				}

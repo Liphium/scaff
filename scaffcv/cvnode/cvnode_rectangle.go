@@ -21,7 +21,7 @@ type RectangleProps struct {
 }
 
 func Rectangle(create func(t *scaff.Tracker, props *RectangleProps)) scaffcv.NodeBuilder {
-	return scaffcv.SingleNode(scaffcv.SingleNodeCreate[RectangleProps]{
+	return scaffcv.Standard(scaffcv.StandardCreate[RectangleProps]{
 		ID: "rectangle",
 		DefaultProps: RectangleProps{
 			Position:        scath.Zero,
@@ -33,8 +33,8 @@ func Rectangle(create func(t *scaff.Tracker, props *RectangleProps)) scaffcv.Nod
 			AcceptChild:     &scaffcv.AcceptChild{},
 		},
 		PropsCreator: create,
-		Create: func(props *scaffcv.SingleChildProps[RectangleProps]) {
-			props.OnDraw = func(node *scaffcv.SingleChildNode[RectangleProps], c *scaff.Context, painter paint.Painter) {
+		Create: func(props *scaffcv.StandardMethods[RectangleProps]) {
+			props.OnDraw = func(node *scaffcv.StandardNode[RectangleProps], c *scaff.Context, painter paint.Painter) {
 				painter.Paint(paint.Rectangle{
 					Position:     node.Props().Position,
 					Size:         node.Props().Size,

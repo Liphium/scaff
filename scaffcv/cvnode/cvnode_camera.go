@@ -15,13 +15,13 @@ type CameraMovementProps struct {
 }
 
 func CameraMovement(cameraPosition *scaff.Signal[scath.Vec], create func(t *scaff.Tracker, props *CameraMovementProps)) scaffcv.NodeBuilder {
-	return scaffcv.SingleNode(scaffcv.SingleNodeCreate[CameraMovementProps]{
+	return scaffcv.Standard(scaffcv.StandardCreate[CameraMovementProps]{
 		ID: "camera-movement",
 		DefaultProps: CameraMovementProps{
 			Speed: 10,
 		},
 		PropsCreator: create,
-		Create: func(props *scaffcv.SingleChildProps[CameraMovementProps]) {
+		Create: func(props *scaffcv.StandardMethods[CameraMovementProps]) {
 			directionForKey := map[ebiten.Key]scath.Vec{
 				ebiten.KeyArrowUp: scath.Up,
 				ebiten.KeyW:       scath.Up,
@@ -36,7 +36,7 @@ func CameraMovement(cameraPosition *scaff.Signal[scath.Vec], create func(t *scaf
 				ebiten.KeyA:         scath.Left,
 			}
 
-			props.OnUpdate = func(node *scaffcv.SingleChildNode[CameraMovementProps], c *scaff.Context) error {
+			props.OnUpdate = func(node *scaffcv.StandardNode[CameraMovementProps], c *scaff.Context) error {
 				active := []scath.Vec{}
 
 				// TODO: Convert to scaff input API with events and stuff

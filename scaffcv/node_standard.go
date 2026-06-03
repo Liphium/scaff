@@ -80,32 +80,38 @@ func (s *StandardNode[P]) Props() P {
 }
 
 func (s *StandardNode[P]) Load(parent Node) {
+	if s.methods.OnLoad != nil {
+		s.methods.OnLoad(s, parent)
+	}
 
 	// Set parent + load children by calling PropsChanged
 	s.parent = parent
 	s.PropsChanged()
-
-	if s.methods.OnLoad != nil {
-		s.methods.OnLoad(s, parent)
-	}
 }
 
 func (s *StandardNode[P]) PropsChanged() {
-	changed := s.props.GetChanged()
-	if changed == nil {
-		return
-	}
 
-	builders := s.props.GetBuilders()
-	for _, i := range changed {
-		if len(s.children) <= int(i) {
-			log.Error("index out of bounds for props update", "i", i, "children", len(s.children))
-			continue
+	// If some children changed, build new ones
+	changed := s.props.GetChanged()
+	if changed != nil {
+		builders := s.props.GetBuilders()
+		if s.children == nil {
+			s.children = make([]Node, len(builders))
 		}
 
-		s.children[i].Unload()
-		s.children[i] = builders[i](s.context)
-		s.children[i].Load(s)
+		for _, i := range changed {
+			if len(builders) < int(i) {
+				log.Error("index out of bounds for props update", "i", i, "children", len(builders))
+				continue
+			}
+
+			if s.children[i] != nil {
+				s.children[i].Unload()
+			}
+			s.children[i] = builders[i](s.context)
+			s.children[i].Load(s)
+		}
+		s.props.ClearChanged()
 	}
 
 	// Call props changed on the actual methods

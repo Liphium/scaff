@@ -21,7 +21,7 @@ type TextProps struct {
 
 // Text creates a simple Text node with a Position and Text.
 func Text(create func(t *scaff.Tracker, props *TextProps)) scaffcv.NodeBuilder {
-	return scaffcv.SingleNode(scaffcv.SingleNodeCreate[TextProps]{
+	return scaffcv.Standard(scaffcv.StandardCreate[TextProps]{
 		ID: "Text",
 		DefaultProps: TextProps{
 			Text:           "",
@@ -31,8 +31,8 @@ func Text(create func(t *scaff.Tracker, props *TextProps)) scaffcv.NodeBuilder {
 			SecondaryAlign: text.AlignCenter,
 		},
 		PropsCreator: create,
-		Create: func(props *scaffcv.SingleChildProps[TextProps]) {
-			props.OnDraw = func(node *scaffcv.SingleChildNode[TextProps], c *scaff.Context, painter paint.Painter) {
+		Create: func(props *scaffcv.StandardMethods[TextProps]) {
+			props.OnDraw = func(node *scaffcv.StandardNode[TextProps], c *scaff.Context, painter paint.Painter) {
 				painter.Paint(paint.Text{
 					Text:           node.Props().Text,
 					FontSize:       20,
