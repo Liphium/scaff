@@ -24,13 +24,13 @@ func (sp CanvasProps) GetBuilders() []NodeBuilder {
 }
 
 func Canvas(create func(t *scaff.Tracker, props *CanvasProps)) scaff.NodeBuilder {
-	return scaff.SingleNode(scaff.SingleNodeCreate[*scaff.AcceptNoChild]{
+	return scaff.Standard(scaff.StandardCreate[*scaff.AcceptNoChild]{
 		ID:           "canvas",
 		DefaultProps: &scaff.AcceptNoChild{},
-		Create: func(props *scaff.SingleChildProps[*scaff.AcceptNoChild]) {
+		Create: func(props *scaff.StandardMethods[*scaff.AcceptNoChild]) {
 			var camera *Camera
 			var cv CanvasProps
-			var root *SingleChildNode[int8]
+			var root Node
 			var painter *paint.EbitenPainter
 			sizeUpdate := true
 
@@ -49,9 +49,9 @@ func Canvas(create func(t *scaff.Tracker, props *CanvasProps)) scaff.NodeBuilder
 				root.builder = MultiNode(MultiNodeCreate[CanvasProps]{
 					ID:           "root-stack",
 					PropsCreator: create,
-					Create: func(props *MultiChildProps[CanvasProps]) {
+					Create: func(props *StandardMethods[CanvasProps]) {
 
-						props.OnPropsChanged = func(node *MultiChildNode[CanvasProps]) {
+						props.OnPropsChanged = func(node *StandardNode[CanvasProps]) {
 							cv = node.Props()
 
 							// Camera only gets initialized after a while

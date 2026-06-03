@@ -70,9 +70,6 @@ type Node interface {
 	// Should layout the node and return the size within the (previously set) constraints
 	Layout() (scath.Vec, error)
 
-	// Called when the props have changed
-	PropsChanged()
-
 	// Called to see if a draw is needed based on changed props, etc.
 	Update() (UpdateResult, scaff.TracedError)
 

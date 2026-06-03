@@ -50,9 +50,6 @@ type Node interface {
 	// Should return your own children
 	Children() []Node
 
-	// Called when the props have been updated (by the parent from a dirty tracker)
-	PropsChanged()
-
 	// Called on every physics tick (like 60 times a second, depending on what ebitens tick rate is)
 	Update(c *Context) TracedError
 

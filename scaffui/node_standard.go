@@ -29,11 +29,11 @@ type StandardCreate[P scaff.ChildProps[NodeBuilder]] struct {
 // Standard lets you create a node with multiple children. Simply implement the ChildProps interface on the props you want to have for your node.
 func Standard[P scaff.ChildProps[NodeBuilder]](create StandardCreate[P]) NodeBuilder {
 	node := &StandardNode[P]{
-		id:         create.ID,
-		multiProps: &StandardMethods[P]{},
+		id:      create.ID,
+		methods: &StandardMethods[P]{},
 	}
 	if create.Create != nil {
-		create.Create(node.multiProps)
+		create.Create(node.methods)
 	}
 
 	return func(context *scaff.BuildContext) Node {
@@ -73,9 +73,9 @@ type StandardNode[P scaff.ChildProps[NodeBuilder]] struct {
 	size        scath.Vec
 	constraints scath.Constraints
 
-	props      P
-	dirty      bool
-	multiProps *StandardMethods[P]
+	props   P
+	dirty   bool
+	methods *StandardMethods[P]
 }
 
 func (s *StandardNode[P]) ID() string {
@@ -112,8 +112,8 @@ func (s *StandardNode[P]) Load(parent Node) {
 	s.parent = parent
 	s.PropsChanged()
 
-	if s.multiProps.OnLoad != nil {
-		s.multiProps.OnLoad(s)
+	if s.methods.OnLoad != nil {
+		s.methods.OnLoad(s)
 	}
 }
 
@@ -136,6 +136,11 @@ func (s *StandardNode[P]) PropsChanged() {
 		s.children[i] = builders[i](s.context)
 		s.children[i].Load(s)
 	}
+
+	// Call props changed on the actual methods
+	if s.methods.OnPropsChanged != nil {
+		s.methods.OnPropsChanged(s)
+	}
 }
 
 func (s *StandardNode[P]) Size() scath.Vec {
@@ -151,18 +156,18 @@ func (s *StandardNode[P]) SetConstraints(c scath.Constraints) {
 }
 
 func (s *StandardNode[P]) WantedConstraints(parent scath.Constraints) scath.Constraints {
-	if s.multiProps.OnWantedConstraints == nil {
+	if s.methods.OnWantedConstraints == nil {
 		return scath.Unconstrained()
 	}
 
-	return s.multiProps.OnWantedConstraints(s, parent)
+	return s.methods.OnWantedConstraints(s, parent)
 }
 
 func (s *StandardNode[P]) Layout() (scath.Vec, error) {
 
 	// If layouting is handled by a method, use that
-	if s.multiProps.OnLayout != nil {
-		size, err := s.multiProps.OnLayout(s)
+	if s.methods.OnLayout != nil {
+		size, err := s.methods.OnLayout(s)
 		if err != nil {
 			return scath.Vec{}, scaff.NewTracedError(s, err)
 		}
@@ -216,8 +221,8 @@ func (s *StandardNode[P]) finalSize(size scath.Vec) (scath.Vec, error) {
 }
 
 func (s *StandardNode[P]) HandleEvent(c *scaff.Context, event scaff.Event) scaff.TracedError {
-	if s.multiProps.OnHandleEvent != nil {
-		if err := s.multiProps.OnHandleEvent(s, c, event); err != nil {
+	if s.methods.OnHandleEvent != nil {
+		if err := s.methods.OnHandleEvent(s, c, event); err != nil {
 			return scaff.NewTracedError(s, err)
 		}
 	}
@@ -272,8 +277,8 @@ func (s *StandardNode[P]) Update() (UpdateResult, scaff.TracedError) {
 }
 
 func (s *StandardNode[P]) Unload() {
-	if s.multiProps.OnUnload != nil {
-		s.multiProps.OnUnload(s)
+	if s.methods.OnUnload != nil {
+		s.methods.OnUnload(s)
 	}
 
 	if s.tracker != nil {
@@ -283,8 +288,8 @@ func (s *StandardNode[P]) Unload() {
 }
 
 func (s *StandardNode[P]) Draw(position scath.Vec, renderer paint.Painter) {
-	if s.multiProps.OnDraw != nil {
-		s.multiProps.OnDraw(s, position, renderer)
+	if s.methods.OnDraw != nil {
+		s.methods.OnDraw(s, position, renderer)
 		return
 	}
 

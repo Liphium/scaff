@@ -18,8 +18,9 @@ func (vp ViewportProps) Child(builder NodeBuilder) {
 
 // Viewport creates a viewport node that can be used to essentially mount a
 func Viewport(create func(t *scaff.Tracker, props *ViewportProps)) scaff.NodeBuilder {
-	// For new viewport:
-	// - Add checks to the update queue if there are updates (then use that to determine if we even need to render in the first place)
+
+	// TODO: For viewport:
+	// - Add checks to the update queue if there are updates (then use that to determine if we even need to call Update() in the first place)
 
 	return scaff.Standard(scaff.StandardCreate[ViewportProps]{
 		ID: "viewport",
