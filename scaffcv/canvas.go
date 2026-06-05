@@ -30,7 +30,6 @@ func Canvas(create func(t *scaff.Tracker, props *CanvasProps)) scaff.NodeBuilder
 		PropsCreator: create,
 		Create: func(props *scaff.StandardMethods[CanvasProps]) {
 			var context *BuildContext
-			var camera *Camera
 			var cv CanvasProps
 			var root Node
 			var painter *paint.EbitenPainter
@@ -38,7 +37,6 @@ func Canvas(create func(t *scaff.Tracker, props *CanvasProps)) scaff.NodeBuilder
 
 			props.OnLoad = func(node *scaff.StandardNode[CanvasProps], parent scaff.Node) {
 				context = &BuildContext{
-					cam:          camera,
 					BuildContext: node.Context(),
 				}
 			}
@@ -72,20 +70,20 @@ func Canvas(create func(t *scaff.Tracker, props *CanvasProps)) scaff.NodeBuilder
 					painter = paint.NewEbitenPainter(screen, true, node.Context().AssetManager())
 
 					// Create new camera (old one will only have invalid positions)
-					camera = NewCamera(cv.Position.X, cv.Position.Y, c.Width(), c.Height())
-					camera.SmoothType = cv.SmoothType
-					camera.SmoothOptions = &cv.SmoothOptions
+					context.cam = NewCamera(cv.Position.X, cv.Position.Y, c.Width(), c.Height())
+					context.cam.SmoothType = cv.SmoothType
+					context.cam.SmoothOptions = &cv.SmoothOptions
 				}
 
 				// Actually draw the root
 				painter.Clear()
 				painter.SetTransform(paint.Transform{
-					CamX:          camera.X,
-					CamY:          camera.Y,
-					CenterOffsetX: camera.CenterOffsetX,
-					CenterOffsetY: camera.CenterOffsetY,
-					Angle:         camera.Angle,
-					ZoomFactor:    camera.ZoomFactor,
+					CamX:          context.cam.X,
+					CamY:          context.cam.Y,
+					CenterOffsetX: context.cam.CenterOffsetX,
+					CenterOffsetY: context.cam.CenterOffsetY,
+					Angle:         context.cam.Angle,
+					ZoomFactor:    context.cam.ZoomFactor,
 				})
 				root.Draw(c, painter)
 				image.DrawImage(painter.Screen(), &ebiten.DrawImageOptions{})

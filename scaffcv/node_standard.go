@@ -1,8 +1,11 @@
 package scaffcv
 
 import (
+	"math"
+
 	"github.com/Liphium/scaff"
 	"github.com/Liphium/scaff/paint"
+	"github.com/Liphium/scaff/scath"
 )
 
 // Struct for defining a new standard node.
@@ -49,12 +52,29 @@ func Standard[P scaff.ChildProps[NodeBuilder]](create StandardCreate[P]) NodeBui
 }
 
 type StandardMethods[P scaff.ChildProps[NodeBuilder]] struct {
-	OnLoad         func(node *StandardNode[P], parent Node)
+	// Should return your current position. This is used by various nodes to perform culling.
+	Position func(node *StandardNode[P]) scath.Vec
+
+	// Should return your current size. This is used by various nodes to perform culling.
+	Size func(node *StandardNode[P]) scath.Vec
+
+	// Called when the node is loaded.
+	OnLoad func(node *StandardNode[P], parent Node)
+
+	// Called when props of the node change.
 	OnPropsChanged func(node *StandardNode[P])
-	OnUnload       func(node *StandardNode[P])
-	OnUpdate       func(node *StandardNode[P], c *scaff.Context) error
-	OnHandleEvent  func(node *StandardNode[P], c *scaff.Context, event scaff.Event) error
-	OnDraw         func(node *StandardNode[P], c *scaff.Context, image paint.Painter)
+
+	// Called when the node is unloaded.
+	OnUnload func(node *StandardNode[P])
+
+	// Called on every Ebiten tick.
+	OnUpdate func(node *StandardNode[P], c *scaff.Context) error
+
+	// Called for every event that comes through from scaff.
+	OnHandleEvent func(node *StandardNode[P], c *scaff.Context, event scaff.Event) error
+
+	// Should draw the node using the painter.
+	OnDraw func(node *StandardNode[P], c *scaff.Context, painter paint.Painter)
 }
 
 // Just for making sure we implement the Node interface
@@ -79,6 +99,42 @@ func (s *StandardNode[P]) ID() string {
 
 func (s *StandardNode[P]) Props() P {
 	return s.props
+}
+
+func (s *StandardNode[P]) Context() *BuildContext {
+	return s.context
+}
+
+func (s *StandardNode[P]) Position() scath.Vec {
+	if s.methods.Position != nil {
+		return s.methods.Position(s)
+	}
+
+	// As default: Calculate minimum X and Y (we want to make sure all children are in our bounding box, size will be adjusted properly)
+	minX, minY := 0.0, 0.0
+	for _, child := range s.children {
+		pos := child.Position()
+		minX = math.Min(pos.X, minX)
+		minY = math.Min(pos.Y, minY)
+	}
+	return scath.Vec{X: minX, Y: minY}
+}
+
+func (s *StandardNode[P]) Size() scath.Vec {
+	if s.methods.Size != nil {
+		return s.methods.Size(s)
+	}
+
+	// As default: Calculate minimum X,Y + maximum X,Y and get the difference. This will make sure the bounding box of Position + Size contains all children.
+	minX, maxX, minY, maxY := 0.0, 0.0, 0.0, 0.0
+	for _, child := range s.children {
+		pos := child.Position()
+		minX = math.Min(pos.X, minX)
+		maxX = math.Max(pos.X, maxX)
+		minY = math.Min(pos.Y, minY)
+		maxY = math.Max(pos.Y, maxY)
+	}
+	return scath.Vec{X: maxX - minX, Y: maxY - minY}
 }
 
 func (s *StandardNode[P]) Load(parent Node) {
@@ -180,7 +236,7 @@ func (s *StandardNode[P]) Draw(c *scaff.Context, painter paint.Painter) {
 	} else {
 
 		// Default implementation: just draw children
-		s.DrawChild(c, painter)
+		s.DrawChildren(c, painter)
 	}
 }
 
@@ -204,8 +260,34 @@ func (s *StandardNode[P]) HandleEventChildren(c *scaff.Context, event scaff.Even
 }
 
 // Draw the children of the node
-func (s *StandardNode[P]) DrawChild(c *scaff.Context, painter paint.Painter) {
+func (s *StandardNode[P]) DrawChildren(c *scaff.Context, painter paint.Painter) {
+	vwOrigin, vwSize := s.Context().Camera().Viewport()
+
 	for _, child := range s.children {
+
+		// Do not draw chlildren that are outside of the camera's view
+		topLeft, size := child.Position(), child.Size()
+		if child.Size() == scath.Zero {
+			continue
+		}
+
+		// TODO: This needs to support camera rotation in the future, but let's not worry about that for now
+		toCheck := []scath.Vec{
+			topLeft,
+			topLeft.Add(scath.Vec{X: size.X}), // Top right
+			topLeft.Add(scath.Vec{Y: size.Y}), // Bottom left
+			topLeft.Add(size),                 // Bottom right
+		}
+		found := false
+		for _, vec := range toCheck {
+			if vec.IsWithinRectangle(vwOrigin, vwSize) {
+				found = true
+			}
+		}
+		if !found {
+			continue
+		}
+
 		child.Draw(c, painter)
 	}
 }

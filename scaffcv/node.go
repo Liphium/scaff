@@ -3,6 +3,7 @@ package scaffcv
 import (
 	"github.com/Liphium/scaff"
 	"github.com/Liphium/scaff/paint"
+	"github.com/Liphium/scaff/scath"
 )
 
 type BuildContext struct {
@@ -20,6 +21,12 @@ type Node interface {
 	scaff.Tracking
 	scaff.Identifiable
 	scaff.Loadable[Node]
+
+	// Should return your current position in world coordinates (this can be used to determine if you should be rendered or not)
+	Position() scath.Vec
+
+	// Should return your current size in the world (this can be used to determine if you should be rendered or not)
+	Size() scath.Vec
 
 	// Should return your own parent
 	Parent() Node

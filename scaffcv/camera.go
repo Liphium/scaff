@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math"
 
+	"github.com/Liphium/scaff/scath"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/colorm"
 )
@@ -357,6 +358,21 @@ func (cam *Camera) Draw(worldObject *ebiten.Image, worldObjectOps *ebiten.DrawIm
 func (cam *Camera) DrawWithColorM(worldObject *ebiten.Image, cm colorm.ColorM, worldObjectOps *colorm.DrawImageOptions, screen *ebiten.Image) {
 	cam.ApplyCameraTransform(&worldObjectOps.GeoM)
 	colorm.DrawImage(screen, worldObject, cm, worldObjectOps)
+}
+
+// Viewport calculates the top-left position and size of the camera viewport in world coordinates,
+// taking the current ZoomFactor into account.
+//
+// This needs to be expanded to include rotation in some capacity in the future.
+func (cam *Camera) Viewport() (pos scath.Vec, size scath.Vec) {
+	w := cam.Width / cam.ZoomFactor
+	h := cam.Height / cam.ZoomFactor
+
+	cx, cy := cam.Center()
+	x := cx - (w * 0.5)
+	y := cy - (h * 0.5)
+
+	return scath.Vec{X: x, Y: y}, scath.Vec{X: w, Y: h}
 }
 
 // SmoothOptions is the camera movement smoothing options.
