@@ -10,7 +10,6 @@ import (
 	"github.com/Liphium/scaff/scath"
 	sutil "github.com/Liphium/scaff/util"
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
 
 var log = sutil.NewLogger("app")
@@ -40,7 +39,6 @@ func main() {
 
 				props.Child(2, cvnode.Text(func(t *scaff.Tracker, props *cvnode.TextProps) {
 					props.Text = "Wassup?"
-					props.TextDirection = text.DirectionRightToLeft
 					props.Position = scath.Vec{X: 0, Y: 0}
 				}))
 			}))

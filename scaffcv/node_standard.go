@@ -148,6 +148,12 @@ func (s *StandardNode[P]) Load(parent Node) {
 }
 
 func (s *StandardNode[P]) PropsChanged(new P) {
+	s.props = new
+
+	// Call props changed on the actual methods
+	if s.methods.OnPropsChanged != nil {
+		s.methods.OnPropsChanged(s)
+	}
 
 	// If some children changed, build new ones
 	changed := new.GetChanged()
@@ -171,13 +177,6 @@ func (s *StandardNode[P]) PropsChanged(new P) {
 		}
 		new.ClearChanged()
 	}
-
-	// Call props changed on the actual methods
-	if s.methods.OnPropsChanged != nil {
-		s.methods.OnPropsChanged(s)
-	}
-
-	s.props = new
 }
 
 func (s *StandardNode[P]) HandleEvent(c *scaff.Context, event scaff.Event) scaff.TracedError {
@@ -267,8 +266,7 @@ func (s *StandardNode[P]) DrawChildren(c *scaff.Context, painter paint.Painter) 
 
 		// Do not draw chlildren that are outside of the camera's view
 		topLeft, size := child.Position(), child.Size()
-		if size == scath.Zero {
-			log.Debug("culled cause no size")
+		if size.Equals(scath.Zero) {
 			continue
 		}
 
@@ -286,7 +284,6 @@ func (s *StandardNode[P]) DrawChildren(c *scaff.Context, painter paint.Painter) 
 			}
 		}
 		if !found {
-			log.Debug("culled cause not found")
 			continue
 		}
 

@@ -14,10 +14,32 @@ type AcceptNoChild = AcceptNoChildTemplate[NodeBuilder]
 // This is recommended for use with a single child node as it saves a lot of code and implements all of the things required for children properly according to best practices.
 type AcceptChild = AcceptChildTemplate[NodeBuilder]
 
-// A struct that can be embedded as a pointer to implement a Child(builder NodeBuilder) function on props for a node with a multiple children.
+// A struct that can be embedded as a pointer to implement a Child(idex int, builder NodeBuilder) function on props for a node with a multiple children.
 //
 // This is recommended for use with a multi child node as it saves a lot of code and implements all of the things required for children properly according to best practices.
 type AcceptChildren = AcceptChildrenTemplate[NodeBuilder]
+
+// Helper functions
+
+func EmptyNoChild() AcceptNoChild {
+	return EmptyNoChildTemplate[NodeBuilder]()
+}
+
+func EmptyChild() *AcceptChild {
+	return EmptyChildTemplate[NodeBuilder]()
+}
+
+func WithChild(builder NodeBuilder) *AcceptChild {
+	return WithChildTemplate(builder)
+}
+
+func EmptyChildren() *AcceptChildren {
+	return EmptyChildrenTemplate[NodeBuilder]()
+}
+
+func WithChildren(builders []NodeBuilder) *AcceptChildren {
+	return WithChildrenTemplate(builders)
+}
 
 // Make sure we actually implement the things
 var _ ChildProps[NodeBuilder] = &AcceptNoChildTemplate[NodeBuilder]{}
@@ -36,6 +58,11 @@ func (anc AcceptNoChildTemplate[B]) GetChanged() []uint {
 }
 
 func (anc AcceptNoChildTemplate[B]) ClearChanged() {}
+
+// Helper function for quickly creating no child template
+func EmptyNoChildTemplate[B any]() AcceptNoChildTemplate[B] {
+	return AcceptNoChildTemplate[B]{}
+}
 
 // Template struct for type aliases that can be embedded as a pointer to implement a Child(builder NodeBuilder) function on props for a node with a single child.
 type AcceptChildTemplate[B any] struct {
@@ -67,6 +94,19 @@ func (ac AcceptChildTemplate[B]) GetChanged() []uint {
 
 func (ac *AcceptChildTemplate[B]) ClearChanged() {
 	ac.changed = false
+}
+
+// Helper function for quickly creating empty single child template.
+func EmptyChildTemplate[B any]() *AcceptChildTemplate[B] {
+	return &AcceptChildTemplate[B]{}
+}
+
+// Helper function for quickly creating new single child props.
+func WithChildTemplate[B any](builder B) *AcceptChildTemplate[B] {
+	return &AcceptChildTemplate[B]{
+		child:   optional.With(builder),
+		changed: true,
+	}
 }
 
 // Template struct for type aliases that can be embedded as a pointer to implement a Child(i uint, builder NodeBuilder) function on props for a node with a multiple children.
@@ -102,4 +142,24 @@ func (ac AcceptChildrenTemplate[B]) GetChanged() []uint {
 
 func (ac *AcceptChildrenTemplate[B]) ClearChanged() {
 	ac.changed = nil
+}
+
+// Helper function for quickly creating empty multi child template.
+func EmptyChildrenTemplate[B any]() *AcceptChildrenTemplate[B] {
+	return &AcceptChildrenTemplate[B]{}
+}
+
+// Helper function for quickly creating new single child props.
+func WithChildrenTemplate[B any](builders []B) *AcceptChildrenTemplate[B] {
+
+	// We just need to build a list with all the indices to make sure all of them are marked as changed
+	changed := make([]uint, len(builders))
+	for i := range builders {
+		changed[i] = uint(i)
+	}
+
+	return &AcceptChildrenTemplate[B]{
+		children: builders,
+		changed:  changed,
+	}
 }

@@ -57,7 +57,6 @@ func Canvas(create func(t *scaff.Tracker, props *CanvasProps)) scaff.NodeBuilder
 				}
 
 				if context.cam != nil {
-					context.cam.LookAt(node.Props().Position.X, node.Props().Position.Y)
 					context.cam.SmoothType = node.Props().SmoothType
 					context.cam.SmoothOptions = node.Props().SmoothOptions
 				}
@@ -88,6 +87,9 @@ func Canvas(create func(t *scaff.Tracker, props *CanvasProps)) scaff.NodeBuilder
 					context.cam.SmoothOptions = cv.SmoothOptions
 					sizeUpdate = false
 				}
+
+				// Set the proper position on the camera (this needs to be called every update so the smoothing is updated)
+				context.cam.LookAt(node.Props().Position.X, node.Props().Position.Y)
 
 				// Actually draw the root
 				painter.Clear()

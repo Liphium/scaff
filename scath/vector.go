@@ -29,7 +29,7 @@ import (
 
 var (
 	// Zero Vec{0, 0} vector is a vector with all components set to 0.
-	Zero = Vec{1, 1}
+	Zero = Vec{0, 0}
 	// One Vec{1, 1} vector is a vector with all components set to 1.
 	One = Vec{1, 1}
 	// Left unit vector. Vec{-1, 0} Represents the direction of left.

@@ -1,6 +1,7 @@
 package cvnode
 
 import (
+	"maps"
 	"slices"
 
 	"github.com/Liphium/scaff"
@@ -11,14 +12,15 @@ import (
 
 type CameraMovementProps struct {
 	Speed float64
-	scaffcv.AcceptNoChild
+	*scaffcv.AcceptChild
 }
 
 func CameraMovement(cameraPosition *scaff.Signal[scath.Vec], create func(t *scaff.Tracker, props *CameraMovementProps)) scaffcv.NodeBuilder {
 	return scaffcv.Standard(scaffcv.StandardCreate[CameraMovementProps]{
 		ID: "camera-movement",
 		DefaultProps: CameraMovementProps{
-			Speed: 10,
+			Speed:       10,
+			AcceptChild: scaffcv.EmptyChild(),
 		},
 		PropsCreator: create,
 		Create: func(props *scaffcv.StandardMethods[CameraMovementProps]) {
@@ -36,29 +38,34 @@ func CameraMovement(cameraPosition *scaff.Signal[scath.Vec], create func(t *scaf
 				ebiten.KeyA:         scath.Left,
 			}
 
-			props.OnUpdate = func(node *scaffcv.StandardNode[CameraMovementProps], c *scaff.Context) error {
-				active := []scath.Vec{}
+			props.OnPropsChanged = func(node *scaffcv.StandardNode[CameraMovementProps]) {
+				node.Props().AcceptChild.Child(Keyboard(func(t *scaff.Tracker, props *KeyboardProps) {
+					props.Keys = slices.Collect(maps.Keys(directionForKey))
 
-				// TODO: Convert to scaff input API with events and stuff
-				for key, vec := range directionForKey {
-					if ebiten.IsKeyPressed(key) && !slices.ContainsFunc(active, func(v scath.Vec) bool {
-						return v.Equals(vec)
-					}) {
-						active = append(active, vec)
+					props.OnUpdate = func(pressed []ebiten.Key) error {
+						active := []scath.Vec{}
+
+						for key, vec := range directionForKey {
+							if ebiten.IsKeyPressed(key) && !slices.ContainsFunc(active, func(v scath.Vec) bool {
+								return v.Equals(vec)
+							}) {
+								active = append(active, vec)
+							}
+						}
+
+						// Sum movement vectors + normalize
+						sum := scath.Vec{}
+						for _, v := range active {
+							sum = sum.Add(v)
+						}
+						sum = sum.Unit()
+
+						// Actually move the camera
+						sum = sum.Scale(node.Props().Speed)
+						cameraPosition.Set(cameraPosition.Value().Add(sum))
+						return nil
 					}
-				}
-
-				// Sum movement vectors + normalize
-				sum := scath.Vec{}
-				for _, v := range active {
-					sum = sum.Add(v)
-				}
-				sum = sum.Unit()
-
-				// Actually move the camera
-				sum = sum.Scale(node.Props().Speed)
-				cameraPosition.Set(cameraPosition.Value().Add(sum))
-				return nil
+				}))
 			}
 		},
 	})

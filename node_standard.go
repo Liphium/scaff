@@ -92,9 +92,15 @@ func (s *StandardNode[P]) Load(parent Node) {
 }
 
 func (s *StandardNode[P]) PropsChanged(new P) {
-	changed := new.GetChanged()
+	s.props = new
+
+	// Call props changed on the actual methods
+	if s.methods.OnPropsChanged != nil {
+		s.methods.OnPropsChanged(s)
+	}
 
 	// If some children changed, build new ones
+	changed := new.GetChanged()
 	if changed != nil {
 		builders := new.GetBuilders()
 		if s.children == nil {
@@ -115,13 +121,6 @@ func (s *StandardNode[P]) PropsChanged(new P) {
 		}
 		new.ClearChanged()
 	}
-
-	// Call props changed on the actual methods
-	if s.methods.OnPropsChanged != nil {
-		s.methods.OnPropsChanged(s)
-	}
-
-	s.props = new
 }
 
 func (s *StandardNode[P]) HandleEvent(c *Context, event Event) TracedError {
