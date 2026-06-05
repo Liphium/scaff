@@ -3,11 +3,6 @@ package sutil
 import (
 	"context"
 	"log/slog"
-	"os"
-	"time"
-
-	"github.com/lmittmann/tint"
-	"github.com/mattn/go-colorable"
 )
 
 type prefixHandler struct {
@@ -23,7 +18,13 @@ const blue = "\x1b[38;5;67m" // slightly brighter muted blue
 const reset = "\x1b[0m"
 
 func (p *prefixHandler) Handle(ctx context.Context, r slog.Record) error {
-	r.Message = blue + p.prefix + reset + r.Message
+	if IsWASM {
+		// Avoid ANSI color codes in WASM. The browser writer
+		// will parse this plain prefix and apply native CSS styles instead.
+		r.Message = p.prefix + r.Message
+	} else {
+		r.Message = blue + p.prefix + reset + r.Message
+	}
 	return p.h.Handle(ctx, r)
 }
 
@@ -35,12 +36,10 @@ func (p *prefixHandler) WithGroup(name string) slog.Handler {
 	return &prefixHandler{h: p.h.WithGroup(name), prefix: p.prefix}
 }
 
-// TODO: Expand to be able to set to JSON logging in production for potentially connecting loki and stuff
+// NewLogger automatically yields a native browser console logger
+// when compiled for WASM, and a tinted terminal logger otherwise.
 func NewLogger(part string) *slog.Logger {
-	h := tint.NewHandler(colorable.NewColorable(os.Stdout), &tint.Options{
-		Level:      slog.LevelDebug,
-		TimeFormat: time.Kitchen,
-	})
+	h := newBaseHandler()
 
 	return slog.New(&prefixHandler{
 		h:      h,

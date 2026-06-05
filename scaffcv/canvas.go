@@ -8,9 +8,14 @@ import (
 )
 
 type CanvasProps struct {
-	Position      scath.Vec
-	SmoothType    SmoothType
-	SmoothOptions SmoothOptions
+	// The current camera position
+	Position scath.Vec
+
+	// The current smooth type
+	SmoothType SmoothType
+
+	// The current camera smoothing options
+	SmoothOptions *SmoothOptions
 
 	child *AcceptChild
 	*scaff.AcceptNoChild
@@ -24,6 +29,8 @@ func Canvas(create func(t *scaff.Tracker, props *CanvasProps)) scaff.NodeBuilder
 	return scaff.Standard(scaff.StandardCreate[CanvasProps]{
 		ID: "canvas",
 		DefaultProps: CanvasProps{
+			SmoothType:    CameraMovementNone,
+			SmoothOptions: DefaultSmoothOptions(),
 			child:         &AcceptChild{},
 			AcceptNoChild: &scaff.AcceptNoChild{},
 		},
@@ -47,6 +54,12 @@ func Canvas(create func(t *scaff.Tracker, props *CanvasProps)) scaff.NodeBuilder
 					root = node.Props().child.GetBuilders()[0](context)
 					root.Load(nil)
 					node.Props().child.ClearChanged()
+				}
+
+				if context.cam != nil {
+					context.cam.LookAt(node.Props().Position.X, node.Props().Position.Y)
+					context.cam.SmoothType = node.Props().SmoothType
+					context.cam.SmoothOptions = node.Props().SmoothOptions
 				}
 			}
 
@@ -72,7 +85,8 @@ func Canvas(create func(t *scaff.Tracker, props *CanvasProps)) scaff.NodeBuilder
 					// Create new camera (old one will only have invalid positions)
 					context.cam = NewCamera(cv.Position.X, cv.Position.Y, c.Width(), c.Height())
 					context.cam.SmoothType = cv.SmoothType
-					context.cam.SmoothOptions = &cv.SmoothOptions
+					context.cam.SmoothOptions = cv.SmoothOptions
+					sizeUpdate = false
 				}
 
 				// Actually draw the root

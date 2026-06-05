@@ -33,8 +33,15 @@ func Rectangle(create func(t *scaff.Tracker, props *RectangleProps)) scaffcv.Nod
 			AcceptChild:     &scaffcv.AcceptChild{},
 		},
 		PropsCreator: create,
-		Create: func(props *scaffcv.StandardMethods[RectangleProps]) {
-			props.OnDraw = func(node *scaffcv.StandardNode[RectangleProps], c *scaff.Context, painter paint.Painter) {
+		Create: func(methods *scaffcv.StandardMethods[RectangleProps]) {
+			methods.Position = func(node *scaffcv.StandardNode[RectangleProps]) scath.Vec {
+				return node.Props().Position
+			}
+			methods.Size = func(node *scaffcv.StandardNode[RectangleProps]) scath.Vec {
+				return node.Props().Size
+			}
+
+			methods.OnDraw = func(node *scaffcv.StandardNode[RectangleProps], c *scaff.Context, painter paint.Painter) {
 				painter.Paint(paint.Rectangle{
 					Position:     node.Props().Position,
 					Size:         node.Props().Size,

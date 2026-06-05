@@ -23,7 +23,7 @@ type StandardCreate[P scaff.ChildProps[NodeBuilder]] struct {
 	ID           string
 	DefaultProps P
 	PropsCreator func(t *scaff.Tracker, props *P)
-	Create       func(props *StandardMethods[P])
+	Create       func(methods *StandardMethods[P])
 }
 
 // Standard lets you create a node with multiple children. Simply implement the ChildProps interface on the props you want to have for your node.

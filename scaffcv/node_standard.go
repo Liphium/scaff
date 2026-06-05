@@ -21,7 +21,7 @@ type StandardCreate[P scaff.ChildProps[NodeBuilder]] struct {
 	ID           string
 	DefaultProps P
 	PropsCreator func(t *scaff.Tracker, props *P)
-	Create       func(props *StandardMethods[P])
+	Create       func(methods *StandardMethods[P])
 }
 
 // Standard lets you create a node with multiple children. Simply implement the ChildProps interface on the props you want to have for your node.
@@ -267,7 +267,8 @@ func (s *StandardNode[P]) DrawChildren(c *scaff.Context, painter paint.Painter) 
 
 		// Do not draw chlildren that are outside of the camera's view
 		topLeft, size := child.Position(), child.Size()
-		if child.Size() == scath.Zero {
+		if size == scath.Zero {
+			log.Debug("culled cause no size")
 			continue
 		}
 
@@ -285,6 +286,7 @@ func (s *StandardNode[P]) DrawChildren(c *scaff.Context, painter paint.Painter) 
 			}
 		}
 		if !found {
+			log.Debug("culled cause not found")
 			continue
 		}
 

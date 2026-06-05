@@ -15,5 +15,6 @@ func Stack(create func(t *scaff.Tracker, props *StackProps)) scaffcv.NodeBuilder
 		DefaultProps: StackProps{
 			AcceptChildren: &scaffcv.AcceptChildren{},
 		},
+		PropsCreator: create,
 	})
 }

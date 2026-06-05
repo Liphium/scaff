@@ -15,7 +15,7 @@ type StandardCreate[P ChildProps[NodeBuilder]] struct {
 	ID           string
 	DefaultProps P
 	PropsCreator func(t *Tracker, props *P)
-	Create       func(props *StandardMethods[P])
+	Create       func(methods *StandardMethods[P])
 }
 
 // Standard lets you create a node with multiple children. Simply implement the ChildProps interface on the props you want to have for your node.
@@ -178,7 +178,6 @@ func (s *StandardNode[P]) Draw(c *Context, image *ebiten.Image) {
 	if s.methods.OnDraw != nil {
 		s.methods.OnDraw(s, c, image)
 	} else {
-
 		// Default implementation: just draw children
 		s.DrawChild(c, image)
 	}

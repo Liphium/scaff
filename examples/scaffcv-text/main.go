@@ -8,8 +8,12 @@ import (
 	"github.com/Liphium/scaff/scaffcv"
 	"github.com/Liphium/scaff/scaffcv/cvnode"
 	"github.com/Liphium/scaff/scath"
+	sutil "github.com/Liphium/scaff/util"
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
+
+var log = sutil.NewLogger("app")
 
 func main() {
 	ebiten.SetWindowSize(900, 600)
@@ -23,6 +27,7 @@ func main() {
 			t.Effect(func() {
 				props.Position = cameraPosition.Track(t)
 			})
+			props.SmoothType = scaffcv.CameraMovementDamp
 
 			props.Child(cvnode.Stack(func(t *scaff.Tracker, props *cvnode.StackProps) {
 				props.Child(0, cvnode.CameraMovement(cameraPosition, nil))
@@ -34,7 +39,8 @@ func main() {
 				}))
 
 				props.Child(2, cvnode.Text(func(t *scaff.Tracker, props *cvnode.TextProps) {
-					props.Text = "Hello, world!"
+					props.Text = "Wassup?"
+					props.TextDirection = text.DirectionRightToLeft
 					props.Position = scath.Vec{X: 0, Y: 0}
 				}))
 			}))
