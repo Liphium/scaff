@@ -1,11 +1,11 @@
-module rooms
-
-replace github.com/Liphium/scaff => ../../
+module github.com/Liphium/scaff/examples/scaffcv-tilemap
 
 go 1.26.3
 
+replace github.com/Liphium/scaff => ../../
+
 require (
-	github.com/Liphium/scaff v0.0.0-20260528085355-df17b757dae9
+	github.com/Liphium/scaff v0.0.0-00010101000000-000000000000
 	github.com/hajimehoshi/ebiten/v2 v2.9.9
 )
 

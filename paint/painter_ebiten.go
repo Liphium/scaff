@@ -61,6 +61,18 @@ func (er *EbitenPainter) Paint(command RenderCommand) {
 	}
 }
 
+func (er *EbitenPainter) DrawRaw(image *ebiten.Image, op *ebiten.DrawImageOptions) {
+
+	// Apply painter transform
+	op.GeoM.Translate(-er.transform.CamX, -er.transform.CamY)
+	op.GeoM.Translate(er.transform.CenterOffsetX, er.transform.CenterOffsetY)
+	op.GeoM.Rotate(er.transform.Angle)
+	op.GeoM.Scale(er.transform.ZoomFactor, er.transform.ZoomFactor)
+	op.GeoM.Translate(math.Abs(er.transform.CenterOffsetX), math.Abs(er.transform.CenterOffsetY))
+
+	er.screen.DrawImage(image, op)
+}
+
 func (er *EbitenPainter) PaintMulti(commands []RenderCommand) {
 	for _, command := range commands {
 		er.Paint(command)
