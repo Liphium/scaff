@@ -2,14 +2,14 @@ package uinode
 
 import (
 	"github.com/Liphium/scaff"
-	"github.com/Liphium/scaff/optional"
 	"github.com/Liphium/scaff/scaffui"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
 type ClickableProps struct {
-	OnClick optional.O[func(button ebiten.MouseButton) bool]
-	cursor  ebiten.CursorShapeType
+	OnClick        func(button ebiten.MouseButton) bool
+	OnClickOutside func() bool
+	Cursor         ebiten.CursorShapeType
 	*scaffui.AcceptChild
 }
 
@@ -19,16 +19,19 @@ func Clickable(create func(t *scaff.Tracker, props *ClickableProps)) scaffui.Nod
 	// Create an input node for actually listening to the events
 	return Input(func(t *scaff.Tracker, input *InputProps) {
 		props := &ClickableProps{
-			cursor:      ebiten.CursorShapePointer,
+			Cursor:      ebiten.CursorShapePointer,
 			AcceptChild: input.AcceptChild,
 		}
 		create(t, props)
 
+		set := false
 		input.OnMove = func(handled, inside bool, event scaff.MoveEvent) bool {
 			if inside {
-				ebiten.SetCursorShape(props.cursor)
-			} else {
+				ebiten.SetCursorShape(props.Cursor)
+				set = true
+			} else if set {
 				ebiten.SetCursorShape(ebiten.CursorShapeDefault)
+				set = false
 			}
 			return false
 		}
@@ -36,6 +39,10 @@ func Clickable(create func(t *scaff.Tracker, props *ClickableProps)) scaffui.Nod
 		input.OnDown = func(handled, inside bool, event scaff.PressEvent) bool {
 			if inside {
 				pressed[event.Button] = true
+			} else {
+				if props.OnClickOutside != nil {
+					return props.OnClickOutside()
+				}
 			}
 			return inside
 		}
@@ -46,8 +53,8 @@ func Clickable(create func(t *scaff.Tracker, props *ClickableProps)) scaffui.Nod
 
 			// If the event was not handled before and the button was pressed before + released inside of this element, a click has been detected
 			if wasPressed && inside && !handled {
-				if fn, ok := props.OnClick.Value(); ok {
-					return fn(event.Button)
+				if props.OnClick != nil {
+					return props.OnClick(event.Button)
 				}
 				return true
 			}

@@ -37,7 +37,10 @@ func (fp *FlexProps) Expanded(i uint, factor int, builder scaffui.NodeBuilder) {
 
 func Flex(create func(t *scaff.Tracker, props *FlexProps)) scaffui.NodeBuilder {
 	return scaffui.Standard(scaffui.StandardCreate[FlexProps]{
-		ID:           "flex",
+		ID: "flex",
+		DefaultProps: FlexProps{
+			AcceptChildren: scaffui.EmptyChildren(),
+		},
 		PropsCreator: create,
 		Create: func(props *scaffui.StandardMethods[FlexProps]) {
 			props.OnLayout = func(node *scaffui.StandardNode[FlexProps]) (scath.Vec, error) {

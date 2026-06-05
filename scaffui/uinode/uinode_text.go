@@ -31,7 +31,7 @@ type TextProps struct {
 	// SecondaryAlign sets the secondary alignment direction depending on your Text direction. If you for example choose left to right as your Text direction (the default), this will be vertical alignment.
 	SecondaryAlign text.Align
 
-	*scaffui.AcceptNoChild
+	scaffui.AcceptNoChild
 }
 
 func Text(create func(t *scaff.Tracker, props *TextProps)) scaffui.NodeBuilder {
@@ -46,7 +46,6 @@ func Text(create func(t *scaff.Tracker, props *TextProps)) scaffui.NodeBuilder {
 			LineSpacing:    0.25,
 			PrimaryAlign:   text.AlignStart,
 			SecondaryAlign: text.AlignStart,
-			AcceptNoChild:  &scaffui.AcceptNoChild{},
 		},
 		PropsCreator: create,
 		Create: func(props *scaffui.StandardMethods[TextProps]) {

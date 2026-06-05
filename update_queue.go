@@ -42,18 +42,14 @@ func (u *UpdateQueue) Update() {
 		// We prioritize it and skip other individual effects for this tracker.
 		if cb, ok := trackerCallbacks[-1]; ok {
 			cb()
-			if tracker.onChange != nil {
-				tracker.onChange()
-			}
+			tracker.runChangeHandlers()
 			continue
 		}
 
 		for _, cb := range trackerCallbacks {
 			cb()
 		}
-		if tracker.onChange != nil {
-			tracker.onChange()
-		}
+		tracker.runChangeHandlers()
 	}
 }
 

@@ -6,8 +6,6 @@ import (
 	"github.com/Liphium/scaff/paint"
 	"github.com/Liphium/scaff/scaffui"
 	"github.com/Liphium/scaff/scath"
-
-	"errors"
 )
 
 var _ scaff.ChildProps[scaffui.NodeBuilder] = AlignProps{}
@@ -39,19 +37,11 @@ func Align(create func(t *scaff.Tracker, props *AlignProps)) scaffui.NodeBuilder
 					return size, err
 				}
 
-				if node.Props().HorizontalAligment.HasValue() {
-					if node.Constraints().MaxX == scath.Infinite {
-						return size, errors.New("infinite width for horizontal alignment")
-					}
-
+				if node.Props().HorizontalAligment.HasValue() && node.Constraints().MaxX != scath.Infinite {
 					size.X = node.Constraints().MaxX
 				}
 
-				if node.Props().VerticalAlignment.HasValue() {
-					if node.Constraints().MaxY == scath.Infinite {
-						return size, errors.New("infinite height for vertical alignment")
-					}
-
+				if node.Props().VerticalAlignment.HasValue() && node.Constraints().MaxY != scath.Infinite {
 					size.Y = node.Constraints().MaxY
 				}
 

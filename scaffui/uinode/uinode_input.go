@@ -23,6 +23,9 @@ type InputProps struct {
 	// When scrolling with the mouse or potentially differnet methods when no mouse is available.
 	OnScroll func(handled, inside bool, event scaff.ScrollEvent) bool
 
+	// When a key is pressed.
+	OnKeyPress func(handled bool, event scaff.KeyPressEvent) bool
+
 	*scaffui.AcceptChild
 }
 
@@ -44,8 +47,6 @@ func Input(create func(t *scaff.Tracker, props *InputProps)) scaffui.NodeBuilder
 				isInside := false
 				if posEvent, ok := event.(scaff.PositionalEvent); ok {
 					isInside = posEvent.Position().IsWithinRectangle(lastPosition, node.Size())
-				} else {
-					return nil
 				}
 
 				switch ev := event.(type) {
@@ -70,6 +71,12 @@ func Input(create func(t *scaff.Tracker, props *InputProps)) scaffui.NodeBuilder
 				case scaff.ScrollEvent:
 					if node.Props().OnScroll != nil {
 						if node.Props().OnScroll(handled, isInside, ev) {
+							c.Handled(event.EventID())
+						}
+					}
+				case scaff.KeyPressEvent:
+					if node.Props().OnKeyPress != nil {
+						if node.Props().OnKeyPress(handled, ev) {
 							c.Handled(event.EventID())
 						}
 					}

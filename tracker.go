@@ -19,10 +19,10 @@ type effect struct {
 
 // TODO: We need a method for actually, after the props are created, running all the effects cause otherwise those parts of the props won't be set, an ideal thing to do additionally would be to when the effects are ran, track which signals were added in each effect and then create a mapping between signal -> effect index, that way we could only re-run the effects that matter, for others we just re-run all effects obv.
 type Tracker struct {
-	mu       sync.Mutex
-	runMu    sync.Mutex
-	context  *BuildContext
-	onChange func()
+	mu               sync.Mutex
+	runMu            sync.Mutex
+	context          *BuildContext
+	onChangeHandlers []func()
 
 	removal       map[any]func()
 	effectsToCall map[any][]int
@@ -39,11 +39,11 @@ func (t *Tracker) Tracker() *Tracker {
 
 func NewTracker(context *BuildContext, onChange func()) *Tracker {
 	return &Tracker{
-		context:       context,
-		removal:       make(map[any]func()),
-		effectsToCall: make(map[any][]int),
-		currentEffect: -1,
-		onChange:      onChange,
+		context:          context,
+		removal:          make(map[any]func()),
+		effectsToCall:    make(map[any][]int),
+		currentEffect:    -1,
+		onChangeHandlers: []func(){onChange},
 	}
 }
 
@@ -56,6 +56,34 @@ func (t *Tracker) Clear() {
 		remove()
 	}
 	t.removal = make(map[any]func())
+}
+
+// On change will be called when anything subscribed to the tracker changes, unlike effect, it does not track dependencies, this should be used for components that share a tracker across multiple nodes.
+//
+// Also runs the handler once after being added.
+func (t *Tracker) OnChange(t2 *Tracker, handler func()) {
+	t.mu.Lock()
+	t.onChangeHandlers = append(t.onChangeHandlers, func() {
+		handler()
+		if t != t2 {
+			t2.runChangeHandlers()
+		}
+	})
+	t.mu.Unlock()
+
+	handler()
+}
+
+// Run all change handlers
+func (t *Tracker) runChangeHandlers() {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
+	if t.onChangeHandlers != nil {
+		for _, handler := range t.onChangeHandlers {
+			handler()
+		}
+	}
 }
 
 // Effect adds a new handler being called when the thing changes, use this to actually react to changes of signals (runs first immediately after being called).
