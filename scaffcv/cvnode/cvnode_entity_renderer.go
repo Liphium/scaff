@@ -56,7 +56,11 @@ func (e EntityRendererProps[K, E]) render(key K, context *scaffcv.BuildContext) 
 	}
 
 	if en, ok := e.EntityStore.entities[key]; ok {
-		return e.Renderer(key, en)(context)
+		builder := e.Renderer(key, en)
+		if builder == nil {
+			return nil
+		}
+		return builder(context)
 	}
 	return nil
 }
