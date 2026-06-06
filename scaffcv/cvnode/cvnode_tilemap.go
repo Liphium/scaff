@@ -173,8 +173,8 @@ func Tilemap(create func(t *scaff.Tracker, props *TilemapProps)) scaffcv.NodeBui
 					op := &ebiten.DrawImageOptions{
 						Filter: ebiten.FilterPixelated,
 					}
-					width := node.Props().TileWidth * node.Props().ChunkSize
-					height := node.Props().TileHeight * node.Props().ChunkSize
+					width := node.Props().TileWidth
+					height := node.Props().TileHeight
 
 					position := node.Props().Offset.Add(scath.Vec{
 						X: float64(chunkPos.X * width),

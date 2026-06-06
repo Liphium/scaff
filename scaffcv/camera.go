@@ -365,8 +365,8 @@ func (cam *Camera) DrawWithColorM(worldObject *ebiten.Image, cm colorm.ColorM, w
 //
 // This needs to be expanded to include rotation in some capacity in the future.
 func (cam *Camera) Viewport() (pos scath.Vec, size scath.Vec) {
-	w := cam.Width / cam.ZoomFactor
-	h := cam.Height / cam.ZoomFactor
+	w := cam.Width * cam.ZoomFactor
+	h := cam.Height * cam.ZoomFactor
 
 	cx, cy := cam.Center()
 	x := cx - (w * 0.5)

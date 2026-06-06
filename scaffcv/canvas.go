@@ -11,6 +11,9 @@ type CanvasProps struct {
 	// The current camera position
 	Position scath.Vec
 
+	// The current zoom factor
+	Zoom float64
+
 	// The current smooth type
 	SmoothType SmoothType
 
@@ -90,6 +93,7 @@ func Canvas(create func(t *scaff.Tracker, props *CanvasProps)) scaff.NodeBuilder
 
 				// Set the proper position on the camera (this needs to be called every update so the smoothing is updated)
 				context.cam.LookAt(node.Props().Position.X, node.Props().Position.Y)
+				context.cam.ZoomFactor = node.Props().Zoom
 
 				// Actually draw the root
 				painter.Clear()
