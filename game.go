@@ -38,6 +38,14 @@ func (g *Game) Layout(width, height int) (int, int) {
 	return -1, -1
 }
 
+func (g *Game) Width() float64 {
+	return g.width
+}
+
+func (g *Game) Height() float64 {
+	return g.height
+}
+
 // This makes sure the monitor's resolution is actually properly respected (Source: https://github.com/tinne26/kage-desk/blob/main/docs/tutorials/ebitengine_game.md#layout)
 func (g *Game) LayoutF(logicWinWidth, logicWinHeight float64) (float64, float64) {
 	scale := ebiten.Monitor().DeviceScaleFactor()

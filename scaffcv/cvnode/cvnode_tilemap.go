@@ -75,6 +75,23 @@ func (t TilemapStore) TileToWorldCenter(pos TilePosition) scath.Vec {
 	}
 }
 
+func (t TilemapStore) GetBounds() (scath.Vec, scath.Vec) {
+	minX, minY, maxX, maxY := 0.0, 0.0, 0.0, 0.0
+	for pos := range t.tilePositions {
+		realPos := t.Offset.Add(scath.Vec{
+			X: float64(pos.X * t.TileWidth),
+			Y: float64(pos.Y * t.TileHeight),
+		})
+
+		minX = math.Min(minX, realPos.X)
+		minY = math.Min(minY, realPos.Y)
+		maxX = math.Max(maxX, realPos.X+float64(t.TileWidth))
+		maxY = math.Max(maxY, realPos.Y+float64(t.TileHeight))
+	}
+
+	return scath.Vec{X: minX, Y: minY}, scath.Vec{X: maxX, Y: maxY}
+}
+
 type TilemapProps struct {
 
 	// Link to the tileset

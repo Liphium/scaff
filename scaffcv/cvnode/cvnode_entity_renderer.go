@@ -41,6 +41,7 @@ func (e *EntityStore[K, E]) clearDiff() {
 
 type EntityRendererProps[K comparable, E any] struct {
 	*EntityStore[K, E]
+	Visible  bool
 	Renderer func(key K, entity E) scaffcv.NodeBuilder
 	scaffcv.AcceptNoChild
 }
@@ -56,7 +57,7 @@ func (e EntityRendererProps[K, E]) render(key K, context *scaffcv.BuildContext) 
 	return nil
 }
 
-func EntityRenderer[K comparable, E any](create func(t *scaff.Tracker, e *EntityRendererProps[K, E])) scaffcv.NodeBuilder {
+func EntityRenderer[K comparable, E any](create func(t *scaff.Tracker, props *EntityRendererProps[K, E])) scaffcv.NodeBuilder {
 	rendered := map[K]scaffcv.Node{}
 
 	// Function to help render changed nodes and mount them properly
@@ -112,6 +113,7 @@ func EntityRenderer[K comparable, E any](create func(t *scaff.Tracker, e *Entity
 	return scaffcv.Standard(scaffcv.StandardCreate[EntityRendererProps[K, E]]{
 		ID: "entity-renderer",
 		DefaultProps: EntityRendererProps[K, E]{
+			Visible: true,
 			EntityStore: &EntityStore[K, E]{
 				entities: map[K]E{},
 			},
@@ -142,7 +144,9 @@ func EntityRenderer[K comparable, E any](create func(t *scaff.Tracker, e *Entity
 			}
 
 			methods.OnDraw = func(node *scaffcv.StandardNode[EntityRendererProps[K, E]], c *scaff.Context, painter paint.Painter) {
-				scaffcv.DrawCulled(maps.Values(rendered), c, painter, node.Context())
+				if node.Props().Visible {
+					scaffcv.DrawCulled(maps.Values(rendered), c, painter, node.Context())
+				}
 			}
 
 			methods.OnHandleEvent = func(node *scaffcv.StandardNode[EntityRendererProps[K, E]], c *scaff.Context, event scaff.Event) error {

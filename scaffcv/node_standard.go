@@ -278,32 +278,34 @@ func (s *StandardNode[P]) DrawChildren(c *scaff.Context, painter paint.Painter) 
 
 // Draw a bunch of nodes with Position and Size functions to be culled according to the camera viewport
 func DrawCulled(nodes iter.Seq[Node], c *scaff.Context, painter paint.Painter, context *BuildContext) {
-	vwOrigin, vwSize := context.Camera().Viewport()
+	//vwOrigin, vwSize := context.Camera().Viewport()
 
 	for child := range nodes {
 
-		// Do not draw chlildren that are outside of the camera's view
-		topLeft, size := child.Position(), child.Size()
-		if size.Equals(scath.Zero) {
-			continue
-		}
-
-		// TODO: This needs to support camera rotation in the future, but let's not worry about that for now
-		toCheck := []scath.Vec{
-			topLeft,
-			topLeft.Add(scath.Vec{X: size.X}), // Top right
-			topLeft.Add(scath.Vec{Y: size.Y}), // Bottom left
-			topLeft.Add(size),                 // Bottom right
-		}
-		found := false
-		for _, vec := range toCheck {
-			if vec.IsWithinRectangle(vwOrigin, vwSize) {
-				found = true
+		/*
+			// Do not draw chlildren that are outside of the camera's view
+			topLeft, size := child.Position(), child.Size()
+			if size.Equals(scath.Zero) {
+				continue
 			}
-		}
-		if !found {
-			continue
-		}
+
+			// TODO: This needs to support camera rotation in the future, but let's not worry about that for now
+			toCheck := []scath.Vec{
+				topLeft,
+				topLeft.Add(scath.Vec{X: size.X}), // Top right
+				topLeft.Add(scath.Vec{Y: size.Y}), // Bottom left
+				topLeft.Add(size),                 // Bottom right
+			}
+			found := false
+			for _, vec := range toCheck {
+				if vec.IsWithinRectangle(vwOrigin, vwSize) {
+					found = true
+				}
+			}
+			if !found {
+				continue
+				}
+		*/
 
 		child.Draw(c, painter)
 	}

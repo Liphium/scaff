@@ -13,10 +13,10 @@ type KeyboardProps struct {
 	Keys []ebiten.Key
 
 	// Called when a key in the list is pressed (return if anything has been done with the event, will not call when the press has already been handled)
-	OnPress func(key ebiten.Key) bool
+	OnPress func(key ebiten.Key, pressed []ebiten.Key) bool
 
 	// Called when a key in the list is released (only called when the keypress was actually handled)
-	OnRelease func(key ebiten.Key)
+	OnRelease func(key ebiten.Key, pressed []ebiten.Key)
 
 	// Called for every update where the key is pressed
 	OnUpdate func(pressed []ebiten.Key) error
@@ -38,7 +38,7 @@ func Keyboard(create func(t *scaff.Tracker, props *KeyboardProps)) scaffcv.NodeB
 
 				// Forward unhandled key presses
 				if keyPress, ok := event.(scaff.KeyPressEvent); ok && !c.IsHandled(keyPress.EventID()) && slices.Contains(node.Props().Keys, keyPress.Key) {
-					handle := node.Props().OnPress == nil || node.Props().OnPress(keyPress.Key)
+					handle := node.Props().OnPress == nil || node.Props().OnPress(keyPress.Key, pressed)
 
 					if handle {
 						pressed = append(pressed, keyPress.Key)
@@ -56,7 +56,7 @@ func Keyboard(create func(t *scaff.Tracker, props *KeyboardProps)) scaffcv.NodeB
 					// If the list doesn't have the same length anymore, we handle the release event
 					if lenBefore != len(pressed) {
 						if node.Props().OnRelease != nil {
-							node.Props().OnRelease(keyRelease.Key)
+							node.Props().OnRelease(keyRelease.Key, pressed)
 						}
 						c.Handled(keyRelease.EventID())
 					}
