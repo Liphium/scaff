@@ -29,6 +29,10 @@ func (e *EntityStore[K, E]) Entity(key K, entity E) {
 	e.entities[key] = entity
 }
 
+func (e *EntityStore[K, E]) Get(key K) E {
+	return e.entities[key]
+}
+
 func (e *EntityStore[K, E]) RemoveEntity(key K) {
 	e.deletions = append(e.deletions, key)
 	delete(e.entities, key)
