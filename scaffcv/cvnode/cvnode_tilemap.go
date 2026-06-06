@@ -33,10 +33,12 @@ type TilemapStore struct {
 	changedTiles  []TilePosition
 }
 
-func NewTilemapStore() *TilemapStore {
+func NewTilemapStore(width int, height int) *TilemapStore {
 	return &TilemapStore{
 		tilePositions: map[TilePosition]int{},
 		changedTiles:  []TilePosition{},
+		TileWidth:     width,
+		TileHeight:    height,
 	}
 }
 
