@@ -103,21 +103,32 @@ func (s *StandardNode[P]) PropsChanged(new P) {
 	changed := new.GetChanged()
 	if changed != nil {
 		builders := new.GetBuilders()
+
+		// Diff size to make sure length is properly done
 		if s.children == nil {
 			s.children = make([]Node, len(builders))
+		} else if len(s.children) > len(builders) {
+			for _, node := range s.children[len(builders)-1:] {
+				node.Unload()
+			}
+		} else if len(s.children) < len(builders) {
+			s.children = append(s.children, make([]Node, len(builders)-len(s.children))...)
 		}
 
 		for _, i := range changed {
-			if len(builders) < int(i) {
+			if int(i) >= len(builders) {
 				log.Error("index out of bounds for props update", "i", i, "children", len(builders))
 				continue
 			}
 
 			if s.children[i] != nil {
 				s.children[i].Unload()
+				s.children[i] = nil
 			}
-			s.children[i] = builders[i](s.context)
-			s.children[i].Load(s)
+			if builders[i] != nil {
+				s.children[i] = builders[i](s.context)
+				s.children[i].Load(s)
+			}
 		}
 		new.ClearChanged()
 	}

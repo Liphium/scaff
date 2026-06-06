@@ -20,8 +20,24 @@ func TilePos(x int, y int) TilePosition {
 }
 
 type TilemapStore struct {
+	// Offset from the center
+	Offset scath.Vec
+
+	// Width for the tile
+	TileWidth int
+
+	// Height for the tile
+	TileHeight int
+
 	tilePositions map[TilePosition]int
 	changedTiles  []TilePosition
+}
+
+func NewTilemapStore() *TilemapStore {
+	return &TilemapStore{
+		tilePositions: map[TilePosition]int{},
+		changedTiles:  []TilePosition{},
+	}
 }
 
 // Set a tile at a specific position on the tilemap (you can use -1 to clear if nothing should be there)
@@ -34,21 +50,36 @@ func (t *TilemapStore) clearChanged() {
 	t.changedTiles = []TilePosition{}
 }
 
+// Get the tile at a specific position (-1 if it's not there)
+func (t *TilemapStore) TileAt(tile TilePosition) int {
+	if tile, ok := t.tilePositions[tile]; ok {
+		return tile
+	}
+	return -1
+}
+
+func (t TilemapStore) WorldToTile(pos scath.Vec) TilePosition {
+	relative := pos.Sub(t.Offset)
+	return TilePosition{
+		X: int(relative.X) / t.TileWidth,
+		Y: int(relative.Y) / t.TileHeight,
+	}
+}
+
+func (t TilemapStore) TileToWorldCenter(pos TilePosition) scath.Vec {
+	return scath.Vec{
+		X: float64(pos.X*t.TileWidth) + float64(t.TileWidth)/2 + t.Offset.X,
+		Y: float64(pos.Y*t.TileHeight) + float64(t.TileHeight)/2 + t.Offset.Y,
+	}
+}
+
 type TilemapProps struct {
-	// Offset from the center
-	Offset scath.Vec
 
 	// Link to the tileset
 	Tileset string
 
 	// All tiles available (in the image, based on tile width and height)
 	Tiles []TilePosition
-
-	// Width for the tile
-	TileWidth int
-
-	// Height for the tile
-	TileHeight int
 
 	// The size of the cached chunks of the tilemap
 	ChunkSize int
@@ -72,10 +103,10 @@ func Tilemap(create func(t *scaff.Tracker, props *TilemapProps)) scaffcv.NodeBui
 	return scaffcv.Standard(scaffcv.StandardCreate[TilemapProps]{
 		ID: "tilemap",
 		DefaultProps: TilemapProps{
-			TileWidth:  16,
-			TileHeight: 16,
-			ChunkSize:  10,
+			ChunkSize: 10,
 			TilemapStore: &TilemapStore{
+				TileWidth:     16,
+				TileHeight:    16,
 				tilePositions: map[TilePosition]int{},
 				changedTiles:  []TilePosition{},
 			},

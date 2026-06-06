@@ -1,7 +1,9 @@
 package scaffcv
 
 import (
+	"iter"
 	"math"
+	"slices"
 
 	"github.com/Liphium/scaff"
 	"github.com/Liphium/scaff/paint"
@@ -159,21 +161,32 @@ func (s *StandardNode[P]) PropsChanged(new P) {
 	changed := new.GetChanged()
 	if changed != nil {
 		builders := new.GetBuilders()
+
+		// Diff size to make sure length is properly done
 		if s.children == nil {
 			s.children = make([]Node, len(builders))
+		} else if len(s.children) > len(builders) {
+			for _, node := range s.children[len(builders)-1:] {
+				node.Unload()
+			}
+		} else if len(s.children) < len(builders) {
+			s.children = append(s.children, make([]Node, len(builders)-len(s.children))...)
 		}
 
 		for _, i := range changed {
-			if len(builders) < int(i) {
+			if int(i) >= len(builders) {
 				log.Error("index out of bounds for props update", "i", i, "children", len(builders))
 				continue
 			}
 
 			if s.children[i] != nil {
 				s.children[i].Unload()
+				s.children[i] = nil
 			}
-			s.children[i] = builders[i](s.context)
-			s.children[i].Load(s)
+			if builders[i] != nil {
+				s.children[i] = builders[i](s.context)
+				s.children[i].Load(s)
+			}
 		}
 		new.ClearChanged()
 	}
@@ -260,9 +273,14 @@ func (s *StandardNode[P]) HandleEventChildren(c *scaff.Context, event scaff.Even
 
 // Draw the children of the node
 func (s *StandardNode[P]) DrawChildren(c *scaff.Context, painter paint.Painter) {
-	vwOrigin, vwSize := s.Context().Camera().Viewport()
+	DrawCulled(slices.Values(s.children), c, painter, s.Context())
+}
 
-	for _, child := range s.children {
+// Draw a bunch of nodes with Position and Size functions to be culled according to the camera viewport
+func DrawCulled(nodes iter.Seq[Node], c *scaff.Context, painter paint.Painter, context *BuildContext) {
+	vwOrigin, vwSize := context.Camera().Viewport()
+
+	for child := range nodes {
 
 		// Do not draw chlildren that are outside of the camera's view
 		topLeft, size := child.Position(), child.Size()
