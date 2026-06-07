@@ -25,7 +25,7 @@ func Rectangle(create func(t *scaff.Tracker, props *RectangleProps)) scaffcv.Nod
 		ID: "rectangle",
 		DefaultProps: RectangleProps{
 			Position:        scath.Zero,
-			Size:            scath.Vec{X: 100, Y: 100},
+			Size:            scath.Zero,
 			FillColor:       color.White,
 			BorderRadius:    0,
 			StrokeColor:     color.Black,
