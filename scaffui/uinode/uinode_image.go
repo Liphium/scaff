@@ -1,9 +1,10 @@
 package uinode
 
 import (
-	"github.com/Liphium/scaff/paint"
+	"image"
 
-	"image/color"
+	"github.com/Liphium/scaff/paint"
+	"github.com/Liphium/scaff/scaffcv/cvnode"
 
 	"github.com/Liphium/scaff"
 	"github.com/Liphium/scaff/optional"
@@ -15,8 +16,10 @@ import (
 
 type ImageProps struct {
 	Constraints optional.O[scath.Constraints]
-	Path        optional.O[string]
-	FilterMode  optional.O[ebiten.Filter]
+	Path        string
+	FilterMode  ebiten.Filter
+	Offset      optional.O[cvnode.TilePosition]
+	Frame       optional.O[cvnode.TilePosition]
 	*scaffui.AcceptNoChild
 }
 
@@ -27,6 +30,9 @@ func Image(create func(t *scaff.Tracker, props *ImageProps)) scaffui.NodeBuilder
 	return scaffui.Standard(scaffui.StandardCreate[ImageProps]{
 		ID: "image",
 		DefaultProps: ImageProps{
+			FilterMode:    ebiten.FilterLinear,
+			Offset:        optional.None[cvnode.TilePosition](),
+			Frame:         optional.None[cvnode.TilePosition](),
 			AcceptNoChild: &scaffui.AcceptNoChild{},
 		},
 		PropsCreator: create,
@@ -46,24 +52,38 @@ func Image(create func(t *scaff.Tracker, props *ImageProps)) scaffui.NodeBuilder
 			}
 
 			props.OnDraw = func(node *scaffui.StandardNode[ImageProps], position scath.Vec, painter paint.Painter) {
-				if Path, ok := node.Props().Path.Value(); ok {
-
-					// Draw the actual image
-					painter.Paint(paint.Image{
-						Path:       Path,
-						Position:   position,
-						Size:       node.Size(),
-						FilterMode: node.Props().FilterMode.Or(ebiten.FilterLinear),
-					})
-				} else {
-
-					// Draw a red rectangle to signal an error
-					painter.Paint(paint.Rectangle{
-						Position:  position,
-						Size:      node.Size(),
-						FillColor: color.RGBA{255, 0, 0, 255},
-					})
+				asset, err := node.Context().AssetManager().GetImage(node.Props().Path)
+				if err != nil {
+					log.Error("couldn't find image", "i", node.Props().Path)
+					return
 				}
+
+				// If it is a sub-image make sure to cut it out
+				width, height := 0.0, 0.0
+				if offset, ok := node.Props().Offset.Value(); ok {
+					frame, ok := node.Props().Frame.Value()
+					if !ok {
+						log.Error("can't render subimage without frame")
+						return
+					}
+
+					asset = asset.SubImage(image.Rect(offset.X, offset.Y, offset.X+frame.X, offset.Y+frame.Y)).(*ebiten.Image)
+					width, height = float64(frame.X), float64(frame.Y)
+				} else {
+					width, height = float64(asset.Bounds().Dx()), float64(asset.Bounds().Dy())
+				}
+
+				op := &ebiten.DrawImageOptions{
+					Filter: node.Props().FilterMode,
+				}
+				realSize := node.Size()
+				if realSize.X != 0 && realSize.Y != 0 {
+					op.GeoM.Scale(realSize.X/width, realSize.Y/height)
+				}
+				op.GeoM.Translate(position.X, position.Y)
+
+				// Draw the actual image
+				painter.DrawRaw(asset, op)
 			}
 		},
 	})
