@@ -63,6 +63,17 @@ func (Text) ID() string {
 	return "text"
 }
 
+type Line struct {
+	Start     scath.Vec   `json:"start"`
+	End       scath.Vec   `json:"end"`
+	Color     color.Color `json:"color"`
+	Thickness float64     `json:"thickness"`
+}
+
+func (Line) ID() string {
+	return "line"
+}
+
 type Transform struct {
 	CamX          float64
 	CamY          float64

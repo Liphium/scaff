@@ -56,6 +56,8 @@ func (er *EbitenPainter) Paint(command RenderCommand) {
 		er.drawImage(c)
 	case Text:
 		er.drawText(c)
+	case Line:
+		er.drawLine(c)
 	default:
 		log.Warn("unknown render command", "id", command.ID())
 	}
@@ -138,6 +140,35 @@ func (er *EbitenPainter) drawRectangleStroke(command RectangleStroke) {
 	}
 	drawOptions := &vector.DrawPathOptions{AntiAlias: er.antialias}
 	drawOptions.ColorScale.ScaleWithColor(command.Color)
+	vector.StrokePath(er.screen, path, strokeOptions, drawOptions)
+}
+
+func (er *EbitenPainter) drawLine(line Line) {
+	path := &vector.Path{}
+	path.MoveTo(float32(line.Start.X), float32(line.Start.Y))
+	path.LineTo(float32(line.End.X), float32(line.End.Y))
+
+	// Apply transform to path
+	if er.transform.ZoomFactor != 1 || er.transform.Angle != 0 || er.transform.CamX != 0 || er.transform.CamY != 0 || er.transform.CenterOffsetX != 0 || er.transform.CenterOffsetY != 0 {
+		geom := ebiten.GeoM{}
+		geom.Translate(-er.transform.CamX, -er.transform.CamY)
+		geom.Translate(er.transform.CenterOffsetX, er.transform.CenterOffsetY)
+		geom.Rotate(er.transform.Angle)
+		geom.Scale(er.transform.ZoomFactor, er.transform.ZoomFactor)
+		geom.Translate(math.Abs(er.transform.CenterOffsetX), math.Abs(er.transform.CenterOffsetY))
+
+		tfPath := &vector.Path{}
+		tfPath.AddPath(path, &vector.AddPathOptions{GeoM: geom})
+		path = tfPath
+	}
+
+	strokeOptions := &vector.StrokeOptions{
+		Width:    float32(line.Thickness),
+		LineJoin: vector.LineJoinRound,
+		LineCap:  vector.LineCapRound,
+	}
+	drawOptions := &vector.DrawPathOptions{AntiAlias: er.antialias}
+	drawOptions.ColorScale.ScaleWithColor(line.Color)
 	vector.StrokePath(er.screen, path, strokeOptions, drawOptions)
 }
 

@@ -3,6 +3,7 @@ package cvnode
 import (
 	"maps"
 	"slices"
+	"sync"
 
 	"github.com/Liphium/scaff"
 	"github.com/Liphium/scaff/paint"
@@ -11,6 +12,7 @@ import (
 )
 
 type EntityStore[K comparable, E any] struct {
+	mu        sync.Mutex
 	deletions []K
 	updates   []K
 	order     []K
@@ -19,11 +21,15 @@ type EntityStore[K comparable, E any] struct {
 
 func NewEntityStore[K comparable, E any]() *EntityStore[K, E] {
 	return &EntityStore[K, E]{
+		mu:       sync.Mutex{},
 		entities: map[K]E{},
 	}
 }
 
 func (e *EntityStore[K, E]) Entity(key K, entity E) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
 	if e.entities == nil {
 		e.entities = make(map[K]E)
 	}
@@ -33,19 +39,39 @@ func (e *EntityStore[K, E]) Entity(key K, entity E) {
 }
 
 func (e *EntityStore[K, E]) Get(key K) E {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
 	return e.entities[key]
 }
 
 func (e *EntityStore[K, E]) RemoveEntity(key K) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
 	e.deletions = append(e.deletions, key)
 	delete(e.entities, key)
+	e.order = slices.Collect(maps.Keys(e.entities))
 }
 
 func (e *EntityStore[K, E]) GetOrder() []K {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
 	return e.order
 }
 
+func (e *EntityStore[K, E]) GetAll() map[K]E {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
+	return e.entities
+}
+
 func (e *EntityStore[K, E]) clearDiff() {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
 	e.deletions = []K{}
 	e.updates = []K{}
 }

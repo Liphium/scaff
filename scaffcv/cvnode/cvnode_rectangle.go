@@ -15,7 +15,7 @@ type RectangleProps struct {
 	FillColor       color.Color
 	StrokeThickness float64
 	StrokeColor     color.Color
-	borderRadius    float64
+	BorderRadius    float64
 
 	*scaffcv.AcceptChild
 }
@@ -27,7 +27,7 @@ func Rectangle(create func(t *scaff.Tracker, props *RectangleProps)) scaffcv.Nod
 			Position:        scath.Zero,
 			Size:            scath.Vec{X: 100, Y: 100},
 			FillColor:       color.White,
-			borderRadius:    0,
+			BorderRadius:    0,
 			StrokeColor:     color.Black,
 			StrokeThickness: 0,
 			AcceptChild:     &scaffcv.AcceptChild{},
@@ -46,7 +46,7 @@ func Rectangle(create func(t *scaff.Tracker, props *RectangleProps)) scaffcv.Nod
 					Position:     node.Props().Position,
 					Size:         node.Props().Size,
 					FillColor:    node.Props().FillColor,
-					BorderRadius: node.Props().borderRadius,
+					BorderRadius: node.Props().BorderRadius,
 				})
 
 				// Draw stroke when there
@@ -55,7 +55,7 @@ func Rectangle(create func(t *scaff.Tracker, props *RectangleProps)) scaffcv.Nod
 						Position:     node.Props().Position,
 						Size:         node.Props().Size,
 						Color:        node.Props().StrokeColor,
-						BorderRadius: node.Props().borderRadius,
+						BorderRadius: node.Props().BorderRadius,
 					})
 				}
 			}
