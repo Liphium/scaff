@@ -281,6 +281,9 @@ func DrawCulled(nodes iter.Seq[Node], c *scaff.Context, painter paint.Painter, c
 	//vwOrigin, vwSize := context.Camera().Viewport()
 
 	for child := range nodes {
+		if child == nil {
+			continue
+		}
 
 		/*
 			// Do not draw chlildren that are outside of the camera's view

@@ -2,6 +2,7 @@ package cvnode
 
 import (
 	"maps"
+	"slices"
 
 	"github.com/Liphium/scaff"
 	"github.com/Liphium/scaff/paint"
@@ -12,6 +13,7 @@ import (
 type EntityStore[K comparable, E any] struct {
 	deletions []K
 	updates   []K
+	order     []K
 	entities  map[K]E
 }
 
@@ -27,6 +29,7 @@ func (e *EntityStore[K, E]) Entity(key K, entity E) {
 	}
 	e.updates = append(e.updates, key)
 	e.entities[key] = entity
+	e.order = slices.Collect(maps.Keys(e.entities))
 }
 
 func (e *EntityStore[K, E]) Get(key K) E {
@@ -36,6 +39,10 @@ func (e *EntityStore[K, E]) Get(key K) E {
 func (e *EntityStore[K, E]) RemoveEntity(key K) {
 	e.deletions = append(e.deletions, key)
 	delete(e.entities, key)
+}
+
+func (e *EntityStore[K, E]) GetOrder() []K {
+	return e.order
 }
 
 func (e *EntityStore[K, E]) clearDiff() {
@@ -151,9 +158,20 @@ func EntityRenderer[K comparable, E any](create func(t *scaff.Tracker, props *En
 				return nil
 			}
 
+			toRender := make([]scaffcv.Node, 1)
 			methods.OnDraw = func(node *scaffcv.StandardNode[EntityRendererProps[K, E]], c *scaff.Context, painter paint.Painter) {
+				if len(toRender) != len(node.Props().EntityStore.GetOrder()) {
+					toRender = make([]scaffcv.Node, len(node.Props().EntityStore.GetOrder()))
+				}
+
 				if node.Props().Visible {
-					scaffcv.DrawCulled(maps.Values(rendered), c, painter, node.Context())
+					for i, key := range node.Props().EntityStore.GetOrder() {
+						if rendered[key] == nil {
+							continue
+						}
+						toRender[i] = rendered[key]
+					}
+					scaffcv.DrawCulled(slices.Values(toRender), c, painter, node.Context())
 				}
 			}
 

@@ -1,6 +1,8 @@
 package cvnode
 
 import (
+	"time"
+
 	"github.com/Liphium/scaff"
 	"github.com/Liphium/scaff/paint"
 	"github.com/Liphium/scaff/scaffcv"
@@ -8,7 +10,7 @@ import (
 )
 
 type TranslateProps struct {
-	Offset scath.Vec
+	Offset func(now time.Time) scath.Vec
 	*scaffcv.AcceptChild
 }
 
@@ -24,15 +26,16 @@ func Translate(create func(t *scaff.Tracker, props *TranslateProps)) scaffcv.Nod
 				if len(node.Children()) == 0 {
 					return scath.Zero
 				}
-				return node.Props().Offset.Add(node.Children()[0].Position())
+				return node.Props().Offset(time.Now()).Add(node.Children()[0].Position())
 			}
 
 			methods.OnDraw = func(node *scaffcv.StandardNode[TranslateProps], c *scaff.Context, painter paint.Painter) {
 				before := painter.Transform()
 
 				transform := painter.Transform()
-				transform.CamX -= node.Props().Offset.X
-				transform.CamY -= node.Props().Offset.Y
+				newPos := node.Props().Offset(c.Now())
+				transform.CamX -= newPos.X
+				transform.CamY -= newPos.Y
 
 				painter.SetTransform(transform)
 				node.DrawChildren(c, painter)
