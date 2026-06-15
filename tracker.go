@@ -21,7 +21,7 @@ type effect struct {
 type Tracker struct {
 	mu               sync.Mutex
 	runMu            sync.Mutex
-	context          *BuildContext
+	instance         *Instance
 	onChangeHandlers []func()
 
 	removal       map[any]func()
@@ -37,9 +37,9 @@ func (t *Tracker) Tracker() *Tracker {
 	return t
 }
 
-func NewTracker(context *BuildContext, onChange func()) *Tracker {
+func newTracker(instance *Instance, onChange func()) *Tracker {
 	return &Tracker{
-		context:          context,
+		instance:         instance,
 		removal:          make(map[any]func()),
 		effectsToCall:    make(map[any][]int),
 		currentEffect:    -1,
@@ -230,20 +230,20 @@ func TrackValue[T any](tracker *Tracker, signal *Signal[T]) T {
 			tracker.mu.Lock()
 			defer tracker.mu.Unlock()
 
-			if tracker.context != nil && tracker.context.updateQueue != nil {
+			if tracker.instance != nil && tracker.instance.updateQueue != nil {
 				if effects, ok := tracker.effectsToCall[signal]; ok {
 					if slices.Contains(effects, -1) {
-						tracker.context.updateQueue.Push(tracker, -1, tracker.update)
+						tracker.instance.updateQueue.Push(tracker, -1, tracker.update)
 					} else {
 						for _, effectID := range effects {
-							tracker.context.updateQueue.Push(tracker, effectID, func() {
+							tracker.instance.updateQueue.Push(tracker, effectID, func() {
 								tracker.runEffect(effectID)
 							})
 						}
 					}
 				} else {
 					// Fallback to update everything
-					tracker.context.updateQueue.Push(tracker, -1, tracker.update)
+					tracker.instance.updateQueue.Push(tracker, -1, tracker.update)
 				}
 			}
 		})

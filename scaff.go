@@ -1,3 +1,4 @@
+// Scaff provides reactivity primitives useful for making games.
 package scaff
 
 import (
