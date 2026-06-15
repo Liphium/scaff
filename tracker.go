@@ -38,13 +38,17 @@ func (t *Tracker) Tracker() *Tracker {
 }
 
 func newTracker(instance *Instance, onChange func()) *Tracker {
-	return &Tracker{
-		instance:         instance,
-		removal:          make(map[any]func()),
-		effectsToCall:    make(map[any][]int),
-		currentEffect:    -1,
-		onChangeHandlers: []func(){onChange},
+	t := &Tracker{
+		instance:      instance,
+		removal:       make(map[any]func()),
+		effectsToCall: make(map[any][]int),
+		currentEffect: -1,
 	}
+
+	if onChange != nil {
+		t.onChangeHandlers = []func(){onChange}
+	}
+	return t
 }
 
 // Clear removes all tracked signals and is safe to call multiple times.
@@ -56,22 +60,6 @@ func (t *Tracker) Clear() {
 		remove()
 	}
 	t.removal = make(map[any]func())
-}
-
-// On change will be called when anything subscribed to the tracker changes, unlike effect, it does not track dependencies, this should be used for components that share a tracker across multiple nodes.
-//
-// Also runs the handler once after being added.
-func (t *Tracker) OnChange(t2 *Tracker, handler func()) {
-	t.mu.Lock()
-	t.onChangeHandlers = append(t.onChangeHandlers, func() {
-		handler()
-		if t != t2 {
-			t2.runChangeHandlers()
-		}
-	})
-	t.mu.Unlock()
-
-	handler()
 }
 
 // Run all change handlers

@@ -16,3 +16,11 @@ func NewInstance() *Instance {
 func (i *Instance) NewTracker(onChange func()) *Tracker {
 	return newTracker(i, onChange)
 }
+
+func (i *Instance) Update() {
+	i.updateQueue.Update()
+}
+
+func (i *Instance) Unload() {
+	i.updateQueue.Clear()
+}
