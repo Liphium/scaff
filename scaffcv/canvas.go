@@ -2,7 +2,7 @@ package scaffcv
 
 import (
 	"github.com/Liphium/scaff"
-	"github.com/Liphium/scaff/paint"
+	"github.com/Liphium/scaff/engine"
 	"github.com/Liphium/scaff/scath"
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -42,7 +42,7 @@ func Canvas(create func(t *scaff.Tracker, props *CanvasProps)) scaff.NodeBuilder
 			var context *BuildContext
 			var cv CanvasProps
 			var root Node
-			var painter *paint.EbitenPainter
+			var painter *engine.EbitenPainter
 			sizeUpdate := true
 
 			props.OnLoad = func(node *scaff.StandardNode[CanvasProps], parent scaff.Node) {
@@ -82,7 +82,7 @@ func Canvas(create func(t *scaff.Tracker, props *CanvasProps)) scaff.NodeBuilder
 				// This is run on the first frame as well to create the painter
 				if sizeUpdate {
 					screen := ebiten.NewImage(image.Bounds().Dx(), image.Bounds().Dy())
-					painter = paint.NewEbitenPainter(screen, true, node.Context().AssetManager())
+					painter = engine.NewEbitenPainter(screen, true, node.Context().AssetManager())
 
 					// Create new camera (old one will only have invalid positions)
 					context.cam = NewCamera(cv.Position.X, cv.Position.Y, c.Width(), c.Height())
@@ -97,7 +97,7 @@ func Canvas(create func(t *scaff.Tracker, props *CanvasProps)) scaff.NodeBuilder
 
 				// Actually draw the root
 				painter.Clear()
-				painter.SetTransform(paint.Transform{
+				painter.SetTransform(engine.Transform{
 					CamX:          context.cam.X,
 					CamY:          context.cam.Y,
 					CenterOffsetX: context.cam.CenterOffsetX,

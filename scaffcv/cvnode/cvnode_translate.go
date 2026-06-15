@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/Liphium/scaff"
-	"github.com/Liphium/scaff/paint"
+	"github.com/Liphium/scaff/engine"
 	"github.com/Liphium/scaff/scaffcv"
 	"github.com/Liphium/scaff/scath"
 )
@@ -29,7 +29,7 @@ func Translate(create func(t *scaff.Tracker, props *TranslateProps)) scaffcv.Nod
 				return node.Props().Offset(time.Now()).Add(node.Children()[0].Position())
 			}
 
-			methods.OnDraw = func(node *scaffcv.StandardNode[TranslateProps], c *scaff.Context, painter paint.Painter) {
+			methods.OnDraw = func(node *scaffcv.StandardNode[TranslateProps], c *scaff.Context, painter engine.Painter) {
 				before := painter.Transform()
 
 				transform := painter.Transform()

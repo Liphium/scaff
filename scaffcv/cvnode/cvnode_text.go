@@ -4,7 +4,7 @@ import (
 	"image/color"
 
 	"github.com/Liphium/scaff"
-	"github.com/Liphium/scaff/paint"
+	"github.com/Liphium/scaff/engine"
 	"github.com/Liphium/scaff/scaffcv"
 	"github.com/Liphium/scaff/scath"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
@@ -123,9 +123,9 @@ func Text(create func(t *scaff.Tracker, props *TextProps)) scaffcv.NodeBuilder {
 				return size
 			}
 
-			props.OnDraw = func(node *scaffcv.StandardNode[TextProps], c *scaff.Context, painter paint.Painter) {
+			props.OnDraw = func(node *scaffcv.StandardNode[TextProps], c *scaff.Context, painter engine.Painter) {
 				lineSpacing := node.Props().FontSize * node.Props().LineSpacing
-				painter.Paint(paint.Text{
+				painter.Paint(engine.Text{
 					Font:           node.Props().Font,
 					Text:           node.Props().Text,
 					Direction:      node.Props().TextDirection,

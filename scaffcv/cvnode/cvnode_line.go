@@ -4,7 +4,7 @@ import (
 	"image/color"
 
 	"github.com/Liphium/scaff"
-	"github.com/Liphium/scaff/paint"
+	"github.com/Liphium/scaff/engine"
 	"github.com/Liphium/scaff/scaffcv"
 	"github.com/Liphium/scaff/scath"
 )
@@ -27,8 +27,8 @@ func Line(create func(t *scaff.Tracker, props *LineProps)) scaffcv.NodeBuilder {
 		},
 		PropsCreator: create,
 		Create: func(methods *scaffcv.StandardMethods[LineProps]) {
-			methods.OnDraw = func(node *scaffcv.StandardNode[LineProps], c *scaff.Context, painter paint.Painter) {
-				painter.Paint(paint.Line{
+			methods.OnDraw = func(node *scaffcv.StandardNode[LineProps], c *scaff.Context, painter engine.Painter) {
+				painter.Paint(engine.Line{
 					Start:     node.Props().Start,
 					End:       node.Props().End,
 					Color:     node.Props().Color,

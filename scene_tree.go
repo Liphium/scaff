@@ -1,12 +1,12 @@
 package scaff
 
 import (
-	"github.com/Liphium/scaff/paint"
+	"github.com/Liphium/scaff/engine"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
 // NewSceneTree makes a new scene tree based on an identifier. This tree supports a builder pattern, just use .Mount(<node>) to mount a node into it or add a transition with SetTransitionProps.
-func NewSceneTree(id string, assetManager *paint.AssetManager) *SceneTree {
+func NewSceneTree(id string, assetManager *engine.AssetManager) *SceneTree {
 	return &SceneTree{
 		id:           id,
 		assetManager: assetManager,
@@ -20,7 +20,7 @@ var _ Scene = &SceneTree{}
 type SceneTree struct {
 	id              string                          // ID of the scene (MUST BE SET)
 	updateQueue     *UpdateQueue                    // Update queue for the scene
-	assetManager    *paint.AssetManager             // Asset manager for the scene
+	assetManager    *engine.AssetManager             // Asset manager for the scene
 	transitionProps func(bool) TransitionProperties // Set the transition properties for this scene
 	sceneRoot       Node                            // Node at the root of the scene tree
 }

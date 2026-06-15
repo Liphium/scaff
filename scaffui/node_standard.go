@@ -3,7 +3,7 @@ package scaffui
 import (
 	"fmt"
 
-	"github.com/Liphium/scaff/paint"
+	"github.com/Liphium/scaff/engine"
 
 	"github.com/Liphium/scaff"
 
@@ -60,7 +60,7 @@ type StandardMethods[P scaff.ChildProps[NodeBuilder]] struct {
 	OnWantedConstraints func(node *StandardNode[P], parent scath.Constraints) scath.Constraints
 	OnLayout            func(node *StandardNode[P]) (scath.Vec, error)
 	OnHandleEvent       func(node *StandardNode[P], c *scaff.Context, event scaff.Event) error
-	OnDraw              func(node *StandardNode[P], position scath.Vec, renderer paint.Painter)
+	OnDraw              func(node *StandardNode[P], position scath.Vec, renderer engine.Painter)
 }
 
 var _ Node = &StandardNode[*AcceptChildren]{}
@@ -306,7 +306,7 @@ func (s *StandardNode[P]) Unload() {
 	}
 }
 
-func (s *StandardNode[P]) Draw(position scath.Vec, renderer paint.Painter) {
+func (s *StandardNode[P]) Draw(position scath.Vec, renderer engine.Painter) {
 	if s.methods.OnDraw != nil {
 		s.methods.OnDraw(s, position, renderer)
 		return

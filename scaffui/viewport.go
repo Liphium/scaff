@@ -2,7 +2,7 @@ package scaffui
 
 import (
 	"github.com/Liphium/scaff"
-	"github.com/Liphium/scaff/paint"
+	"github.com/Liphium/scaff/engine"
 	"github.com/Liphium/scaff/scath"
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -32,7 +32,7 @@ func Viewport(create func(t *scaff.Tracker, props *ViewportProps)) scaff.NodeBui
 		Create: func(props *scaff.StandardMethods[ViewportProps]) {
 			var root Node
 			var context *scaff.BuildContext
-			var renderer *paint.EbitenPainter
+			var renderer *engine.EbitenPainter
 
 			props.OnLoad = func(node *scaff.StandardNode[ViewportProps], parent scaff.Node) {
 				context = node.Context().CopyWithNewUpdateQueue()
@@ -61,7 +61,7 @@ func Viewport(create func(t *scaff.Tracker, props *ViewportProps)) scaff.NodeBui
 				// Initialize the UI and stuff
 				firstRender := false
 				if renderer == nil {
-					renderer = paint.NewEbitenPainter(ebiten.NewImage(screen.Bounds().Dx(), screen.Bounds().Dy()), true, node.Context().AssetManager())
+					renderer = engine.NewEbitenPainter(ebiten.NewImage(screen.Bounds().Dx(), screen.Bounds().Dy()), true, node.Context().AssetManager())
 					root.SetConstraints(scath.Loose(float64(c.Width()), float64(c.Height())))
 					_, err := root.Layout()
 					if err != nil {

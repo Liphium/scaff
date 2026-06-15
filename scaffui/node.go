@@ -1,7 +1,7 @@
 package scaffui
 
 import (
-	"github.com/Liphium/scaff/paint"
+	"github.com/Liphium/scaff/engine"
 
 	"github.com/Liphium/scaff"
 	"github.com/Liphium/scaff/scath"
@@ -74,7 +74,7 @@ type Node interface {
 	Update() (UpdateResult, scaff.TracedError)
 
 	// Draw the thing onto the screen at a specified position (next step is getting this to work)
-	Draw(position scath.Vec, painter paint.Painter)
+	Draw(position scath.Vec, painter engine.Painter)
 
 	// Handle events from scaff (you do not have to handle any, but should always push them along to children at least)
 	HandleEvent(c *scaff.Context, event scaff.Event) scaff.TracedError

@@ -7,7 +7,7 @@ import (
 	"unicode"
 
 	"github.com/Liphium/scaff"
-	"github.com/Liphium/scaff/paint"
+	"github.com/Liphium/scaff/engine"
 	"github.com/Liphium/scaff/scaffui"
 	"github.com/Liphium/scaff/scath"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
@@ -222,8 +222,8 @@ func Text(create func(t *scaff.Tracker, props *TextProps)) scaffui.NodeBuilder {
 				return scath.Vec{X: width, Y: height}, nil
 			}
 
-			props.OnDraw = func(node *scaffui.StandardNode[TextProps], position scath.Vec, painter paint.Painter) {
-				painter.Paint(paint.Text{
+			props.OnDraw = func(node *scaffui.StandardNode[TextProps], position scath.Vec, painter engine.Painter) {
+				painter.Paint(engine.Text{
 					Direction:      node.Props().TextDirection,
 					Font:           node.Props().Font,
 					Text:           finalText,

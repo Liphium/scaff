@@ -3,7 +3,7 @@ package uinode
 import (
 	"image"
 
-	"github.com/Liphium/scaff/paint"
+	"github.com/Liphium/scaff/engine"
 	"github.com/Liphium/scaff/scaffcv/cvnode"
 
 	"github.com/Liphium/scaff"
@@ -51,7 +51,7 @@ func Image(create func(t *scaff.Tracker, props *ImageProps)) scaffui.NodeBuilder
 				return spec.LayoutWithoutChild()
 			}
 
-			props.OnDraw = func(node *scaffui.StandardNode[ImageProps], position scath.Vec, painter paint.Painter) {
+			props.OnDraw = func(node *scaffui.StandardNode[ImageProps], position scath.Vec, painter engine.Painter) {
 				asset, err := node.Context().AssetManager().GetImage(node.Props().Path)
 				if err != nil {
 					log.Error("couldn't find image", "i", node.Props().Path)

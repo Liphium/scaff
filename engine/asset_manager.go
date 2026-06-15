@@ -1,4 +1,4 @@
-package paint
+package engine
 
 import (
 	"bytes"

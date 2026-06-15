@@ -5,7 +5,7 @@ import (
 	"math"
 
 	"github.com/Liphium/scaff"
-	"github.com/Liphium/scaff/paint"
+	"github.com/Liphium/scaff/engine"
 	"github.com/Liphium/scaff/scaffcv"
 	"github.com/Liphium/scaff/scath"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -218,7 +218,7 @@ func Tilemap(create func(t *scaff.Tracker, props *TilemapProps)) scaffcv.NodeBui
 				node.Props().TilemapStore.clearChanged()
 			}
 
-			methods.OnDraw = func(node *scaffcv.StandardNode[TilemapProps], c *scaff.Context, painter paint.Painter) {
+			methods.OnDraw = func(node *scaffcv.StandardNode[TilemapProps], c *scaff.Context, painter engine.Painter) {
 				for chunkPos, chunk := range chunks {
 					op := &ebiten.DrawImageOptions{
 						Filter: ebiten.FilterPixelated,

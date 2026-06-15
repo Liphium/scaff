@@ -1,7 +1,7 @@
 package scaff
 
 import (
-	"github.com/Liphium/scaff/paint"
+	"github.com/Liphium/scaff/engine"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -9,7 +9,7 @@ import (
 
 // All the context for nodes being created within ScaffUI
 type BuildContext struct {
-	assetManager *paint.AssetManager
+	assetManager *engine.AssetManager
 	updateQueue  *UpdateQueue
 }
 
@@ -17,7 +17,7 @@ func (bc BuildContext) UpdateQueue() *UpdateQueue {
 	return bc.updateQueue
 }
 
-func (bc BuildContext) AssetManager() *paint.AssetManager {
+func (bc BuildContext) AssetManager() *engine.AssetManager {
 	return bc.assetManager
 }
 

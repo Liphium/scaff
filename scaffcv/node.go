@@ -2,7 +2,7 @@ package scaffcv
 
 import (
 	"github.com/Liphium/scaff"
-	"github.com/Liphium/scaff/paint"
+	"github.com/Liphium/scaff/engine"
 	"github.com/Liphium/scaff/scath"
 )
 
@@ -41,5 +41,5 @@ type Node interface {
 	HandleEvent(c *scaff.Context, event scaff.Event) scaff.TracedError
 
 	// Draw the thing onto the screen (world coordinates)
-	Draw(c *scaff.Context, painter paint.Painter)
+	Draw(c *scaff.Context, painter engine.Painter)
 }

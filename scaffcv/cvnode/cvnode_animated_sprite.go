@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/Liphium/scaff"
-	"github.com/Liphium/scaff/paint"
+	"github.com/Liphium/scaff/engine"
 	"github.com/Liphium/scaff/scaffcv"
 	"github.com/Liphium/scaff/scath"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -51,7 +51,7 @@ func AnimatedSprite(create func(t *scaff.Tracker, props *AnimatedSpriteProps)) s
 				totalDuration = time.Duration(len(node.Props().FramesToPlay)) * node.Props().Duration
 			}
 
-			methods.OnDraw = func(node *scaffcv.StandardNode[AnimatedSpriteProps], c *scaff.Context, painter paint.Painter) {
+			methods.OnDraw = func(node *scaffcv.StandardNode[AnimatedSpriteProps], c *scaff.Context, painter engine.Painter) {
 				spritesheet, err := node.Context().AssetManager().GetImage(node.Props().SpriteSheet)
 				if err != nil {
 					log.Error("couldn't load image for spritesheet", "i", node.Props().SpriteSheet)

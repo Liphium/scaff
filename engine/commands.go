@@ -1,4 +1,4 @@
-package paint
+package engine
 
 import (
 	"image/color"
@@ -72,40 +72,4 @@ type Line struct {
 
 func (Line) ID() string {
 	return "line"
-}
-
-type Transform struct {
-	CamX          float64
-	CamY          float64
-	CenterOffsetX float64
-	CenterOffsetY float64
-	Angle         float64 // in radians
-	ZoomFactor    float64
-}
-
-// NewTransform returns a default Transform with scale (1, 1).
-func NewTransform() Transform {
-	return Transform{
-		ZoomFactor: 1.0,
-	}
-}
-
-type Painter interface {
-	// Get the current transform
-	Transform() Transform
-
-	// Set a transform
-	SetTransform(transform Transform)
-
-	// Clear the canvas for a new frame
-	Clear()
-
-	// Should draw one render command on top of everything else that has already been drawn.
-	Paint(command RenderCommand)
-
-	// Draw an image directly onto the screen
-	DrawRaw(image *ebiten.Image, op *ebiten.DrawImageOptions)
-
-	// Should draw all of the commands in order, the first index gets drawn first, etc.
-	PaintMulti(commands []RenderCommand)
 }

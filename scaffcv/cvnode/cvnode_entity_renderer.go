@@ -6,7 +6,7 @@ import (
 	"sync"
 
 	"github.com/Liphium/scaff"
-	"github.com/Liphium/scaff/paint"
+	"github.com/Liphium/scaff/engine"
 	"github.com/Liphium/scaff/scaffcv"
 	"github.com/Liphium/scaff/scath"
 )
@@ -185,7 +185,7 @@ func EntityRenderer[K comparable, E any](create func(t *scaff.Tracker, props *En
 			}
 
 			toRender := make([]scaffcv.Node, 1)
-			methods.OnDraw = func(node *scaffcv.StandardNode[EntityRendererProps[K, E]], c *scaff.Context, painter paint.Painter) {
+			methods.OnDraw = func(node *scaffcv.StandardNode[EntityRendererProps[K, E]], c *scaff.Context, painter engine.Painter) {
 				if len(toRender) != len(node.Props().EntityStore.GetOrder()) {
 					toRender = make([]scaffcv.Node, len(node.Props().EntityStore.GetOrder()))
 				}

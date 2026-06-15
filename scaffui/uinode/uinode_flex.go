@@ -1,7 +1,7 @@
 package uinode
 
 import (
-	"github.com/Liphium/scaff/paint"
+	"github.com/Liphium/scaff/engine"
 
 	"github.com/Liphium/scaff"
 	"github.com/Liphium/scaff/optional"
@@ -47,7 +47,7 @@ func Flex(create func(t *scaff.Tracker, props *FlexProps)) scaffui.NodeBuilder {
 				return flexLayout(node)
 			}
 
-			props.OnDraw = func(node *scaffui.StandardNode[FlexProps], position scath.Vec, painter paint.Painter) {
+			props.OnDraw = func(node *scaffui.StandardNode[FlexProps], position scath.Vec, painter engine.Painter) {
 				flexDraw(node, position, painter)
 			}
 		},
@@ -58,7 +58,7 @@ func flexDirection(node *scaffui.StandardNode[FlexProps]) LayoutDirection {
 	return node.Props().Direction.Or(LayoutTopToBottom)
 }
 
-func flexDraw(node *scaffui.StandardNode[FlexProps], position scath.Vec, painter paint.Painter) {
+func flexDraw(node *scaffui.StandardNode[FlexProps], position scath.Vec, painter engine.Painter) {
 	children := node.Children()
 
 	switch flexDirection(node) {

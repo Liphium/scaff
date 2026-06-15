@@ -6,7 +6,7 @@ import (
 	"slices"
 
 	"github.com/Liphium/scaff"
-	"github.com/Liphium/scaff/paint"
+	"github.com/Liphium/scaff/engine"
 	"github.com/Liphium/scaff/scath"
 )
 
@@ -76,7 +76,7 @@ type StandardMethods[P scaff.ChildProps[NodeBuilder]] struct {
 	OnHandleEvent func(node *StandardNode[P], c *scaff.Context, event scaff.Event) error
 
 	// Should draw the node using the painter.
-	OnDraw func(node *StandardNode[P], c *scaff.Context, painter paint.Painter)
+	OnDraw func(node *StandardNode[P], c *scaff.Context, painter engine.Painter)
 }
 
 // Just for making sure we implement the Node interface
@@ -242,7 +242,7 @@ func (s *StandardNode[P]) Unload() {
 	s.tracker = nil // Cut tracker off from tree for GC
 }
 
-func (s *StandardNode[P]) Draw(c *scaff.Context, painter paint.Painter) {
+func (s *StandardNode[P]) Draw(c *scaff.Context, painter engine.Painter) {
 	if s.methods.OnDraw != nil {
 		s.methods.OnDraw(s, c, painter)
 	} else {
@@ -272,12 +272,12 @@ func (s *StandardNode[P]) HandleEventChildren(c *scaff.Context, event scaff.Even
 }
 
 // Draw the children of the node
-func (s *StandardNode[P]) DrawChildren(c *scaff.Context, painter paint.Painter) {
+func (s *StandardNode[P]) DrawChildren(c *scaff.Context, painter engine.Painter) {
 	DrawCulled(slices.Values(s.children), c, painter, s.Context())
 }
 
 // Draw a bunch of nodes with Position and Size functions to be culled according to the camera viewport
-func DrawCulled(nodes iter.Seq[Node], c *scaff.Context, painter paint.Painter, context *BuildContext) {
+func DrawCulled(nodes iter.Seq[Node], c *scaff.Context, painter engine.Painter, context *BuildContext) {
 	//vwOrigin, vwSize := context.Camera().Viewport()
 
 	for child := range nodes {

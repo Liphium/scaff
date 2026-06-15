@@ -1,7 +1,7 @@
 package uinode
 
 import (
-	"github.com/Liphium/scaff/paint"
+	"github.com/Liphium/scaff/engine"
 
 	"github.com/Liphium/scaff"
 	"github.com/Liphium/scaff/scaffui"
@@ -85,7 +85,7 @@ func Input(create func(t *scaff.Tracker, props *InputProps)) scaffui.NodeBuilder
 				return nil
 			}
 
-			props.OnDraw = func(node *scaffui.StandardNode[InputProps], position scath.Vec, renderer paint.Painter) {
+			props.OnDraw = func(node *scaffui.StandardNode[InputProps], position scath.Vec, renderer engine.Painter) {
 				lastPosition = position
 				if child, ok := node.Child(); ok {
 					child.Draw(position, renderer)

@@ -2,7 +2,7 @@ package cvnode
 
 import (
 	"github.com/Liphium/scaff"
-	"github.com/Liphium/scaff/paint"
+	"github.com/Liphium/scaff/engine"
 	"github.com/Liphium/scaff/scaffcv"
 	"github.com/Liphium/scaff/scath"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -29,8 +29,8 @@ func Image(create func(t *scaff.Tracker, props *ImageProps)) scaffcv.NodeBuilder
 				return node.Props().Size
 			}
 
-			methods.OnDraw = func(node *scaffcv.StandardNode[ImageProps], c *scaff.Context, painter paint.Painter) {
-				painter.Paint(paint.Image{
+			methods.OnDraw = func(node *scaffcv.StandardNode[ImageProps], c *scaff.Context, painter engine.Painter) {
+				painter.Paint(engine.Image{
 					Position:   node.Props().Position,
 					Size:       node.Props().Size,
 					Path:       node.Props().Path,

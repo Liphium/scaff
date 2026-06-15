@@ -3,7 +3,7 @@ package uinode
 import (
 	"github.com/Liphium/scaff"
 	"github.com/Liphium/scaff/optional"
-	"github.com/Liphium/scaff/paint"
+	"github.com/Liphium/scaff/engine"
 	"github.com/Liphium/scaff/scaffui"
 	"github.com/Liphium/scaff/scath"
 )
@@ -49,7 +49,7 @@ func Align(create func(t *scaff.Tracker, props *AlignProps)) scaffui.NodeBuilder
 			}
 
 			// Draw child at proper position for alignment
-			props.OnDraw = func(node *scaffui.StandardNode[AlignProps], position scath.Vec, renderer paint.Painter) {
+			props.OnDraw = func(node *scaffui.StandardNode[AlignProps], position scath.Vec, renderer engine.Painter) {
 				offset := scath.Vec{}
 
 				if child, ok := node.Child(); ok {

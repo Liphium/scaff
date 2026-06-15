@@ -2,7 +2,7 @@ package uinode
 
 import (
 	"github.com/Liphium/scaff/optional"
-	"github.com/Liphium/scaff/paint"
+	"github.com/Liphium/scaff/engine"
 
 	"image/color"
 
@@ -56,16 +56,16 @@ func Rectangle(create func(t *scaff.Tracker, props *RectangleProps)) scaffui.Nod
 				return spec.LayoutWithoutChild()
 			}
 
-			props.OnDraw = func(node *scaffui.StandardNode[RectangleProps], position scath.Vec, painter paint.Painter) {
+			props.OnDraw = func(node *scaffui.StandardNode[RectangleProps], position scath.Vec, painter engine.Painter) {
 				props := node.Props()
-				painter.Paint(paint.Rectangle{
+				painter.Paint(engine.Rectangle{
 					Position:     position.AddC(props.StrokeThickness),
 					Size:         node.Size().AddC(-props.StrokeThickness * 2),
 					FillColor:    props.FillColor,
 					BorderRadius: props.BorderRadius,
 				})
 				if _, _, _, a := props.StrokeColor.RGBA(); a != 0 && props.StrokeThickness != 0 {
-					painter.Paint(paint.RectangleStroke{
+					painter.Paint(engine.RectangleStroke{
 						Position:     position,
 						Size:         node.Size(),
 						Color:        node.Props().StrokeColor,

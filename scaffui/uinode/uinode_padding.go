@@ -1,7 +1,7 @@
 package uinode
 
 import (
-	"github.com/Liphium/scaff/paint"
+	"github.com/Liphium/scaff/engine"
 
 	"github.com/Liphium/scaff"
 	"github.com/Liphium/scaff/optional"
@@ -40,7 +40,7 @@ func Padding(create func(t *scaff.Tracker, props *PaddingProps)) scaffui.NodeBui
 			}
 
 			// Draw child at padded position
-			props.OnDraw = func(node *scaffui.StandardNode[PaddingProps], position scath.Vec, renderer paint.Painter) {
+			props.OnDraw = func(node *scaffui.StandardNode[PaddingProps], position scath.Vec, renderer engine.Painter) {
 				if child, ok := node.Child(); ok {
 					child.Draw(position.Add(node.Props().Padding.Or(scath.Pad(0)).ToVecTopLeft()), renderer)
 				}
