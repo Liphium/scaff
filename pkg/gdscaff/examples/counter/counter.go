@@ -15,6 +15,7 @@ import (
 	"graphics.gd/classdb/SceneTree"
 
 	"github.com/Liphium/scaff"
+	"github.com/Liphium/scaff/pkg/gdscaff"
 )
 
 var Instance = scaff.NewInstance()
@@ -44,6 +45,10 @@ func main() {
 	button := Button.New()
 	t.Effect(func() {
 		button.SetText(fmt.Sprintf("Count: %d", counter.Track(t)))
+	})
+
+	gdscaff.With(Button.New).Build(func(t *scaff.Tracker, node Button.Instance) {
+
 	})
 
 	button.AsBaseButton().OnPressed(func() {

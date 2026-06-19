@@ -2,10 +2,13 @@ module github.com/Liphium/scaff/examples/counter
 
 go 1.26.4
 
-replace github.com/Liphium/scaff => ../../.
+replace github.com/Liphium/scaff => ../../../../.
+
+replace github.com/Liphium/scaff/pkg/gdscaff => ../../.
 
 require (
 	github.com/Liphium/scaff v0.0.1
+	github.com/Liphium/scaff/pkg/gdscaff v0.0.0-00010101000000-000000000000
 	graphics.gd v0.0.0-20260613141922-d663643ba445
 )
 

@@ -8,10 +8,16 @@ import (
 
 var log = sutil.NewLogger("gdscaff")
 
+type Context[N any] struct{}
+
 type GodotNode interface {
 	AsNode() Node.Instance
 }
 
-func New[N GodotNode](creator func() N, create func(t *scaff.Tracker, node N)) {
+func With[N GodotNode](creator func() N) *Context[N] {
+	return &Context[N]{}
+}
+
+func (c *Context[N]) Build(create func(t *scaff.Tracker, node N)) {
 
 }
