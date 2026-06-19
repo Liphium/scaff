@@ -1,7 +1,7 @@
 [configuration]
 
 entry_symbol = "cgo_extension_init"
-compatibility_minimum = "4.6.2.stable.official.71f334935"
+compatibility_minimum = "4.6.2.stable.mono.official.71f334935"
 
 [libraries]
 
