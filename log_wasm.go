@@ -1,6 +1,6 @@
 //go:build js && wasm
 
-package sutil
+package scaff
 
 import (
 	"encoding/json"

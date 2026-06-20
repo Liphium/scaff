@@ -1,4 +1,4 @@
-package sutil
+package scaff
 
 import (
 	"context"

@@ -29,7 +29,7 @@ type Reactor[N GodotNode] struct {
 	tracker *scaff.Tracker
 }
 
-func Child[P, C GodotNode](ctx Ctx[P], create func() C) *Reactor[C] {
+func Child[P, C GodotNode](ctx *Ctx[P], create func() C) *Reactor[C] {
 	// TODO: Add build hook that adds child
 	return With(ctx.mount, create)
 }
@@ -57,7 +57,7 @@ func (r *Reactor[N]) Build() N {
 		return node
 	}
 
-	r.init(r.tracker, node)
+	r.init(r.buildCtx(), node)
 	node.AsNode().OnTreeExited(r.Unload)
 	return node
 }
